@@ -60,6 +60,29 @@ The code is set in `src/lib/site.ts` (`GOATCOUNTER`). Counting only runs on the 
 Besides page views, a **"Finished: …"** event is counted the first time a reader scrolls to the end of a page,
 so you can compare how many people open a chapter with how many read it to the end.
 
+## Protected main branch
+
+`main` has a ruleset called **Protect main** (Settings > Rules > Rulesets):
+
+- Nobody can push to `main` directly. Every change goes through a pull request, including yours.
+- A pull request can only be merged when the **build** check passes (`.github/workflows/check.yml`).
+- Force-pushes to `main` and deleting `main` are blocked.
+- No approval is required, because GitHub does not let you approve your own pull request.
+
+To make a change yourself:
+
+```bash
+git checkout -b my-change
+# edit, then
+git commit -am "Describe the change"
+git push -u origin my-change
+gh pr create --fill        # or open the pull request on GitHub
+gh pr merge --squash       # after the build check passes
+```
+
+The first time someone contributes, GitHub waits for you to approve running their checks.
+Open the pull request and click **Approve and run workflows**.
+
 ## Reviewing contributions
 
 - Issue forms are in `.github/ISSUE_TEMPLATE/` and tag issues `fix`, `example`, `topic idea` or `speaking`. Speaking offers come from the “Raise your hand to speak” form.

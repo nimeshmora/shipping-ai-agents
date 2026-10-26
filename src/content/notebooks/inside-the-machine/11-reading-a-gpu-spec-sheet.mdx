@@ -1,0 +1,99 @@
+---
+number: 11
+title: "How to read a GPU spec sheet"
+kicker: "Chapter eleven"
+subtitle: "Five numbers, what each one tells you, and a worked example of choosing a GPU."
+question: "Which numbers on a spec sheet matter for running an agent's model?"
+part: "From chip to cloud"
+quote: {"who": "maya", "text": "Now the spec sheet finally makes sense. Let me pick a GPU."}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+A GPU spec sheet is full of numbers. For running a model, five of them matter most, and you now know what each one means.
+
+<Sketch name="im-ch11-1" />
+
+## The five numbers
+
+| Number | What it tells you | Chapter |
+|---|---|---|
+| **GPU memory** | Will the model and the KV cache fit? | 4, and Notebook #2 |
+| **Memory bandwidth** | How fast can tokens appear for each user? | 7 |
+| **Maths speed** (dense, at the number format you use) | How much batching can it handle, and how fast is the first token? | 6 |
+| **NVLink** | Can you split a big model across GPUs well? | 8 |
+| **Power** | Can your rack or data center supply it? | 9 |
+
+## The line-up
+
+| GPU | Memory | Bandwidth | BF16 dense | FP8 dense | Power |
+|---|---|---|---|---|---|
+| L4 | 24 GB | 300 GB/s | 121 TF | 242 TF | 72 W |
+| L40S | 48 GB | 864 GB/s | 362 TF | 733 TF | 350 W |
+| A100 80GB (SXM) | 80 GB | 2,039 GB/s | 312 TF | not supported | 400 W |
+| H100 (SXM) | 80 GB | 3,350 GB/s | about 989 TF | about 1,979 TF | up to 700 W |
+| H200 (SXM) | 141 GB | 4,800 GB/s | about 989 TF | about 1,979 TF | up to 700 W |
+| B200 (in an 8-GPU HGX board) | 180 GB | about 8,000 GB/s | about 2,250 TF | about 4,500 TF | up to 1,200 W |
+
+<Note>
+
+Sources: NVIDIA's product pages for each GPU, NVIDIA's HGX page (B200 figures are the 8-GPU totals divided by 8), and NVIDIA's Blackwell Ultra blog (B200 maximum power). TF means trillion operations per second. NVIDIA's pages often quote numbers “with sparsity”, which are twice these. Checked 26 October 2026.
+
+</Note>
+
+Look at the H100 and the H200. The maths speed is the same. But the H200 has more memory and about 43% more memory bandwidth. For serving models, that makes the H200 noticeably faster per user, and it can hold bigger models or more conversations.
+
+## A worked example
+
+Maya wants to serve an 8B model in FP8 (8 GB of weights) for about 50 users at once. Which GPU?
+
+1. **Memory.** 8 GB of weights. The L4's 24 GB fits it, with room for some KV cache. The L40S's 48 GB leaves much more room for 50 conversations.
+2. **Bandwidth.** The ceiling for one user is about 300 ÷ 8 ≈ 37 tokens per second on the L4, and 864 ÷ 8 ≈ 108 on the L40S. With 50 users sharing, each gets less. The L40S leaves much more headroom.
+3. **Price.** On AWS, an L4 machine (g6.xlarge) is about $0.80 an hour and an L40S machine (g6e.xlarge) about $1.86 an hour (Notebook #2, Chapter 4).
+4. **Decision.** Maya starts with the L40S, then load-tests it with Botley's real requests before deciding how many she needs.
+
+<Careful>
+
+**The spec sheet is the starting point, not the answer.** Real speed depends on your model, your serving software, your request lengths and how many users you have. Always measure with your own traffic.
+
+</Careful>
+
+<NoSillyQuestions>
+
+<QA q={"Why does the A100 say FP8 is not supported?"}>
+
+The A100 is an older design. It has no special hardware for FP8 maths. It can still store FP8 weights in some software, but it doesn't get the FP8 speed-up.
+
+</QA>
+
+<QA q={"Which single number should I look at first?"}>
+
+Memory size, to see if the model fits. Then memory bandwidth, to see how fast it will feel.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. A 70B model in FP8 (70 GB) must run on one GPU with room for the KV cache. Which GPUs in the table could work? <Blank />
+2. Using the rule from Chapter 7, roughly how many tokens per second could one user get from that model on an H200? <Blank />
+3. Two GPUs have the same maths speed, but one has 40% more memory bandwidth. Which is better for serving one user quickly? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- Five numbers matter most: memory, memory bandwidth, dense maths speed, NVLink and power.
+- Memory decides what fits. Bandwidth decides how fast it feels. Maths speed decides how much batching you can do.
+- The H200 has the same maths speed as the H100, but more and faster memory, so it serves models better.
+- Use the spec sheet to shortlist, then measure with your own requests.
+
+</Takeaways>

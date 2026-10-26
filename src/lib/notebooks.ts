@@ -30,6 +30,15 @@ export const notebooks: Notebook[] = [
     cover: 'rm-cover',
     edition: 'First edition, October 2026',
   },
+  {
+    slug: 'inside-the-machine',
+    number: 3,
+    title: 'Inside the Machine',
+    blurb: 'How GPUs run your agent. Starts from zero: what a computer is, how CPUs, memory and GPUs work, why memory speed sets the pace, and what happens inside the data centers where agents run.',
+    pdf: 'inside-the-machine.pdf',
+    cover: 'im-cover',
+    edition: 'First edition, October 2026',
+  },
 ];
 
 export function notebook(slug: string): Notebook {

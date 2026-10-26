@@ -1,0 +1,103 @@
+---
+number: 3
+title: "The CPU: a few very fast chefs"
+kicker: "Chapter three"
+subtitle: "Instructions, the clock and cores. The part of the computer that runs Botley's own code."
+question: "What does a CPU do, and what is it good at?"
+part: "How any computer works"
+quote: {"who": "kai", "text": "Before we meet the GPU, meet the chef that runs everything else."}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+Every computer, from a phone to a server, has a **CPU** (central processing unit). Billions of transistors are arranged so that the CPU can follow instructions.
+
+## A program is a recipe
+
+A program is a long list of very small steps called **instructions**: “add these two numbers”, “copy this number over there”, “if this number is zero, jump to step 40”. The CPU follows them one after another, like a chef following a recipe card.
+
+<Sketch name="im-ch03-1" />
+
+The CPU repeats the same loop over and over: **fetch** the next instruction, **do** it, **move on**. A **clock** keeps time for this loop. A clock speed of 3 GHz means 3 billion ticks every second. Modern CPUs can often finish more than one instruction per tick.
+
+## More cores, more chefs
+
+One core can only follow one list of instructions at a time. So modern CPUs have many **cores**, many chefs working side by side. Each core can run a different job at the same time.
+
+<Sketch name="im-ch03-2" />
+
+A laptop CPU has a handful of cores. A big server CPU has many more:
+
+| Server CPU | Cores | Clock speed |
+|---|---|---|
+| AMD EPYC 9965 | 192 | 2.25 to 3.7 GHz |
+| Intel Xeon 6980P | 128 | 2.0 to 3.9 GHz |
+
+<Note>
+
+Sources: AMD EPYC 9965 and Intel Xeon 6980P product pages, checked 26 October 2026. Intel also makes Xeon 6 chips with up to 288 smaller, simpler cores.
+
+</Note>
+
+## What CPUs are great at
+
+CPU cores are **clever**. Each one is very good at following complicated instructions full of decisions: “if the flight is full, try the next one; if the price is too high, ask the user”. They switch quickly between many different jobs.
+
+That is exactly what most of an agent's work looks like. The CPU runs:
+
+- Botley's own code: planning steps and deciding what to do next
+- the web server that receives Priya's message
+- the tools: searching flights, checking the calendar, calling other services
+- the database that stores conversations and memory
+- turning text into tokens and back
+
+<Careful>
+
+**The CPU is not the slow part of most agents.** The CPU work in an agent usually takes milliseconds. The model takes much longer. When an agent feels slow, look at the model calls and the tools first, not at the CPU.
+
+</Careful>
+
+## What CPUs are not great at
+
+Running a large AI model means doing billions of very simple multiplications, the same ones, over and over. A CPU can do it, but it has only tens or hundreds of chefs, and each chef is built for clever work, not for repeating one simple job billions of times. For that, you want a different kind of kitchen. That is Chapter 6.
+
+<NoSillyQuestions>
+
+<QA q={"Can a CPU run an AI model at all?"}>
+
+Yes. Small models can run on a CPU, and tools such as llama.cpp are built for it. It works for testing or for very small models. For many users and bigger models, a GPU is much faster.
+
+</QA>
+
+<QA q={"Is a higher GHz always faster?"}>
+
+Not on its own. What matters is how much work gets done in total: the clock speed, how much each tick achieves, and how many cores share the job.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. Botley's code checks 20 flights one by one, with different rules for each airline. Is this a job for a CPU or a GPU? <Blank />
+2. A CPU runs at 2 GHz. How many clock ticks is that every second? <Blank />
+3. Name two parts of an agent system that run on a CPU. <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- A CPU follows a program: a long list of small instructions, in a fetch, do, move-on loop.
+- The clock sets the pace. 3 GHz means 3 billion ticks a second.
+- Cores are chefs working side by side. Server CPUs have up to about 200 of them.
+- CPUs are great at clever, varied work: an agent's code, tools, web servers and databases.
+- They are not built for repeating one simple sum billions of times. That is the GPU's job.
+
+</Takeaways>

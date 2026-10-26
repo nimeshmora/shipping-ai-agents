@@ -13,7 +13,7 @@ const chapters = defineCollection({
     subtitle: z.string(),
     question: z.string(),
     part: z.string(),
-    quote: z.object({ who: z.enum(['maya', 'botley', 'sam']), text: z.string() }).optional(),
+    quote: z.object({ who: z.enum(['maya', 'botley', 'sam', 'kai']), text: z.string() }).optional(),
     lastChecked: z.coerce.date().optional(),
   }),
 });

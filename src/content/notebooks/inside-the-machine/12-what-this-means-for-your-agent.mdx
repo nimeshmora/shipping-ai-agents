@@ -1,0 +1,105 @@
+---
+number: 12
+title: "What this means for your agent"
+kicker: "Chapter twelve"
+subtitle: "Where the seconds go, where the money goes, and when a plain CPU is enough."
+question: "How do I use all this to make my agent faster and cheaper?"
+part: "From chip to cloud"
+quote: {"who": "botley", "text": "So that's what happens every time I think. Thanks, Kai!"}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+The tour is over. Maya and Kai sit down with a coffee and turn everything Maya saw into practical lessons for Botley.
+
+## Where the seconds go
+
+<Sketch name="im-ch12-1" />
+
+When one Botley task feels slow, the time is spread across several places. The sizes above are only an example. Measure your own agent to see the real split. But in most agents, the model writing its answers is the biggest piece, followed by the tools.
+
+| If this is slow | Why | What helps |
+|---|---|---|
+| The wait before the first word | Reading a long request (Notebook #2, Chapter 3) | Shorter instructions, fewer tool results, prompt caching |
+| The words flowing out | Memory bandwidth (Chapter 7) | A GPU with more bandwidth, a smaller or FP8 model, shorter answers |
+| The tools | The services Botley calls | Faster tools, calling tools in parallel |
+| The trip across the world | Distance (Chapter 1) | Running the model in a region near your users |
+
+## Where the money goes
+
+You pay for GPUs by the hour, whether they are busy or not. So the two biggest cost levers are:
+
+1. **Keep GPUs busy.** Batching many users onto one GPU (Chapter 7) makes each token far cheaper.
+2. **Use the smallest model and number format that does the job well.** Fewer bytes to move means fewer GPUs for the same traffic.
+
+Notebook #2, Chapter 9 has the full cost math.
+
+## When a plain CPU is enough
+
+Not everything in an agent needs a GPU. Botley's own code, the web server, the database and the tools all run happily on CPUs (Chapter 3). And if you use a managed model service, someone else runs the GPUs and you don't need any of your own.
+
+You need GPUs of your own only when you run a model yourself. Notebook #2 helps you decide whether that's worth it.
+
+## What Maya learned
+
+<Sticky color="yellow" width="88%">
+
+**Maya's notes from the tour**
+
+- Every token needs every weight, so **memory bandwidth** sets the pace for each user.
+- **Batching** shares each delivery of weights between users. That's why one GPU can serve many people.
+- **Memory size** decides what fits: the model plus every conversation's KV cache.
+- **FP8 and FP4** help because there are fewer bytes to move.
+- Big models are **split across GPUs**, which need fast links like NVLink.
+- GPUs live in **real buildings** with power and cooling limits. That's why they're scarce and expensive.
+
+</Sticky>
+
+## A checklist for the hardware side
+
+- [ ] I know how big my model's weights are in the number format I use (Chapter 2)
+- [ ] I know the GPU memory, memory bandwidth and dense maths speed of my GPU (Chapter 11)
+- [ ] I have worked out the one-user ceiling: bandwidth ÷ weight size (Chapter 7)
+- [ ] I have load-tested with real requests and many users at once
+- [ ] My model runs in a region close to my users (Chapter 1)
+- [ ] I have reserved GPUs ahead for big events (Chapter 9)
+
+<NoSillyQuestions>
+
+<QA q={"Will GPUs keep getting faster?"}>
+
+Yes. Each new generation has added more memory, more bandwidth and faster maths. But the ideas in this notebook stay the same, so you will be able to read the next spec sheet too.
+
+</QA>
+
+<QA q={"What should I read next?"}>
+
+Notebook #2, Running Your Own Models, puts this into practice: choosing between managed services and your own GPUs, serving a model with vLLM, and doing the cost math.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. Botley's answers start quickly but then flow slowly. Name two things that could help. <Blank />
+2. Your agent uses a managed model service. Do you need GPUs of your own? <Blank />
+3. Name the two biggest levers for lowering the cost of running your own model. <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- In most agents, the model writing its answer takes the most time, then the tools.
+- Slow first words: shorten the request. Slow flowing words: more memory bandwidth, or fewer bytes per weight.
+- Keep GPUs busy with batching, and use the smallest model that does the job well.
+- Agent code, tools and databases run on CPUs. You need your own GPUs only if you run the model yourself.
+
+</Takeaways>

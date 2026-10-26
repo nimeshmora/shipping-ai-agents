@@ -1,0 +1,115 @@
+---
+number: 2
+title: "Switches all the way down"
+kicker: "Chapter two"
+subtitle: "Bits, bytes and transistors. Every number a computer knows is a row of tiny on/off switches."
+question: "How does a computer store a number, and what do BF16 and FP8 really mean?"
+part: "How any computer works"
+quote: {"who": "maya", "text": "So everything, even Botley's model, is just switches?"}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+Kai starts the tour at the smallest thing in the building. It is too small to see.
+
+## One switch, one bit
+
+A switch can be **on** or **off**. Write on as **1** and off as **0**. One switch holds one **bit**: one 0 or 1.
+
+One bit can't say much. But put 8 switches in a row and you get **256** different on/off patterns. Eight bits are called a **byte**. With a byte, you can store any whole number from 0 to 255.
+
+<Sketch name="im-ch02-1" caption={"Each switch has a value: 128, 64, 32, 16, 8, 4, 2, 1. Add up the ones that are on."} />
+
+Everything in a computer is stored this way: letters, photos, your messages to Botley, and every number inside an AI model. It is all bytes. In the end, it is all switches.
+
+## The switch is a transistor
+
+A light switch needs your finger. A computer's switch is a **transistor**: a tiny switch that a small electrical signal turns on or off. A transistor can switch billions of times a second, and because it is turned on and off by electricity, transistors can control other transistors. That is how a chip does logic and maths.
+
+<Sketch name="im-ch02-3" />
+
+They are also incredibly small. NVIDIA's H100 GPU has **80 billion** transistors. Its Blackwell GPUs have **208 billion**, made by TSMC.
+
+<Note>
+
+Sources: NVIDIA's Hopper architecture blog (80 billion transistors) and NVIDIA's Blackwell architecture page (208 billion transistors, TSMC 4NP process). Checked 26 October 2026.
+
+</Note>
+
+## Numbers with a decimal point
+
+Whole numbers are easy. But a model's weights are numbers like 0.0213 or −1.402. Computers store these as **floating-point** numbers. Some of the bits say how big the number is, and the rest say its exact digits. The more bits you use, the more exact the number.
+
+<Sketch name="im-ch02-2" />
+
+This is what the names in Notebook #2 mean:
+
+| Name | Bits per number | Bytes per number | How exact |
+|---|---|---|---|
+| FP32 | 32 | 4 | Very exact |
+| BF16 | 16 | 2 | Exact enough for most AI models |
+| FP8 | 8 | 1 | Rougher |
+| FP4 | 4 | 0.5 | Very rough |
+
+So when someone says “this model is 8B in BF16, so 16 GB”, they mean: 8 billion numbers × 2 bytes each. Fewer bits per number means less memory, less to move around, and faster maths, but rougher numbers.
+
+<Geek>
+
+**How the 32, 16, 8 and 4 bits are split.** Each format has 1 sign bit (plus or minus), some **exponent** bits (how big) and some **mantissa** bits (the exact digits):
+
+```text
+FP32      1 sign + 8 exponent + 23 mantissa
+BF16      1 sign + 8 exponent +  7 mantissa
+FP8 E4M3  1 sign + 4 exponent +  3 mantissa
+FP4 E2M1  1 sign + 2 exponent +  1 mantissa
+```
+
+BF16 keeps the same 8 exponent bits as FP32, so it can hold numbers just as big or small. It only drops detail. That is why AI models like it so much.
+
+</Geek>
+
+<Think>
+
+A GPU spends much of its time moving numbers from memory to its workers (Chapter 7). If each number takes half as many bits, what happens to how many numbers it can move each second?
+
+</Think>
+
+<NoSillyQuestions>
+
+<QA q={"Why 8 bits in a byte, and not 10?"}>
+
+Mostly history. Early computers used different sizes, and 8 became the standard because it was a handy size for storing one letter. Today almost everything counts memory in bytes.
+
+</QA>
+
+<QA q={"If FP4 is so rough, why does anyone use it?"}>
+
+Because it is small and fast. New GPUs have special support for FP4 and FP8 maths. For many models, careful use of fewer bits loses very little quality. You still need to test it on your own tasks (Notebook #2, Chapter 4).
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. Using the switch values 128, 64, 32, 16, 8, 4, 2, 1, which switches are on for the number 5? <Blank />
+2. A model has 70 billion weights stored in FP8. About how much memory do the weights need? <Blank />
+3. Why would moving FP8 numbers be faster than moving BF16 numbers? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- A bit is one on/off switch. A byte is 8 bits, enough for 256 patterns.
+- Everything in a computer, including every weight in a model, is stored as bytes.
+- A transistor is a tiny switch controlled by electricity. A modern GPU has tens to hundreds of billions of them.
+- FP32, BF16, FP8 and FP4 use 32, 16, 8 and 4 bits per number. Fewer bits: less memory and faster, but rougher.
+
+</Takeaways>

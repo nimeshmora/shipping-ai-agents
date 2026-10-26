@@ -1,0 +1,112 @@
+---
+number: 9
+title: "Inside a data center"
+kicker: "Chapter nine"
+subtitle: "Racks, power, cooling and networks. Kai shows Maya around."
+question: "What does it take to keep thousands of GPUs running?"
+part: "From chip to cloud"
+quote: {"who": "kai", "text": "Mind the cables. And yes, it's loud in here."}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+Kai badges Maya through two security doors into a huge, cool, noisy hall. Rows of tall cabinets stretch away in every direction, blinking with small lights.
+
+## Rows of racks
+
+<Sketch name="im-ch09-1" />
+
+A **rack** is a tall metal cabinet that holds many servers stacked on top of each other. A data center hall holds rows and rows of racks. Some racks are full of GPU servers. Others hold network switches and storage.
+
+Each rack needs three things from the building: **power** to run, **cooling** to remove the heat, and **network** cables to talk to everything else.
+
+## Power: the first limit
+
+GPU servers use a lot of electricity, and almost all of it turns into heat.
+
+<Sketch name="im-ch09-2" />
+
+| What | Power |
+|---|---|
+| An average rack in a data center today | about 5 to 15 kW |
+| One NVIDIA DGX H100 server (8 GPUs) | up to 10.2 kW |
+| One NVIDIA DGX B200 server (8 GPUs) | about 14.3 kW |
+| One GB200 NVL72 rack (72 GPUs) | about 120 to 130 kW |
+
+<Note>
+
+Sources: NVIDIA's DGX H100 user guide (10.2 kW maximum) and DGX B200 page (about 14.3 kW). NVIDIA does not publish one figure for the GB200 NVL72 rack, so the range comes from server makers Supermicro (132 kW) and Gigabyte (up to 130 kW). The average-rack range is from Uptime Institute's 2026 survey. An average US home used about 865 kWh a month in 2024 (US EIA), which is about 1.2 kW on average. Checked 26 October 2026.
+
+</Note>
+
+So a single big AI rack can draw as much power as about 100 average US homes. Many older data centers simply can't supply that much power to one rack, which is one reason new AI data centers are being built.
+
+## Cooling: getting rid of the heat
+
+<Sketch name="im-ch09-3" />
+
+Most servers are cooled by **air**: fans push cool air through the servers, and the building's air conditioning takes the heat away. For the densest GPU racks, air is not enough. NVIDIA's Blackwell racks use **liquid cooling**: metal plates sit directly on the chips, and liquid flowing through them carries the heat away. NVIDIA says cooling can use up to 40% of a data center's electricity, and that liquid cooling can cut that a lot.
+
+## Networks: several of them
+
+GPUs in different servers need to talk to each other, and to storage. NVIDIA's reference designs use several separate networks:
+
+| Network | What it carries |
+|---|---|
+| **NVLink** | GPU to GPU inside a server or rack (Chapter 8) |
+| **Compute network** | GPU to GPU between servers, using InfiniBand or fast Ethernet |
+| **Storage network** | Weights, data and checkpoints |
+| **Management networks** | Logging in, setting up and watching the machines |
+
+Keeping these apart means a big data copy doesn't slow down the GPUs talking to each other.
+
+## Why GPUs are hard to get
+
+Building all this takes time and a lot of money, and demand for GPUs is high. That's why the clouds have special ways to reserve them: **EC2 Capacity Blocks for ML** on AWS, which let you book GPUs for a set time in the future, **Flex-start** on Google Cloud, and **capacity reservations** on Azure. Microsoft's documents point out that having **quota** (permission to use GPUs) is not the same as **capacity** (GPUs actually being free in that region).
+
+<Careful>
+
+**Plan for GPUs like you plan for a venue.** For a launch, a big demo or a busy season, reserve GPUs ahead of time. Don't assume they will be free on the day.
+
+</Careful>
+
+<NoSillyQuestions>
+
+<QA q={"Why are data centers so loud?"}>
+
+Thousands of fans move huge amounts of air. People who work in the halls often wear ear protection.
+
+</QA>
+
+<QA q={"Do I need to know any of this to rent a GPU?"}>
+
+No. The cloud handles it. But it explains why GPUs are expensive, why some regions run out, and why cloud providers ask you to reserve big GPUs ahead of time.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. A data center can supply 15 kW to each rack. Can it run a GB200 NVL72 rack? <Blank />
+2. Why do the densest GPU racks use liquid cooling? <Blank />
+3. You have GPU quota in a region, but your GPU machine won't start. What could be the reason? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- A data center hall holds rows of racks. Each rack needs power, cooling and network.
+- An 8-GPU server can draw over 10 kW. A GB200 NVL72 rack draws about 120 to 130 kW, as much as about 100 homes.
+- The densest GPU racks need liquid cooling.
+- Several separate networks connect GPUs, storage and management.
+- GPUs are scarce. Quota is not the same as capacity, so reserve ahead for important events.
+
+</Takeaways>

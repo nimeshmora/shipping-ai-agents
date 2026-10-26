@@ -1,0 +1,15 @@
+<svg viewBox='0 0 680 230'>
+<defs><marker id='i23' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' orient='auto'><path d='M0 0 L10 5 L0 10' fill='none' stroke='#23406e' stroke-width='2'/></marker></defs>
+<g stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round' stroke-linecap='round' fill='none'>
+<path d='M40 120 h80'/><circle cx='130' cy='120' r='8' fill='#fff'/><path d='M136 116 l46 -24'/><circle cx='190' cy='120' r='8' fill='#fff'/><path d='M198 120 h80'/>
+<path d='M380 120 h80'/><rect x='460' y='96' width='80' height='48' rx='6' fill='#dcf5d6'/><path d='M540 120 h80'/><path d='M500 96 v-40'/>
+</g>
+<path d='M400 112 h40 M560 112 h40' stroke='#f5c400' stroke-width='4' stroke-linecap='round' marker-end='url(#i23)'/>
+<text class='hb' x='160' y='178' text-anchor='middle' font-size='15'>A light switch</text>
+<text class='h' x='160' y='198' text-anchor='middle' font-size='13'>your finger turns it on or off</text>
+<text class='hb' x='500' y='178' text-anchor='middle' font-size='15'>A transistor</text>
+<text class='h' x='500' y='198' text-anchor='middle' font-size='13'>a small signal turns it on or off</text>
+<text class='hk' x='500' y='46' text-anchor='middle' font-size='12.5'>control signal</text>
+<text class='hk' x='500' y='126' text-anchor='middle' font-size='12.5'>switch</text>
+<text class='m' x='340' y='126' text-anchor='middle' font-size='22'>=</text>
+</svg>

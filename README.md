@@ -54,6 +54,30 @@ Written by Nimesha Jinarajadasa, with help from [contributors](https://github.co
 10. Reasons that aren't money
 11. Choosing your path
 
+### Notebook #3: [Inside the Machine](https://nimeshmora.github.io/shipping-ai-agents/notebooks/inside-the-machine/) &nbsp;·&nbsp; [PDF](https://nimeshmora.github.io/shipping-ai-agents/inside-the-machine.pdf)
+
+*How GPUs run your agent.*
+
+**How any computer works**
+1. What happens when Botley thinks?
+2. Switches all the way down
+3. The CPU: a few very fast chefs
+4. The counter, the fridge and the warehouse
+
+**Why AI needs GPUs**
+
+5. The maths inside a model, gently
+6. The GPU: thousands of line cooks
+7. The real bottleneck
+8. When one GPU isn't enough
+
+**From chip to cloud**
+
+9. Inside a data center
+10. Not only NVIDIA
+11. How to read a GPU spec sheet
+12. What this means for your agent
+
 ## Help make it better
 
 These notebooks are open to contributions, and you don't have to write code to help.

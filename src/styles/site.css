@@ -173,3 +173,8 @@ main>.paper.index{margin-top:28px}
 @keyframes cta-wiggle{0%,100%{transform:rotate(-1deg)}25%{transform:rotate(1.5deg)}50%{transform:rotate(-2deg)}75%{transform:rotate(1deg)}}
 @media (prefers-reduced-motion:reduce){.stage-cta{animation:none}}
 html:has(.stage-panel[open]){overflow:hidden}
+
+/* Visit counter on the front page (from GoatCounter) */
+.visits{display:inline-block;margin:6px 0 2px;padding:5px 12px;border:2px dashed var(--ink);border-radius:999px;font-family:var(--f-hand);font-size:.95rem;background:var(--paper);transform:rotate(-1deg)}
+.visits b{font-family:var(--f-marker);font-weight:400;font-size:1.05rem}
+.visits[hidden]{display:none}

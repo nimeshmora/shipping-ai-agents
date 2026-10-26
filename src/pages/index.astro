@@ -7,7 +7,7 @@ import YourTurn from '../components/YourTurn.astro';
 import NoSillyQuestions from '../components/NoSillyQuestions.astro';
 import QA from '../components/QA.astro';
 import { url } from '../lib/url';
-import { REPO } from '../lib/site';
+import { REPO, GOATCOUNTER } from '../lib/site';
 import { notebooks } from '../lib/notebooks';
 import Talks from '../components/Talks.astro';
 import { allChapters } from '../lib/chapters';
@@ -32,6 +32,21 @@ const counts = Object.fromEntries(await Promise.all(notebooks.map(async (n) => [
     <a class="btn" id="resume" href={url()} hidden>Continue reading</a>
     <a class="btn" href="#join-in">Contribute</a>
   </div>
+  {GOATCOUNTER && <p class="visits" id="visits" hidden><span aria-hidden="true">👀</span> <b id="visits-n"></b> visits so far</p>}
+  {GOATCOUNTER && (
+    <script is:inline define:vars={{ code: GOATCOUNTER }}>
+    // Shows the total visits from GoatCounter. It stays hidden if the count can't be loaded
+    // (for example while "Allow adding visitor counts on your website" is off in GoatCounter's settings).
+    fetch('https://' + code + '.goatcounter.com/counter/TOTAL.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.count) return;
+        document.getElementById('visits-n').textContent = d.count;
+        document.getElementById('visits').hidden = false;
+      })
+      .catch(function () {});
+    </script>
+  )}
 
   <h2><span>Topics covered</span></h2>
   <div class="topics">

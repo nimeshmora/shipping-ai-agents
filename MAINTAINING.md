@@ -60,6 +60,13 @@ The code is set in `src/lib/site.ts` (`GOATCOUNTER`). Counting only runs on the 
 Besides page views, a **"Finished: …"** event is counted the first time a reader scrolls to the end of a page,
 so you can compare how many people open a chapter with how many read it to the end.
 
+### Public visit counter
+
+The front page shows “👀 N visits so far” using GoatCounter's public counter
+(`https://<code>.goatcounter.com/counter/TOTAL.json`). It only appears when GoatCounter allows it:
+in GoatCounter, open **Settings** and turn on **Allow adding visitor counts on your website**, then save.
+While that is off, or if a visitor's ad blocker blocks GoatCounter, the counter simply stays hidden.
+
 ## Protected main branch
 
 `main` has a ruleset called **Protect main** (Settings > Rules > Rulesets):

@@ -24,7 +24,7 @@ export const pastTalks = { count: '70+', since: 2018 };
 export const highlights: { host: string; what: string; short: string }[] = [
   { host: 'KubeCon', what: 'Speaker', short: 'KubeCon speaker' },
   { host: 'KCD Sri Lanka', what: 'Speaker', short: 'KCD Sri Lanka speaker' },
-  { host: 'National University of Singapore', what: 'DevOps workshop', short: 'NUS DevOps workshop' },
+  { host: 'National University of Singapore', what: 'DevOps workshop', short: 'National University of Singapore' },
   { host: 'AAIF', what: 'Talk, and organizer', short: 'AAIF talk and organizer' },
 ];
 

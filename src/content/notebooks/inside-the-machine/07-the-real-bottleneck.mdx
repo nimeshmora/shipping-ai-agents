@@ -1,0 +1,131 @@
+---
+number: 7
+title: "The real bottleneck"
+kicker: "Chapter seven"
+subtitle: "Getting ingredients to the cooks. Why memory speed, not maths speed, sets how fast your agent talks."
+question: "Why does memory bandwidth matter so much for running a model?"
+part: "Why AI needs GPUs"
+quote: {"who": "kai", "text": "The cooks are never the problem. Getting food to them is."}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+This is the most important chapter in the notebook. It explains why answers flow at the speed they do, why batching helps so much, and why GPU spec sheets brag about **memory bandwidth**.
+
+## Every token needs every weight
+
+To write one token, the model does a multiply-and-add with **every** weight (Chapter 5). Every weight has to travel from the GPU's memory to the cores. Then, for the next token, all the weights have to travel again.
+
+<Sketch name="im-ch07-1" />
+
+The PyTorch team put it this way: for one user, “each forward pass requires us to ‘touch’ every single parameter on the GPU”, and “in order to generate 100 tokens, we must load our weights 100 times.”
+
+<Note>
+
+Source: PyTorch blog, “Accelerating Generative AI with PyTorch II: GPT, Fast”. Databricks gives the same picture: a 7B model in 16-bit numbers has to move about 14 GB of weights for every token. Checked 26 October 2026.
+
+</Note>
+
+## Memory bandwidth: the width of the belt
+
+**Memory bandwidth** is how many bytes per second can flow from memory to the cores. Think of it as the width of the conveyor belt.
+
+<Sketch name="im-ch07-2" />
+
+| Memory | Bandwidth |
+|---|---|
+| Server CPU (AMD EPYC 9965, 12 memory channels) | about 0.6 TB/s |
+| L4 | 0.3 TB/s |
+| L40S | 0.86 TB/s |
+| H100 SXM | 3.35 TB/s |
+| H200 SXM | 4.8 TB/s |
+| B200 | about 8 TB/s |
+
+<Note>
+
+Sources: AMD EPYC 9965 product page, and NVIDIA product pages for the L4, L40S, H100, H200 and HGX B200. Checked 26 October 2026.
+
+</Note>
+
+## A rule of thumb you can use
+
+For one user, the fastest a model can possibly write is roughly:
+
+```text
+tokens per second  ≈  memory bandwidth  ÷  size of the weights
+```
+
+For an 8B model in BF16 (16 GB of weights):
+
+| GPU | Bandwidth | Most tokens per second for one user |
+|---|---|---|
+| L4 | 0.3 TB/s | about 19 |
+| H100 SXM | 3.35 TB/s | about 209 |
+| B200 | 8 TB/s | about 500 |
+
+This is a ceiling, not a promise. Real numbers are lower, because the KV cache also has to be read and nothing runs perfectly. For example, NVIDIA measured about 71 tokens per second for one user of an 8B model in FP8 on an L40S. The rule gives a ceiling of 864 GB/s ÷ 8 GB, about 108. The real number sits below the ceiling, as it should.
+
+<Careful>
+
+**Maths speed hardly matters for one user.** In Chapter 6, an H100 could in theory do the maths for over 60,000 tokens a second. The memory belt allows about 209. For a single user, the cooks spend most of their time waiting.
+
+</Careful>
+
+## Batching: one delivery, many orders
+
+If the weights have to travel anyway, why not use each delivery for more than one user? That is **batching**. The GPU brings in the weights once and writes the next token for many conversations at the same time.
+
+<Sketch name="im-ch07-3" />
+
+This is why, in Notebook #2, one L40S wrote about 71 tokens a second for 1 user, but about 2,869 tokens a second in total for 100 users. The belt was the same. Each delivery just fed many more orders.
+
+There is a limit. Each conversation needs its own KV cache, and that takes memory and bandwidth too. So the number of users per GPU depends on how much memory is left after the weights. This is why memory size and memory speed are the two numbers to look at first.
+
+<FaceOff title={"What makes a GPU fast for AI?"} left={"Maths speed"} right={"Memory speed"} lines={[["L", "Look at all my teraFLOPS! I can do a thousand trillion sums a second."], ["R", "And for one user, you sit waiting for me to bring the weights."], ["L", "With batching, I get to use more of my power."], ["R", "True. With many users, we both matter. But for answer speed, look at me first."]]} />
+
+<NoSillyQuestions>
+
+<QA q={"Why not keep the weights inside the cores, where it's fast?"}>
+
+There's far too little room. The fast memory inside the GPU chip is measured in megabytes. A model's weights are measured in gigabytes.
+
+</QA>
+
+<QA q={"Does a smaller number format help with this?"}>
+
+Yes, a lot. FP8 weights are half the size of BF16 weights, so the belt can deliver them twice as fast. That is a big reason FP8 and FP4 are popular.
+
+</QA>
+
+<QA q={"Is the first token also limited by memory?"}>
+
+Less so. Reading the request (stage 1, Notebook #2, Chapter 3) handles all the request's tokens together, so each weight delivery is used many times. That stage is usually limited by maths speed instead.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. A 70B model in FP8 (70 GB) runs on one H200 (4.8 TB/s). Roughly what is the ceiling for one user's tokens per second? <Blank />
+2. Your GPU writes 30 tokens a second for one user. Will a GPU with twice the maths speed, but the same memory bandwidth, make one user's answers much faster? <Blank />
+3. Why does batching help so much? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- To write each token, every weight travels from memory to the cores.
+- So for one user, memory bandwidth, not maths speed, sets how fast tokens appear.
+- Rule of thumb: most tokens per second for one user ≈ bandwidth ÷ weight size. Real numbers are lower.
+- Batching uses each delivery of weights for many users at once, so total throughput rises a lot.
+- Smaller number formats (FP8, FP4) help because there are fewer bytes to move.
+
+</Takeaways>

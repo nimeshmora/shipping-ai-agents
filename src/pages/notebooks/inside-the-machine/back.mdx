@@ -1,0 +1,120 @@
+---
+layout: ../../../layouts/Prose.astro
+title: "Word list and answers"
+kicker: "Back of the book"
+subtitle: "Every tricky word in this notebook, in plain English, and the answers to the exercises"
+slug: back
+notebook: inside-the-machine
+---
+
+| Word | What it means |
+|---|---|
+| Bit | One on/off switch, written as 1 or 0. |
+| Byte | 8 bits. Enough for 256 different patterns. |
+| Transistor | A tiny switch that electricity turns on or off. Chips are made of billions of them. |
+| Floating-point number | A number with a decimal point, stored as a size part and a digits part. |
+| FP32, BF16, FP8, FP4 | Number formats using 32, 16, 8 and 4 bits. Fewer bits: less memory, rougher numbers. |
+| CPU | The chip that runs a computer's programs. A few clever cores. |
+| Core | One worker inside a chip that follows instructions. |
+| Clock speed, GHz | How many ticks per second a chip's clock makes. 3 GHz is 3 billion ticks a second. |
+| Instruction | One tiny step in a program, such as “add these two numbers”. |
+| Cache | Very small, very fast memory inside a chip. |
+| Memory, RAM | Where a computer keeps what it is working on now. Fast, but cleared when the power is off. |
+| SSD | Fast storage that keeps data when the power is off. |
+| PCIe | The connection between a GPU and the rest of the computer. |
+| Multiply-and-add | Multiply numbers by weights and add them up. Most of a model's work. |
+| Layer | One step of a model. The sums inside a layer don't depend on each other. |
+| Parallel work | Work that can be split into pieces done at the same time. |
+| GPU | A chip with thousands of simple cores, built for parallel work. |
+| Streaming multiprocessor (SM) | One station inside a GPU, with its own cores, Tensor Cores and small fast memory. |
+| Warp | A team of 32 GPU cores doing the same instruction together. |
+| Tensor Core | A part of a GPU that does a whole grid of multiply-and-adds in one go. |
+| FLOPS, TFLOPS | Floating-point operations per second. Tera means a trillion. |
+| Dense, with sparsity | Dense is the normal speed. “With sparsity” is twice that, and only for specially prepared models. |
+| HBM | High bandwidth memory: memory stacked right next to the GPU chip, very fast. |
+| GDDR | Graphics memory on separate chips around the GPU. Cheaper, slower than HBM. |
+| Memory bandwidth | How many bytes per second can flow from memory to the cores. |
+| Batching | Using each delivery of weights to write tokens for many users at once. |
+| Tensor parallelism | Splitting one model across several GPUs, each holding a slice of every layer. |
+| NVLink | NVIDIA's fast direct link between GPUs. |
+| NVSwitch | A chip that lets every GPU in a group talk to every other at full NVLink speed. |
+| HGX | NVIDIA's board of 8 GPUs joined by NVSwitch. |
+| Rack | A tall cabinet holding many servers. |
+| kW (kilowatt) | A measure of power. A kettle uses about 1.5 to 3 kW. |
+| Liquid cooling | Cooling chips with liquid flowing through metal plates on top of them. |
+| Quota, capacity | Quota is permission to use GPUs. Capacity is GPUs actually being free. |
+| TPU, Trainium, Inferentia | AI chips made by Google (TPU) and AWS (Trainium, Inferentia). |
+| NPU | A small, low-power AI chip inside laptops and phones. |
+
+## Answers
+
+### Chapter 1, Your turn
+
+1. Priya's phone, the internet, a data center, a server, a GPU.
+2. The trip across the world. Inside a data center, a round trip takes well under a millisecond. Across the world, it takes a noticeable part of a second.
+
+### Chapter 2, Your turn
+
+1. The switches worth 4 and 1: 00000101.
+2. About **70 GB** (70 billion × 1 byte).
+3. Each FP8 number is half the size, so twice as many numbers can be moved every second.
+
+### Chapter 3, Your turn
+
+1. A CPU. It is varied work full of decisions.
+2. 2 billion ticks.
+3. For example: Botley's own code, the web server, the tools, the database, or turning text into tokens.
+
+### Chapter 4, Your turn
+
+1. Cache, RAM, SSD, network storage.
+2. 1,000.
+3. In the GPU's own memory.
+
+### Chapter 5, Your turn
+
+1. 1.0 × 0.5 + 2.0 × 0.5 + 4.0 × 0.25 = 0.5 + 1.0 + 1.0 = **2.5**.
+2. About **70 billion**.
+3. Each sum only needs the inputs and its own weights, not the answer of any other sum.
+
+### Chapter 6, Your turn
+
+1. A GPU. The colors can all be worked out at the same time.
+2. A warp.
+3. About **989** TFLOPS (half of 1,979).
+
+### Chapter 7, Your turn
+
+1. About **69** tokens per second (4,800 GB/s ÷ 70 GB). Real numbers will be lower.
+2. No, not much. For one user, memory bandwidth sets the pace, not maths speed.
+3. The GPU brings in the weights once and uses them to write the next token for many users at the same time.
+
+### Chapter 8, Your turn
+
+1. 4 GPUs hold 320 GB, but that leaves only about 20 GB in total for the KV cache and working space, which is too little in practice. Use more GPUs (for example a full 8-GPU server), GPUs with more memory, or FP8 to shrink the weights.
+2. About 7 times (900 GB/s ÷ 128 GB/s).
+3. 8 GPUs joined by NVSwitch can all talk to each other at full NVLink speed, so they can share one large model well. NVIDIA sells them as an 8-GPU HGX board.
+
+### Chapter 9, Your turn
+
+1. No. A GB200 NVL72 rack needs about 120 to 130 kW.
+2. They make so much heat in so little space that air can't carry it away fast enough.
+3. Quota is permission, not a guarantee. There may be no free GPUs of that kind in that region or zone right now. Try another zone or region, or reserve capacity ahead.
+
+### Chapter 10, Your turn
+
+1. TPU7x (192 GB), Instinct MI300X (192 GB) and Instinct MI355X (288 GB).
+2. That your model, your serving tool and the features you need are supported on that chip. Then measure speed and cost.
+3. It shares the laptop's normal memory, which is too small to hold a large model and much too slow to feed it quickly.
+
+### Chapter 11, Your turn
+
+1. The H200 (141 GB) and the B200 (180 GB). The H100's 80 GB would leave almost no room for the KV cache.
+2. About **69** tokens per second (4,800 ÷ 70). Real numbers will be lower.
+3. The one with more memory bandwidth.
+
+### Chapter 12, Your turn
+
+1. For example: a GPU with more memory bandwidth, a smaller or FP8 model, or shorter answers.
+2. No. The service runs the GPUs. Botley's own code can run on CPUs.
+3. Keep GPUs busy with batching, and use the smallest model and number format that does the job well.

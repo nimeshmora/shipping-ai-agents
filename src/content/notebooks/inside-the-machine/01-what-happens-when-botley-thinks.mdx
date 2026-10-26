@@ -1,0 +1,105 @@
+---
+number: 1
+title: "What happens when Botley thinks?"
+kicker: "Chapter one"
+subtitle: "One request's trip from a phone to a GPU and back. The rest of this notebook zooms into each stop."
+question: "Where does an agent's request actually go, and what happens there?"
+part: "How any computer works"
+quote: {"who": "kai", "text": "Hi Maya, I'm Kai. Come and see where Botley's brain really runs."}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+Maya has read the spec sheets. She knows an H100 has 80 GB of memory and that an L4 is cheaper. But numbers like “3.35 TB/s” still mean nothing to her. Why does that number matter so much? What is actually inside the box?
+
+**Kai** looks after the data center where Maya's GPUs run. Kai is an infrastructure engineer: the person who keeps the machines powered, cooled, connected and healthy. Kai offers Maya a tour.
+
+## The trip of one request
+
+Priya, one of Botley's users, types: “Find me a flight to Lisbon on Tuesday.” Here is where that message goes.
+
+<Sketch name="im-ch01-1" />
+
+1. **Priya's phone** sends the message over the internet.
+2. **The internet** carries it to the right building. If Priya is on the other side of the world, the trip there and back alone takes a noticeable part of a second.
+3. **A data center** receives it. Inside the building, messages move between machines in well under a millisecond.
+4. **A server**, one of thousands of computers in the building, runs Botley's code. Botley decides it needs the model.
+5. **A GPU** in another server reads the request and writes the answer, one token at a time.
+6. **The answer** travels all the way back to Priya's phone.
+
+<Note>
+
+Rough timings from Jeff Dean's well-known list of “numbers everyone should know”: a round trip inside one data center takes about 0.5 milliseconds, and a message from California to the Netherlands and back takes about 150 milliseconds. The list is from 2009, so treat the numbers as rough sizes, not exact values.
+
+</Note>
+
+<Think>
+
+Botley often calls the model ten or more times for one task, and calls tools in between. If each step needs a trip across the world and back, what happens to the total waiting time?
+
+</Think>
+
+## Zooming in
+
+Each stop in that trip is a box inside a bigger box. A data center holds rows of racks. A rack holds servers. A server holds GPUs. A GPU holds thousands of tiny workers.
+
+<Sketch name="im-ch01-2" caption={"This notebook starts with the smallest box and works its way out."} />
+
+We will start at the very bottom, with a single on/off switch, and build up from there:
+
+| Part | What you will learn | Chapters |
+|---|---|---|
+| How any computer works | Switches, numbers, CPUs, memory and storage | 2 to 4 |
+| Why AI needs GPUs | The maths inside a model, how a GPU works, and why memory speed sets the pace | 5 to 8 |
+| From chip to cloud | Data centers, other AI chips, reading a spec sheet, and what it all means for your agent | 9 to 12 |
+
+<Sticky color="green" width="80%">
+
+**Kai's rule:** everything in a data center, the power, the cooling and the networks, exists for one reason: to keep the GPUs busy doing useful work. Keep this in mind. It explains almost every design choice you will see.
+
+</Sticky>
+
+<NoSillyQuestions>
+
+<QA q={"Do I need to know hardware to run an agent?"}>
+
+Not to start. But when you choose a GPU, read a bill, or wonder why answers are slow, it helps a lot to know what is happening inside the machine. That is what this notebook is for.
+
+</QA>
+
+<QA q={"Is “the cloud” really just buildings full of computers?"}>
+
+Yes. When you rent a GPU from AWS, Google or Microsoft, it sits in a real server, in a real rack, in a real building, with real power and cooling. Chapter 9 walks through one.
+
+</QA>
+
+<QA q={"Do I need Notebook #2 first?"}>
+
+No. This notebook starts from zero. If you have read Notebook #2, many of its numbers, such as GPU memory sizes and tokens per second, will finally make sense.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. Put these in the order a request visits them: a GPU, a data center, the internet, a server, Priya's phone. <Blank />
+2. Priya is in Sri Lanka and the data center is in the United States. Which part of the trip is likely to take the longest: the trip inside the data center, or the trip across the world? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- A request travels from a phone, over the internet, into a data center, to a server and a GPU, and back.
+- A round trip inside a data center takes well under a millisecond. Across the world, it takes a noticeable part of a second.
+- A data center holds racks, racks hold servers, servers hold GPUs, and GPUs hold thousands of tiny workers.
+- Everything in a data center exists to keep the GPUs busy.
+
+</Takeaways>

@@ -1,0 +1,89 @@
+---
+number: 5
+title: "The maths inside a model, gently"
+kicker: "Chapter five"
+subtitle: "No equations. A model is mostly one tiny sum, repeated billions of times."
+question: "What work does a model actually do to write one token?"
+part: "Why AI needs GPUs"
+quote: {"who": "maya", "text": "I always thought AI was something mysterious. Is it really just sums?"}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+To understand why AI needs special chips, you need to know what kind of work a model does. The surprise is how simple each piece is.
+
+## One tiny sum
+
+Most of the work in a model is one small sum, done over and over: take some numbers, multiply each one by a **weight**, and add up the results. This is called a **multiply-and-add**.
+
+<Sketch name="im-ch05-1" />
+
+That is it. The “intelligence” of a model is not in any single sum. It is in the billions of weights, which were set during training, and in doing these sums in the right order.
+
+## Many sums at once
+
+A model is built in **layers**. Each layer takes the numbers from the layer before and does thousands of these sums to produce new numbers. Here is the important part: **each sum in a layer does not need the answer of any other sum in the same layer.** They can all be done at the same time.
+
+<Sketch name="im-ch05-2" />
+
+Work like this, where many pieces can be done side by side, is called **parallel** work. Some jobs are hard to split up, like following a recipe where step 2 needs the result of step 1. A model's layers are easy to split up.
+
+## How much work per token?
+
+For every token it writes, a model does roughly one multiply-and-add for every weight it has.
+
+<Sketch name="im-ch05-3" />
+
+So an 8B model does about 8 billion multiply-and-adds for each token. A 70B model does about 70 billion. And it does this again for the next token, and the next.
+
+<Geek>
+
+**Why “about”?** The work per token is roughly one multiply-and-add per weight, which people often count as 2 operations (one multiply, one add). So an 8B model needs about 16 billion operations per token. Long conversations add some extra work for the attention part of the model, which looks back at earlier tokens using the KV cache. For mixture-of-experts models, only the active weights count.
+
+</Geek>
+
+<Think>
+
+A CPU core does a handful of these sums per clock tick. Server CPUs have up to about 200 cores. Is that a good fit for billions of simple sums per token, for many users at once?
+
+</Think>
+
+<NoSillyQuestions>
+
+<QA q={"Where does the “thinking” happen, then?"}>
+
+Nowhere in particular. Each sum is simple. What looks like thinking comes from billions of weights, tuned during training so that all those sums together produce a useful next token.
+
+</QA>
+
+<QA q={"Does a bigger model always do more work per token?"}>
+
+Yes, for a normal model: twice the weights means about twice the sums. Mixture-of-experts models are the exception. They only use some of their weights for each token (Notebook #2, Chapter 2).
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. Work out the sum: inputs 1.0, 2.0 and 4.0; weights 0.5, 0.5 and 0.25. <Blank />
+2. Roughly how many multiply-and-adds does a 70B model do for one token? <Blank />
+3. Why can all the sums in one layer happen at the same time? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- Most of a model's work is multiply-and-add: multiply numbers by weights, then add them up.
+- A model has layers, and the sums in a layer don't depend on each other, so they can run side by side.
+- A model does about one multiply-and-add per weight for every token.
+- That means billions of simple sums per token. The right tool is something with thousands of simple workers.
+
+</Takeaways>

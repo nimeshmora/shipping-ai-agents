@@ -1,0 +1,42 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Sketch from '../../../components/Sketch.astro';
+import { url } from '../../../lib/url';
+import { allChapters, chapterHref } from '../../../lib/chapters';
+const NB = 'inside-the-machine';
+const chapters = await allChapters(NB);
+const ch = (n: number) => url(chapterHref(chapters.find((c) => c.data.number === n)!.id));
+---
+<Base title="Inside the Machine" page="cover" notebook={NB} description="An illustrated notebook about how GPUs run AI agents, from on/off switches to data centers.">
+  <div class="hero-top">
+    <div>
+      <p class="kick">Notebook #3 from Ship It with Nimesha</p>
+      <h1 class="hero-title">Inside the<br />Machine</h1>
+      <p class="hero-sub">How GPUs run your agent. From a single on/off switch to the data center.</p>
+    </div>
+    <div class="badge">No hardware background needed</div>
+  </div>
+  <div class="scene"><Sketch name="im-cover" /></div>
+  <p class="hero-blurb">Kai, an infrastructure engineer, takes Maya on a tour. Start with how any computer works, see why AI needs GPUs and why memory speed sets the pace, then walk through a real data center. Lots of drawings, no maths background needed.</p>
+  <div class="actions">
+    <a class="btn primary" href={url(`notebooks/${NB}/how/`)}>Start reading</a>
+    <a class="btn" id="resume" href={url()} hidden>Continue reading</a>
+    <a class="btn" href={ch(7)}>Go to the key chapter</a>
+    <a class="btn" href={ch(11)}>Read a GPU spec sheet</a>
+    <a class="btn" href={url('inside-the-machine.pdf')}>Download the PDF</a>
+  </div>
+  <div class="two" style="margin-top:14px">
+    <div class="sticky">How does a GPU actually work?</div>
+    <div class="sticky r blue">Why memory speed sets how fast answers flow</div>
+    <div class="sticky green">A walk through a real data center</div>
+  </div>
+  <p class="byline"><b>Nimesha Jinarajadasa</b><br />First edition, October 2026</p>
+  <div class="paper index" slot="after">
+    <h2><span>What's inside</span></h2>
+    <ol>
+      {chapters.map((c) => (
+        <li><a href={url(chapterHref(c.id))}><span class="n">{c.data.number}</span><span class="t">{c.data.title}<span class="q">{c.data.question}</span></span></a></li>
+      ))}
+    </ol>
+  </div>
+</Base>

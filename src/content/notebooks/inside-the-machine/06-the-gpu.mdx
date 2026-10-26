@@ -1,0 +1,112 @@
+---
+number: 6
+title: "The GPU: thousands of line cooks"
+kicker: "Chapter six"
+subtitle: "What is inside a GPU, and why many simple workers beat a few clever ones for AI."
+question: "How is a GPU different from a CPU, and what are cores, SMs and Tensor Cores?"
+part: "Why AI needs GPUs"
+quote: {"who": "kai", "text": "A CPU is a few top chefs. A GPU is a huge kitchen full of line cooks."}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+A **GPU** (graphics processing unit) was first built to draw video game graphics. Drawing a picture means working out the color of millions of pixels, and each pixel can be worked out on its own. That is parallel work, exactly like the sums in a model's layer. So the same chip turned out to be ideal for AI.
+
+## Few clever chefs, or thousands of simple cooks
+
+<Sketch name="im-ch06-1" />
+
+A CPU core is clever: it is built to handle complicated instructions full of decisions, quickly. A GPU core is simple: it is built to do the same small job as thousands of other cores, at the same time.
+
+| | CPU | GPU (NVIDIA H100) |
+|---|---|---|
+| Workers | Up to about 200 clever cores | 16,896 simple cores, plus 528 Tensor Cores |
+| Good at | Varied work with lots of decisions | The same simple sum on lots of numbers at once |
+| In an agent | Botley's code, tools, web server, database | The model |
+
+<Note>
+
+H100 numbers from NVIDIA's Hopper architecture blog: 132 streaming multiprocessors, each with 128 cores and 4 Tensor Cores. Checked 26 October 2026.
+
+</Note>
+
+## Inside a GPU
+
+<Sketch name="im-ch06-2" />
+
+A GPU is organised into stations called **streaming multiprocessors (SMs)**. NVIDIA describes a GPU as “a collection of Streaming Multiprocessors”. Each SM has:
+
+- many simple **cores** (the line cooks)
+- a few **Tensor Cores** (special maths machines, see below)
+- a small amount of very fast memory of its own
+
+All the SMs share a bigger shelf, the **L2 cache**, and the GPU's main memory sits right next to the chip.
+
+Inside an SM, cores work in teams of 32 called **warps**. All 32 do the same instruction at the same moment, each on its own piece of data. One instruction, 32 results.
+
+## Tensor Cores: a machine for grids of sums
+
+A normal core does one multiply-and-add at a time. A **Tensor Core** does a whole small grid of them in one go. NVIDIA calls them “specialized high-performance compute cores for matrix multiply and accumulate”. In plain words: they are built exactly for the multiply-and-add work that models are made of.
+
+<Sketch name="im-ch06-3" />
+
+Most of a GPU's AI speed comes from its Tensor Cores. When a spec sheet says a GPU can do “989 teraFLOPS of BF16”, that number is mostly Tensor Cores.
+
+## How fast is that?
+
+A **FLOP** is one floating-point operation, such as one multiply or one add. Tera means a trillion.
+
+| GPU | BF16 maths, dense | FP8 maths, dense |
+|---|---|---|
+| L4 | 121 trillion operations per second | 242 trillion |
+| L40S | 362 trillion | 733 trillion |
+| H100 SXM | about 989 trillion | about 1,979 trillion |
+
+<Careful>
+
+**Watch for “with sparsity”.** NVIDIA's pages often show a bigger number “with sparsity”, which is twice the normal (dense) number and only applies to specially prepared models. When you compare GPUs, use the dense numbers. The table above shows dense numbers.
+
+</Careful>
+
+An 8B model needs about 16 billion operations per token (Chapter 5). An H100 could, in theory, do that more than 60,000 times a second. But in practice, a single user gets far fewer tokens than that. The next chapter explains why.
+
+<NoSillyQuestions>
+
+<QA q={"Why is it still called a graphics processor?"}>
+
+History. GPUs started in graphics, and the name stuck. Many data center GPUs, like the H100, have no video output at all.
+
+</QA>
+
+<QA q={"What is CUDA?"}>
+
+CUDA is NVIDIA's way of writing programs that run on its GPUs. Tools like PyTorch and vLLM use it for you, so you rarely write CUDA yourself.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. A job has 10 million independent pixel colors to work out. CPU or GPU? <Blank />
+2. What is the name for a team of 32 GPU cores doing the same instruction together? <Blank />
+3. A spec sheet shows “1,979 TFLOPS with sparsity”. What is the dense number? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- A GPU has thousands of simple cores, built to do the same sum on lots of numbers at once.
+- GPUs are organised into streaming multiprocessors (SMs). Cores work in teams of 32 called warps.
+- Tensor Cores do whole grids of multiply-and-adds in one go. They do most of the AI work.
+- Compare GPUs using dense numbers, not “with sparsity”.
+- In theory a GPU could write tens of thousands of tokens a second for one user. Something else holds it back.
+
+</Takeaways>

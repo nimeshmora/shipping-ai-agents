@@ -1,0 +1,47 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Sketch from '../../../components/Sketch.astro';
+import { url } from '../../../lib/url';
+import { allChapters, chapterHref } from '../../../lib/chapters';
+const NB = 'inside-the-machine';
+const chapters = await allChapters(NB);
+---
+<Base title="How to use this notebook" page="how" notebook={NB}>
+  <section class="chapter">
+    <div class="ch-head"><div><div class="ch-kicker">Before we start</div><h1>How to use this notebook</h1>
+      <div class="ch-sub">Lots of pictures, everyday comparisons and no maths background.</div></div></div>
+    <p>This notebook explains the hardware that runs AI agents, starting from zero. You don't need to know any electronics or maths. If you have ever wondered what is really inside a GPU, why some GPUs are so much faster than others, or why GPUs are so hard to get, this is for you.</p>
+    <p>You will meet a new character. <b>Kai</b> is an infrastructure engineer who looks after the data center where Botley's model runs, and takes Maya on a tour.</p>
+    <Sketch name="cast4" />
+    <p class="small"><b>Maya</b> builds agents. <b>Botley</b> is the agent she built. <b>Sam</b> is her boss. <b>Kai</b> keeps the machines powered, cooled and connected.</p>
+    <h2>One picture for the whole notebook</h2>
+    <p>Think of a computer as a kitchen.</p>
+    <div class="tw"><table class="t">
+      <tr><th style="width:36%">In the kitchen</th><th>In the computer</th></tr>
+      <tr><td>A few expert chefs</td><td>A CPU: a few clever cores.</td></tr>
+      <tr><td>Thousands of line cooks</td><td>A GPU: thousands of simple cores.</td></tr>
+      <tr><td>The counter, the fridge, the warehouse</td><td>GPU memory, SSD storage, network storage.</td></tr>
+      <tr><td>The conveyor belt to the cooks</td><td>Memory bandwidth: how fast numbers reach the cores.</td></tr>
+      <tr><td>A giant shared kitchen</td><td>A data center, with its own power and cooling.</td></tr>
+    </table></div>
+    <h2>Boxes you will see</h2>
+    <div class="tw"><table class="t">
+      <tr><th style="width:36%">Box</th><th>What it is for</th></tr>
+      <tr><td>There are no silly questions</td><td>Questions people often want to ask but don't.</td></tr>
+      <tr><td>Think about it</td><td>Stop and guess the answer before you read on. It helps you remember.</td></tr>
+      <tr><td>Careful!</td><td>Mistakes that real teams make.</td></tr>
+      <tr><td>Your turn</td><td>A short exercise. The answers are at the back.</td></tr>
+      <tr><td>Face-off</td><td>Two people or ideas argue with each other.</td></tr>
+      <tr><td>Geek corner</td><td>A little bit of code or math. You can skip it.</td></tr>
+      <tr><td>Key takeaways</td><td>The main points of the chapter.</td></tr>
+    </table></div>
+    <h2>About the numbers</h2>
+    <p>Every GPU figure in this notebook was checked against NVIDIA's, AMD's, Google's and AWS's own documents in October 2026, and each chapter shows the date its facts were checked. New GPUs come out often, so check the latest documents before you decide.</p>
+    <h2>What's inside</h2>
+    <div class="tw"><table class="t">
+      <tr><th style="width:7%">#</th><th style="width:34%">Chapter</th><th>The question it answers</th></tr>
+      {chapters.map((c) => <tr><td>{c.data.number}</td><td><a href={url(chapterHref(c.id))}>{c.data.title}</a></td><td>{c.data.question}</td></tr>)}
+      <tr><td></td><td><a href={url(`notebooks/${NB}/back/`)}>Back of the book</a></td><td>Word list and exercise answers.</td></tr>
+    </table></div>
+  </section>
+</Base>

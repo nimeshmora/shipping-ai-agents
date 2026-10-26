@@ -1,0 +1,55 @@
+<svg viewBox='0 0 640 460'>
+<defs><marker id='imc-a' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' orient='auto'><path d='M0 0 L10 5 L0 10' fill='none' stroke='#23406e' stroke-width='2'/></marker></defs>
+<path d='M10 404 q160 -5 310 0 t310 0' fill='none' stroke='#1b1b1b' stroke-width='2.4'/>
+<!-- cooling pipes and power -->
+<path d='M330 92 v-30 q0 -12 12 -12 h160 M352 92 v-20 q0 -8 8 -8 h142' fill='none' stroke='#5b8fd6' stroke-width='5' stroke-linecap='round'/>
+<text class='h' x='530' y='56' font-size='13'>cool water in</text>
+<path d='M560 388 l-14 -30 h14 l-12 -30' fill='none' stroke='#c62828' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/>
+<text class='h' x='572' y='366' font-size='13'>lots of</text><text class='h' x='572' y='382' font-size='13'>power</text>
+<!-- the rack -->
+<g stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'>
+<rect x='300' y='92' width='142' height='308' rx='4' fill='#f5f6f3'/>
+<rect x='312' y='108' width='118' height='26' rx='3' fill='#fff'/><rect x='312' y='142' width='118' height='26' rx='3' fill='#fff'/><rect x='312' y='176' width='118' height='26' rx='3' fill='#fff'/><rect x='312' y='210' width='118' height='26' rx='3' fill='#fff1a6'/><rect x='312' y='244' width='118' height='26' rx='3' fill='#fff'/><rect x='312' y='278' width='118' height='26' rx='3' fill='#fff'/><rect x='312' y='312' width='118' height='26' rx='3' fill='#fff'/><rect x='312' y='346' width='118' height='26' rx='3' fill='#fff'/>
+</g>
+<circle cx='412' cy='121' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='121' r='3' fill='#1e7e34' stroke='none'/><path d='M322 117 h60 M322 125 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/><circle cx='412' cy='155' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='155' r='3' fill='#f5c400' stroke='none'/><path d='M322 151 h60 M322 159 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/><circle cx='412' cy='189' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='189' r='3' fill='#f5c400' stroke='none'/><path d='M322 185 h60 M322 193 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/><circle cx='412' cy='223' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='223' r='3' fill='#1e7e34' stroke='none'/><path d='M322 219 h60 M322 227 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/><circle cx='412' cy='257' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='257' r='3' fill='#f5c400' stroke='none'/><path d='M322 253 h60 M322 261 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/><circle cx='412' cy='291' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='291' r='3' fill='#f5c400' stroke='none'/><path d='M322 287 h60 M322 295 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/><circle cx='412' cy='325' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='325' r='3' fill='#1e7e34' stroke='none'/><path d='M322 321 h60 M322 329 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/><circle cx='412' cy='359' r='3' fill='#1e7e34' stroke='none'/><circle cx='421' cy='359' r='3' fill='#f5c400' stroke='none'/><path d='M322 355 h60 M322 363 h48' stroke='#9aa0a6' stroke-width='1.5' fill='none'/>
+<text class='hb' x='371' y='430' text-anchor='middle' font-size='14'>a rack of servers</text>
+<!-- zoom into one server -->
+<path d='M430 210 L486 124 M430 222 L486 236' fill='none' stroke='#23406e' stroke-width='2' stroke-dasharray='6 5'/>
+<g stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'>
+<rect x='484' y='110' width='120' height='130' rx='10' fill='#fff'/>
+<rect x='496' y='150' width='20' height='26' rx='3' fill='#dcf5d6'/><rect x='520' y='150' width='20' height='26' rx='3' fill='#dcf5d6'/><rect x='544' y='150' width='20' height='26' rx='3' fill='#dcf5d6'/><rect x='568' y='150' width='20' height='26' rx='3' fill='#dcf5d6'/><rect x='496' y='184' width='20' height='26' rx='3' fill='#dcf5d6'/><rect x='520' y='184' width='20' height='26' rx='3' fill='#dcf5d6'/><rect x='544' y='184' width='20' height='26' rx='3' fill='#dcf5d6'/><rect x='568' y='184' width='20' height='26' rx='3' fill='#dcf5d6'/>
+</g>
+<text class='hb' x='544' y='134' text-anchor='middle' font-size='13'>one server</text>
+<text class='hk' x='544' y='228' text-anchor='middle' font-size='12.5'>8 GPUs inside</text>
+<!-- the people -->
+<g transform='translate(232,300) scale(0.95)' stroke='#1b1b1b' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'>
+<path d='M-28 78 q0 -46 28 -46 q28 0 28 46z' fill='#ffcf99'/>
+<path d='M-25.5 60 h51 M-27.3 70 h54.6' fill='none' stroke='#fff' stroke-width='4.5'/>
+<path d='M-28 78 q0 -46 28 -46 q28 0 28 46z' fill='none'/>
+<path d='M-7 33 l7 14 l7 -14' fill='none' stroke-width='2'/><rect x='-6' y='46' width='12' height='10' rx='2' fill='#d9ecff' stroke-width='2'/>
+<circle cx='0' cy='0' r='20' fill='#fff'/>
+<path d='M-19 -5 q0 -23 19 -23 q19 0 19 23z' fill='#f5c400'/><path d='M-24 -5 h48' stroke-width='3.4'/><path d='M0 -27 v9' fill='none'/>
+<circle cx='-7' cy='3' r='2' fill='#1b1b1b'/><circle cx='7' cy='3' r='2' fill='#1b1b1b'/>
+<path d='M-7 10 q7 6 14 0' fill='none'/>
+
+<path d='M22 46 l40 -34' fill='none'/></g>
+<g transform='translate(80,304) scale(0.9)' stroke='#1b1b1b' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'>
+<path d='M-28 78 q0 -46 28 -46 q28 0 28 46z' fill='#ffd9e2'/>
+<circle cx='0' cy='0' r='20' fill='#fff'/><path d='M-19 -2 q0 -24 19 -24 q19 0 19 24 q-6 -12 -19 -13 q-13 1 -19 13z' fill='#5a3a1a'/><path d='M-19 -4 q-4 22 2 30 M19 -4 q4 22 -2 30' fill='none' stroke='#5a3a1a' stroke-width='5'/>
+<circle cx='-7' cy='-2' r='2' fill='#1b1b1b'/><circle cx='7' cy='-2' r='2' fill='#1b1b1b'/><path d='M-6 6 q6 5 12 0' fill='none'/></g>
+<g transform='translate(150,338) scale(0.5)' stroke='#1b1b1b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'>
+<line x1='0' y1='-42' x2='0' y2='-26'/><circle cx='0' cy='-46' r='5' fill='#f5c400'/>
+<rect x='-32' y='-26' width='64' height='52' rx='14' fill='#ffffff'/>
+<circle cx='-13' cy='-3' r='6' fill='#1b1b1b'/><circle cx='13' cy='-3' r='6' fill='#1b1b1b'/>
+<path d='M-12 14 q12 9 24 0' fill='none'/>
+<rect x='-26' y='30' width='52' height='42' rx='10' fill='#ffffff'/>
+<rect x='-12' y='40' width='24' height='14' rx='3' fill='#d9ecff'/>
+<path d='M-26 42 l-16 14 M26 42 l16 14' fill='none'/><path d='M-12 72 v14 M12 72 v14' fill='none'/></g>
+<text class='hb' x='232' y='430' text-anchor='middle' font-size='13'>Kai</text>
+<text class='hb' x='80' y='430' text-anchor='middle' font-size='13'>Maya</text>
+<text class='hb' x='150' y='430' text-anchor='middle' font-size='13'>Botley</text>
+<!-- Kai speaks -->
+<path d='M24 150 h236 q14 0 14 14 v44 q0 14 -14 14 h-34 l-6 46 l-30 -46 h-176 q-14 0 -14 -14 v-44 q0 -14 14 -14z' fill='#fff' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/>
+<text class='hk' x='142' y='180' text-anchor='middle' font-size='15'>This is where Botley's</text>
+<text class='hk' x='142' y='202' text-anchor='middle' font-size='15'>brain really runs.</text>
+</svg>

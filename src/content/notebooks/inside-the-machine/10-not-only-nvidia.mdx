@@ -1,0 +1,103 @@
+---
+number: 10
+title: "Not only NVIDIA"
+kicker: "Chapter ten"
+subtitle: "Google TPUs, AWS Trainium and Inferentia, AMD Instinct, and the AI chips inside laptops and phones."
+question: "What other AI chips exist, and when do they matter?"
+part: "From chip to cloud"
+quote: {"who": "sam", "text": "Everyone talks about NVIDIA. Are there any other options?"}
+lastChecked: "2026-10-26"
+---
+
+import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+NVIDIA GPUs are the most common choice, but they are not the only AI chips. Each cloud has built its own, and AMD makes GPUs too. They all follow the same ideas from this notebook: lots of simple workers, fast memory right next to them, and fast links between chips.
+
+<Sketch name="im-ch10-1" />
+
+## The chips, side by side
+
+| Chip | Made by | Memory per chip | Memory bandwidth | Where you get it |
+|---|---|---|---|---|
+| TPU v5e | Google | 16 GB | 819 GB/s | Google Cloud |
+| TPU v6e (Trillium) | Google | 32 GB | about 1,600 GB/s | Google Cloud |
+| TPU7x (Ironwood) | Google | 192 GB | about 7.4 TB/s | Google Cloud |
+| Inferentia2 | AWS | 32 GB | 820 GB/s | AWS (inf2 machines) |
+| Trainium2 | AWS | 96 GiB | 2.9 TB/s | AWS (trn2 machines) |
+| Trainium3 | AWS | 144 GB | 4.9 TB/s | AWS (Trn3 UltraServers) |
+| Instinct MI300X | AMD | 192 GB | 5.3 TB/s | Azure (ND MI300X v5), Oracle Cloud |
+| Instinct MI355X | AMD | 288 GB | 8 TB/s | Oracle Cloud |
+
+<Note>
+
+Sources: Google Cloud TPU documents, AWS Neuron documents and the AWS Trn3 page, Oracle's MI355X announcement, and AMD and SemiAnalysis figures for the MI300X. Checked 26 October 2026. AMD's own product pages could not be reached during checking, so the MI300X figures come from SemiAnalysis.
+
+</Note>
+
+## Why choose something other than NVIDIA?
+
+- **Price.** A cloud's own chips can cost less for the same work, especially on that cloud.
+- **Availability.** When NVIDIA GPUs are hard to get, other chips may be free.
+- **Memory.** AMD's Instinct chips have a lot of memory per chip, which helps big models fit.
+
+## The catch: software
+
+Most AI software is built and tested first on NVIDIA GPUs, using CUDA. Other chips need their own software: AWS chips use the **Neuron** tools, Google TPUs use JAX, PyTorch with XLA, or vLLM's TPU support, and AMD uses **ROCm**. Many popular models and tools work on them, but not all, and not always on day one.
+
+<Careful>
+
+**Check your software first.** Before you choose a non-NVIDIA chip, check that your model, your serving tool (for example vLLM) and the features you need are supported on it. Then measure speed and cost with your own requests.
+
+</Careful>
+
+## AI chips in laptops and phones: NPUs
+
+Many new laptops and phones include an **NPU** (neural processing unit), a small, low-power AI chip:
+
+| Device chip | NPU speed |
+|---|---|
+| Apple M4 | 38 trillion operations per second |
+| Qualcomm Snapdragon X Elite | up to 45 trillion |
+| Intel Core Ultra (Series 2, Lunar Lake) | up to 48 trillion |
+| Microsoft's requirement for a Copilot+ PC | at least 40 trillion |
+
+NPUs are great for small models that run on the device: live captions, translating speech, blurring a video background, or a small assistant that works offline. They can't run large models like the ones behind most agents. They share the laptop's normal memory, which is much smaller and much slower than a data center GPU's memory (Chapter 7).
+
+<NoSillyQuestions>
+
+<QA q={"Are TPUs and Trainium GPUs?"}>
+
+Not exactly. They are chips designed only for AI maths, without the graphics history. But they follow the same ideas: many simple workers, fast memory nearby and fast links between chips.
+
+</QA>
+
+<QA q={"Could Botley run on a laptop NPU?"}>
+
+Botley's code could, and a small model might. But a capable model for an agent like Botley needs far more memory and memory speed than an NPU has. Botley's model belongs in a data center.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. You need a chip with at least 150 GB of memory for one big model. Which chips in the table could hold it? <Blank />
+2. What should you check before moving from NVIDIA GPUs to another chip? <Blank />
+3. Why can't a laptop NPU run a large model? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways>
+
+- Google TPUs, AWS Trainium and Inferentia, and AMD Instinct GPUs are real alternatives to NVIDIA.
+- They can be cheaper or easier to get, and AMD chips offer lots of memory.
+- The catch is software: check that your model and serving tool support the chip.
+- NPUs in laptops and phones run small on-device models, not the large models agents use.
+
+</Takeaways>

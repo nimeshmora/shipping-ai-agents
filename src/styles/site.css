@@ -84,56 +84,59 @@ main>.paper.index{margin-top:28px}
 :root[data-theme="dark"] .paper pre.astro-code{background-color:var(--shiki-dark-bg)!important;color:var(--shiki-dark)}
 :root[data-theme="dark"] .paper pre.astro-code span{color:var(--shiki-dark)}
 
-/* "Where I'm speaking" board on the front page (talks come from src/lib/talks.ts) */
+/* "Where I share this in person" board (talks come from src/lib/talks.ts) */
 .board h2{margin-top:0}
-.pins{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:14px}
-.pin-note{position:relative;padding:22px 14px 14px;box-shadow:1px 3px 6px rgba(0,0,0,.18);transform:rotate(-1.5deg);color:var(--ink);min-height:150px}
-.pin-note:nth-child(even){transform:rotate(1.4deg)}
-.pin-note.c0{background:var(--sy)}.pin-note.c1{background:var(--sb)}.pin-note.c2{background:var(--sg)}
-.pin-note.stat{background:var(--ink);color:var(--paper)}
+.board-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:26px;align-items:start;margin-top:16px}
+.upnext{position:relative;background:var(--sy);padding:20px 18px 12px;box-shadow:1px 3px 6px rgba(0,0,0,.18);transform:rotate(-.8deg)}
 .pin{position:absolute;top:-7px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#d32f2f;border:2px solid var(--ink);box-shadow:1px 2px 0 rgba(0,0,0,.25)}
-.pin-note p{margin:0}
-.pin-note .when{font-family:var(--f-sans);font-weight:700;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.pin-note .host{font-family:var(--f-marker);font-size:1.25rem;line-height:1.1;margin:6px 0 2px}
-.pin-note .what{font-family:var(--f-hand);font-weight:700;font-size:1rem;line-height:1.2}
-.pin-note .detail{font-family:var(--f-hand);font-size:.85rem;line-height:1.25;margin-top:6px;color:var(--hand)}
-.pin-note .more{display:inline-block;margin-top:8px;font-family:var(--f-sans);font-weight:700;font-size:.7rem}
-.pin-note.stat .big{font-family:var(--f-marker);font-size:2.6rem;line-height:1;color:var(--hl)}
-.pin-note.stat .detail{color:var(--paper);opacity:.8}
-@media (max-width:700px){.pins{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.hl-title{font-family:var(--f-hand);font-weight:700;font-size:1.05rem;color:var(--muted);margin:26px 0 8px}
-.highlights{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.highlights li{border:2px solid var(--ink);border-radius:8px;padding:10px 12px;background:var(--paper);box-shadow:3px 3px 0 var(--ink);margin:0}
-.highlights b{display:block;font-family:var(--f-marker);font-weight:400;font-size:1rem;line-height:1.15}
-.highlights span{display:block;font-family:var(--f-hand);font-size:.88rem;color:var(--hand);margin-top:3px}
-.more-talks{font-family:var(--f-hand);font-size:.95rem;margin:16px 0 0}
-@media (max-width:700px){.highlights{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.upnext-title{margin:0 0 4px;font-family:var(--f-hand);font-weight:700;color:var(--muted);font-size:.9rem}
+.upnext ol{list-style:none;margin:0;padding:0}
+.upnext li{margin:0;padding:9px 0;border-top:1.5px dashed rgba(0,0,0,.18)}
+.upnext li:first-child{border-top:0;padding-top:2px}
+.upnext p{margin:0}
+.upnext .when{font-family:var(--f-sans);font-weight:700;font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.upnext .host{font-family:var(--f-marker);font-size:1.1rem;line-height:1.15;margin-top:2px}
+.upnext .what{font-family:var(--f-hand);font-weight:700;font-size:.95rem;line-height:1.2}
+.upnext .detail{font-family:var(--f-hand);font-size:.84rem;line-height:1.25;color:var(--hand);margin-top:2px}
+.upnext .more{font-family:var(--f-sans);font-weight:700;font-size:.68rem}
+.stat-strip{display:flex;align-items:center;gap:12px;margin:0;padding:12px 14px;background:var(--ink);color:var(--paper);border-radius:6px;transform:rotate(.6deg)}
+.stat-strip b{font-family:var(--f-marker);font-weight:400;font-size:2.2rem;line-height:1;color:var(--hl)}
+.stat-strip span{font-family:var(--f-hand);font-weight:700;font-size:1rem;line-height:1.15}
+.stat-strip small{display:block;font-weight:400;font-size:.8rem;opacity:.85;margin-top:2px}
+.hl-title{font-family:var(--f-hand);font-weight:700;font-size:.9rem;color:var(--muted);margin:16px 0 6px}
+.hl-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:7px}
+.hl-tags li{margin:0;border:1.8px solid var(--ink);border-radius:999px;padding:3px 11px;background:var(--paper);font-size:.8rem;line-height:1.3}
+.hl-tags b{font-family:var(--f-marker);font-weight:400}
+.hl-tags span{font-family:var(--f-hand);color:var(--hand)}
+.more-talks{font-family:var(--f-hand);font-size:.85rem;margin:12px 0 0}
+@media (max-width:700px){.board-grid{grid-template-columns:minmax(0,1fr)}}
 
-/* Front page side column: the talks board stays in view on wide screens. Narrower screens show it inline instead. */
+/* Front page side column: the board stays in view on wide screens. Narrower screens show it inline instead. */
 .rail{display:none}
 @media (min-width:1260px){
  .layout.hub.has-rail{max-width:1260px;grid-template-columns:minmax(0,880px) 300px;justify-content:center}
  .rail{display:block;position:sticky;top:calc(72px + env(safe-area-inset-top,0px));align-self:start;max-height:calc(100vh - 92px);overflow-y:auto;padding:2px 6px 8px 2px}
  .talks-inline{display:none}
 }
-.board.compact{background:var(--paper);border:2px solid var(--ink);border-radius:4px;box-shadow:4px 4px 0 var(--ink);padding:18px 16px 14px}
-.board.compact h2{font-size:1.05rem;margin:0}
-.board.compact .pins{grid-template-columns:minmax(0,1fr);gap:13px;margin-top:14px}
-.board.compact .pin-note{min-height:0;padding:11px 12px 8px}
-.board.compact .when{font-size:.56rem}
-.board.compact .pin{top:-6px;width:13px;height:13px;margin-left:-6px}
-.board.compact .host{font-size:1rem;margin:3px 0 1px}
-.board.compact .what{font-size:.9rem}
-.board.compact .detail{font-size:.78rem;margin-top:3px}
-.board.compact .stat{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center}
-.board.compact .stat .big{font-size:2rem;grid-row:span 2}
-.board.compact .stat .detail{grid-column:2;margin:0}
-.board.compact .hl-title{font-size:.9rem;margin:14px 0 2px}
-.board.compact .highlights{grid-template-columns:minmax(0,1fr);gap:0}
-.board.compact .highlights li{box-shadow:none;border:0;border-bottom:1.5px dashed var(--rule);border-radius:0;padding:5px 0;background:none;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.board.compact .highlights b{font-size:.82rem}
-.board.compact .highlights span{font-size:.76rem;margin-top:0;text-align:right;flex:none}
-.board.compact .more-talks{font-size:.78rem;margin-top:8px;line-height:1.3}
+.board.compact{background:var(--paper);border:2px solid var(--ink);border-radius:4px;box-shadow:4px 4px 0 var(--ink);padding:16px 16px 16px}
+.board.compact h2{font-size:.86rem;margin:0;white-space:nowrap}
+.board.compact .upnext li{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px}
+.board.compact .upnext li > *{grid-column:1 / -1}
+.board.compact .upnext .host{grid-column:1;grid-row:1}
+.board.compact .upnext .when{grid-column:2;grid-row:1;align-self:center;text-align:right;font-size:.52rem}
+.board.compact .board-grid{grid-template-columns:minmax(0,1fr);gap:16px;margin-top:18px}
+.board.compact .upnext{padding:16px 14px 6px}
+.board.compact .upnext li{padding:7px 0}
+.board.compact .upnext .host{font-size:.95rem}
+.board.compact .upnext .what{font-size:.86rem}
+.board.compact .upnext .detail{font-size:.78rem}
+.board.compact .stat-strip{padding:9px 12px;gap:10px}
+.board.compact .stat-strip b{font-size:1.8rem}
+.board.compact .stat-strip span{font-size:.88rem}
+.board.compact .stat-strip small{font-size:.72rem}
+.board.compact .hl-title{margin:12px 0 5px;font-size:.82rem}
+.board.compact .hl-tags{gap:5px}
+.board.compact .hl-tags li{font-size:.7rem;padding:2px 8px}
 .talks-inline .paper{margin-top:28px}
 
 /* "Share the stage" panel: slides in from the right when "Want to speak too?" is clicked */
@@ -166,7 +169,8 @@ main>.paper.index{margin-top:28px}
 .stage-cta small{display:block;font-family:var(--f-hand);font-size:.85rem;line-height:1.2;margin-top:2px}
 .stage-cta i{font-style:normal;font-family:var(--f-sans);font-weight:800;font-size:1.2rem}
 .stage-cta:hover{transform:rotate(0) translate(-1px,-1px);box-shadow:6px 6px 0 var(--ink)}
-.board.compact .stage-cta{margin:12px 0 4px;padding:9px 10px;gap:9px}
+.board.compact .stage-cta{margin:12px 0 0;padding:8px 10px;gap:9px}
+.board.compact .stage-cta small{display:none}
 .board.compact .stage-cta svg{width:28px;height:28px;padding:4px}
 .board.compact .stage-cta b{font-size:.95rem}
 .board.compact .stage-cta small{font-size:.74rem}

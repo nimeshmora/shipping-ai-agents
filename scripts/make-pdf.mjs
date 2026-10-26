@@ -100,8 +100,7 @@ ${fontLinks}<style>${siteCss}\n${printCss}</style></head><body>${body}</body></h
 
 // ---- the cover (its own PDF, so the page numbers start at the first inside page) ----
 let cover = article(coverHtml)
-  .replace(/<div class="actions">[\s\S]*?<\/div>/, '')
-  .replace(/Ship It with Nimesha &middot; Notebook #(\d+)/, 'A visual notebook &middot; Ship It with Nimesha #$1');
+  .replace(/<div class="actions">[\s\S]*?<\/div>/, '');
 writeFileSync(join(TMP, 'cover.html'), shell(`<article class="paper"><div class="cover">${cover}</div></article>`, nbTitle));
 
 // ---- the inside pages ----

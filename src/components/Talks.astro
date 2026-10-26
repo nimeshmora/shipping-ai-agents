@@ -1,41 +1,41 @@
 ---
-// The "Where I'm speaking" board. Talks come from src/lib/talks.ts.
+// The "Where I share this in person" board. Everything on it comes from src/lib/talks.ts.
 // compact: the narrow version for the front page's side column on wide screens.
 // The "Want to speak too?" button goes at the top of the side column, so it is always in view, and at the end of the full board.
 import { talks, pastTalks, highlights, profiles } from '../lib/talks';
 import StageCta from './StageCta.astro';
 const { compact = false } = Astro.props as { compact?: boolean };
-const id = compact ? 'speaking-side' : 'speaking';
+const id = compact ? 'in-person-side' : 'in-person';
 const links = profiles.filter((p) => p.url);
 const upcoming = talks.filter((t) => t.upcoming);
 ---
 <section class={compact ? 'board compact' : 'paper board'} aria-labelledby={id}>
-  <h2 id={id}><span>Where I'm speaking</span></h2>
+  <h2 id={id}><span>Where I share this in person</span></h2>
   {compact && <StageCta />}
-  <div class="pins">
-    {upcoming.map((t, i) => (
-      <article class={`pin-note c${i % 3}`}>
-        <span class="pin" aria-hidden="true"></span>
-        <p class="when">{t.date ?? 'Date coming soon'}</p>
-        <p class="host">{t.host}</p>
-        <p class="what">{t.title}</p>
-        {t.detail && <p class="detail">{t.detail}</p>}
-        {t.link && <a class="more" href={t.link}>Details</a>}
-      </article>
-    ))}
-    <article class="pin-note stat">
+  <div class="board-grid">
+    <div class="upnext">
       <span class="pin" aria-hidden="true"></span>
-      <p class="big">{pastTalks.count}</p>
-      <p class="what">talks since {pastTalks.since}</p>
-      <p class="detail">Conferences, meetups, universities and schools</p>
-    </article>
+      <p class="upnext-title">Coming up</p>
+      <ol>
+        {upcoming.map((t) => (
+          <li>
+            <p class="when">{t.date ?? (compact ? 'Soon' : 'Date coming soon')}</p>
+            <p class="host">{t.host}</p>
+            <p class="what">{t.title}</p>
+            {t.detail && <p class="detail">{t.detail}</p>}
+            {t.link && <a class="more" href={t.link}>Details</a>}
+          </li>
+        ))}
+      </ol>
+    </div>
+    <div class="past">
+      <p class="stat-strip"><b>{pastTalks.count}</b><span>talks since {pastTalks.since}<small>{compact ? 'Conferences, meetups, universities and schools' : 'Conferences, meetups, state and private universities, and schools'}</small></span></p>
+      <p class="hl-title">Past highlights</p>
+      <ul class="hl-tags">
+        {highlights.map((h) => <li title={`${h.host}: ${h.what}`}><b>{h.short}</b></li>)}
+      </ul>
+      {links.length > 0 && <p class="more-talks">See more on {links.map((l, i) => <>{i > 0 && (i === links.length - 1 ? ' and ' : ', ')}<a href={l.url}>{l.name}</a></>)}.</p>}
+      {!compact && <StageCta />}
+    </div>
   </div>
-  <h3 class="hl-title">Past highlights</h3>
-  <ul class="highlights">
-    {highlights.map((h) => <li><b>{h.host}</b><span>{h.what}</span></li>)}
-  </ul>
-  <p class="more-talks">Plus talks at many state and private universities, and at schools.
-    {links.length > 0 && <> See more on {links.map((l, i) => <>{i > 0 && (i === links.length - 1 ? ' and ' : ', ')}<a href={l.url}>{l.name}</a></>)}.</>}
-  </p>
-  {!compact && <StageCta />}
 </section>

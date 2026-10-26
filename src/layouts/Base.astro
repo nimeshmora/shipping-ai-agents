@@ -89,7 +89,7 @@ const fullTitle = hub ? 'Ship It with Nimesha' : page === 'cover' ? `${nb!.title
       {!hub && <p class="foot">Cloud services for agents change fast. This notebook describes them as of October 2026. Always check each provider's latest documents before you decide.</p>}
       <p class="foot">Found a mistake or have an example to share? <a href={`${REPO}/blob/main/CONTRIBUTING.md`}>Help improve the notebooks</a>. Text and drawings are shared under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>.</p>
     </main>
-    {rail && <aside class="rail" aria-label="Where I'm speaking"><slot name="aside" /></aside>}
+    {rail && <aside class="rail" aria-label="Where I share this in person"><slot name="aside" /></aside>}
   </div>
   <script is:inline>
   (function () {

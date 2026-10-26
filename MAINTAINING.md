@@ -33,7 +33,7 @@ Notebook #1's older addresses (`/chapters/…`, `/how/`, `/back/`) redirect to t
 
 ## Talks board
 
-The “Where I'm speaking” board on the front page reads `src/lib/talks.ts`. Add a new talk at the top of the list,
+The “Where I share this in person” board on the front page (the right-hand column on wide screens) reads `src/lib/talks.ts`. Add a new talk at the top of the list,
 set `upcoming: false` (or remove it) once it has happened, and update `pastTalks.count` as the number grows.
 A talk without a `date` shows “Date coming soon”.
 

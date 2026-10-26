@@ -11,7 +11,7 @@ lastChecked: "2026-10-26"
 
 import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
 
-A **GPU** (graphics processing unit) was first built to draw video game graphics. Drawing a picture means working out the color of millions of pixels, and each pixel can be worked out on its own. That is parallel work, exactly like the sums in a model's layer. So the same chip turned out to be ideal for AI.
+A **GPU** (graphics processing unit) was first built to draw video game graphics. Drawing a picture means working out the color of millions of pixels, and each pixel can be worked out on its own. That is parallel work, exactly like the sums in a model's layer. So the same kind of chip turned out to suit AI well.
 
 ## Few clever chefs, or thousands of simple cooks
 
@@ -21,7 +21,7 @@ A CPU core is clever: it is built to handle complicated instructions full of dec
 
 | | CPU | GPU (NVIDIA H100) |
 |---|---|---|
-| Workers | Up to about 200 clever cores | 16,896 simple cores, plus 528 Tensor Cores |
+| Workers | Up to a few hundred clever cores | 16,896 simple cores, plus 528 Tensor Cores |
 | Good at | Varied work with lots of decisions | The same simple sum on lots of numbers at once |
 | In an agent | Botley's code, tools, web server, database | The model |
 
@@ -35,10 +35,10 @@ H100 numbers from NVIDIA's Hopper architecture blog: 132 streaming multiprocesso
 
 <Sketch name="im-ch06-2" />
 
-A GPU is organised into stations called **streaming multiprocessors (SMs)**. NVIDIA describes a GPU as “a collection of Streaming Multiprocessors”. Each SM has:
+A GPU is organized into stations called **streaming multiprocessors (SMs)**. NVIDIA describes a GPU as “a collection of Streaming Multiprocessors”. Each SM has:
 
 - many simple **cores** (the line cooks)
-- a few **Tensor Cores** (special maths machines, see below)
+- a few **Tensor Cores** (special math machines, see below)
 - a small amount of very fast memory of its own
 
 All the SMs share a bigger shelf, the **L2 cache**, and the GPU's main memory sits right next to the chip.
@@ -57,7 +57,7 @@ Most of a GPU's AI speed comes from its Tensor Cores. When a spec sheet says a G
 
 A **FLOP** is one floating-point operation, such as one multiply or one add. Tera means a trillion.
 
-| GPU | BF16 maths, dense | FP8 maths, dense |
+| GPU | BF16 math, dense | FP8 math, dense |
 |---|---|---|
 | L4 | 121 trillion operations per second | 242 trillion |
 | L40S | 362 trillion | 733 trillion |
@@ -104,7 +104,7 @@ The answers are at the back.
 <Takeaways>
 
 - A GPU has thousands of simple cores, built to do the same sum on lots of numbers at once.
-- GPUs are organised into streaming multiprocessors (SMs). Cores work in teams of 32 called warps.
+- GPUs are organized into streaming multiprocessors (SMs). Cores work in teams of 32 called warps.
 - Tensor Cores do whole grids of multiply-and-adds in one go. They do most of the AI work.
 - Compare GPUs using dense numbers, not “with sparsity”.
 - In theory a GPU could write tens of thousands of tokens a second for one user. Something else holds it back.

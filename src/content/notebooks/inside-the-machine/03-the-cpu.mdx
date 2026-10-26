@@ -23,7 +23,7 @@ The CPU repeats the same loop over and over: **fetch** the next instruction, **d
 
 ## More cores, more chefs
 
-One core can only follow one list of instructions at a time. So modern CPUs have many **cores**, many chefs working side by side. Each core can run a different job at the same time.
+One core mostly works on one list of instructions at a time. So modern CPUs have many **cores**, many chefs working side by side. Each core can run a different job at the same time.
 
 <Sketch name="im-ch03-2" />
 
@@ -96,7 +96,7 @@ The answers are at the back.
 
 - A CPU follows a program: a long list of small instructions, in a fetch, do, move-on loop.
 - The clock sets the pace. 3 GHz means 3 billion ticks a second.
-- Cores are chefs working side by side. Server CPUs have up to about 200 of them.
+- Cores are chefs working side by side. Server CPUs have up to a few hundred of them.
 - CPUs are great at clever, varied work: an agent's code, tools, web servers and databases.
 - They are not built for repeating one simple sum billions of times. That is the GPU's job.
 

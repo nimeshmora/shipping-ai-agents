@@ -66,7 +66,7 @@ Written by Nimesha Jinarajadasa, with help from [contributors](https://github.co
 
 **Why AI needs GPUs**
 
-5. The maths inside a model, gently
+5. The math inside a model, gently
 6. The GPU: thousands of line cooks
 7. The real bottleneck
 8. When one GPU isn't enough

@@ -2,7 +2,7 @@
 number: 7
 title: "The real bottleneck"
 kicker: "Chapter seven"
-subtitle: "Getting ingredients to the cooks. Why memory speed, not maths speed, sets how fast your agent talks."
+subtitle: "Getting ingredients to the cooks. Why memory speed, not math speed, sets how fast your agent talks."
 question: "Why does memory bandwidth matter so much for running a model?"
 part: "Why AI needs GPUs"
 quote: {"who": "kai", "text": "The cooks are never the problem. Getting food to them is."}
@@ -11,7 +11,7 @@ lastChecked: "2026-10-26"
 
 import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
 
-This is the most important chapter in the notebook. It explains why answers flow at the speed they do, why batching helps so much, and why GPU spec sheets brag about **memory bandwidth**.
+This chapter explains why answers flow at the speed they do, why batching helps so much, and why GPU spec sheets list **memory bandwidth** near the top.
 
 ## Every token needs every weight
 
@@ -64,11 +64,11 @@ For an 8B model in BF16 (16 GB of weights):
 | H100 SXM | 3.35 TB/s | about 209 |
 | B200 | 8 TB/s | about 500 |
 
-This is a ceiling, not a promise. Real numbers are lower, because the KV cache also has to be read and nothing runs perfectly. For example, NVIDIA measured about 71 tokens per second for one user of an 8B model in FP8 on an L40S. The rule gives a ceiling of 864 GB/s ÷ 8 GB, about 108. The real number sits below the ceiling, as it should.
+This is the most you could get. Real numbers are lower, because the KV cache also has to be read and nothing runs perfectly. For example, NVIDIA measured about 71 tokens per second for one user of an 8B model in FP8 on an L40S. The rule gives a ceiling of 864 GB/s ÷ 8 GB, about 108. As expected, the real number is below the ceiling.
 
 <Careful>
 
-**Maths speed hardly matters for one user.** In Chapter 6, an H100 could in theory do the maths for over 60,000 tokens a second. The memory belt allows about 209. For a single user, the cooks spend most of their time waiting.
+**Math speed hardly matters for one user.** In Chapter 6, an H100 could in theory do the math for over 60,000 tokens a second. The memory belt allows about 209. For a single user, the cooks spend most of their time waiting.
 
 </Careful>
 
@@ -78,11 +78,11 @@ If the weights have to travel anyway, why not use each delivery for more than on
 
 <Sketch name="im-ch07-3" />
 
-This is why, in Notebook #2, one L40S wrote about 71 tokens a second for 1 user, but about 2,869 tokens a second in total for 100 users. The belt was the same. Each delivery just fed many more orders.
+This is why, in Notebook #2, Chapter 3, one L40S wrote about 71 tokens a second for 1 user, but about 2,869 tokens a second in total for 100 users. The belt was the same. Each delivery just fed many more orders.
 
 There is a limit. Each conversation needs its own KV cache, and that takes memory and bandwidth too. So the number of users per GPU depends on how much memory is left after the weights. This is why memory size and memory speed are the two numbers to look at first.
 
-<FaceOff title={"What makes a GPU fast for AI?"} left={"Maths speed"} right={"Memory speed"} lines={[["L", "Look at all my teraFLOPS! I can do a thousand trillion sums a second."], ["R", "And for one user, you sit waiting for me to bring the weights."], ["L", "With batching, I get to use more of my power."], ["R", "True. With many users, we both matter. But for answer speed, look at me first."]]} />
+<FaceOff title={"What makes a GPU fast for AI?"} left={"Math speed"} right={"Memory speed"} lines={[["L", "Look at all my teraFLOPS! I can do a thousand trillion sums a second."], ["R", "And for one user, you sit waiting for me to bring the weights."], ["L", "With batching, I get to use more of my power."], ["R", "True. With many users, we both matter. But for answer speed, look at me first."]]} />
 
 <NoSillyQuestions>
 
@@ -100,7 +100,7 @@ Yes, a lot. FP8 weights are half the size of BF16 weights, so the belt can deliv
 
 <QA q={"Is the first token also limited by memory?"}>
 
-Less so. Reading the request (stage 1, Notebook #2, Chapter 3) handles all the request's tokens together, so each weight delivery is used many times. That stage is usually limited by maths speed instead.
+Less so. Reading the request (stage 1, Notebook #2, Chapter 3) handles all the request's tokens together, so each weight delivery is used many times. That stage is usually limited by math speed instead.
 
 </QA>
 
@@ -109,7 +109,7 @@ Less so. Reading the request (stage 1, Notebook #2, Chapter 3) handles all the r
 <YourTurn>
 
 1. A 70B model in FP8 (70 GB) runs on one H200 (4.8 TB/s). Roughly what is the ceiling for one user's tokens per second? <Blank />
-2. Your GPU writes 30 tokens a second for one user. Will a GPU with twice the maths speed, but the same memory bandwidth, make one user's answers much faster? <Blank />
+2. Your GPU writes 30 tokens a second for one user. Will a GPU with twice the math speed, but the same memory bandwidth, make one user's answers much faster? <Blank />
 3. Why does batching help so much? <Blank />
 
 <Hand>
@@ -123,7 +123,7 @@ The answers are at the back.
 <Takeaways>
 
 - To write each token, every weight travels from memory to the cores.
-- So for one user, memory bandwidth, not maths speed, sets how fast tokens appear.
+- So for one user, memory bandwidth, not math speed, sets how fast tokens appear.
 - Rule of thumb: most tokens per second for one user ≈ bandwidth ÷ weight size. Real numbers are lower.
 - Batching uses each delivery of weights for many users at once, so total throughput rises a lot.
 - Smaller number formats (FP8, FP4) help because there are fewer bytes to move.

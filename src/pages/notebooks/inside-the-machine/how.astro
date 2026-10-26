@@ -9,8 +9,8 @@ const chapters = await allChapters(NB);
 <Base title="How to use this notebook" page="how" notebook={NB}>
   <section class="chapter">
     <div class="ch-head"><div><div class="ch-kicker">Before we start</div><h1>How to use this notebook</h1>
-      <div class="ch-sub">Lots of pictures, everyday comparisons and no maths background.</div></div></div>
-    <p>This notebook explains the hardware that runs AI agents, starting from zero. You don't need to know any electronics or maths. If you have ever wondered what is really inside a GPU, why some GPUs are so much faster than others, or why GPUs are so hard to get, this is for you.</p>
+      <div class="ch-sub">Lots of pictures, everyday comparisons and no math background.</div></div></div>
+    <p>This notebook explains the hardware that runs AI agents, starting from zero. You don't need to know any electronics or math. If you have ever wondered what is really inside a GPU, why some GPUs are so much faster than others, or why GPUs are so hard to get, this is for you.</p>
     <p>You will meet a new character. <b>Kai</b> is an infrastructure engineer who looks after the data center where Botley's model runs, and takes Maya on a tour.</p>
     <Sketch name="cast4" />
     <p class="small"><b>Maya</b> builds agents. <b>Botley</b> is the agent she built. <b>Sam</b> is her boss. <b>Kai</b> keeps the machines powered, cooled and connected.</p>
@@ -20,7 +20,7 @@ const chapters = await allChapters(NB);
       <tr><th style="width:36%">In the kitchen</th><th>In the computer</th></tr>
       <tr><td>A few expert chefs</td><td>A CPU: a few clever cores.</td></tr>
       <tr><td>Thousands of line cooks</td><td>A GPU: thousands of simple cores.</td></tr>
-      <tr><td>The counter, the fridge, the warehouse</td><td>GPU memory, SSD storage, network storage.</td></tr>
+      <tr><td>The counter, the fridge, the warehouse</td><td>Memory (the computer's RAM and the GPU's own memory), SSD storage, network storage.</td></tr>
       <tr><td>The conveyor belt to the cooks</td><td>Memory bandwidth: how fast numbers reach the cores.</td></tr>
       <tr><td>A giant shared kitchen</td><td>A data center, with its own power and cooling.</td></tr>
     </table></div>
@@ -36,7 +36,7 @@ const chapters = await allChapters(NB);
       <tr><td>Key takeaways</td><td>The main points of the chapter.</td></tr>
     </table></div>
     <h2>About the numbers</h2>
-    <p>Every GPU figure in this notebook was checked against NVIDIA's, AMD's, Google's and AWS's own documents in October 2026, and each chapter shows the date its facts were checked. New GPUs come out often, so check the latest documents before you decide.</p>
+    <p>Every GPU figure in this notebook was checked in October 2026 against NVIDIA's, Google's and AWS's own documents, and against Oracle and SemiAnalysis figures for AMD chips, and each chapter shows the date its facts were checked. New GPUs come out often, so check the latest documents before you decide.</p>
     <h2>What's inside</h2>
     <div class="tw"><table class="t">
       <tr><th style="width:7%">#</th><th style="width:34%">Chapter</th><th>The question it answers</th></tr>

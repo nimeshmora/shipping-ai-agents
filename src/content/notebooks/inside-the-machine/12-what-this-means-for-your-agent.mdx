@@ -17,12 +17,12 @@ The tour is over. Maya and Kai sit down with a coffee and turn everything Maya s
 
 <Sketch name="im-ch12-1" />
 
-When one Botley task feels slow, the time is spread across several places. The sizes above are only an example. Measure your own agent to see the real split. But in most agents, the model writing its answers is the biggest piece, followed by the tools.
+When one Botley task feels slow, the time is spread across several places. The sizes above are only an example. Measure your own agent to see the real split. In many agents, writing the answer is the biggest piece, but slow tools can match it. Measure yours.
 
 | If this is slow | Why | What helps |
 |---|---|---|
 | The wait before the first word | Reading a long request (Notebook #2, Chapter 3) | Shorter instructions, fewer tool results, prompt caching |
-| The words flowing out | Memory bandwidth (Chapter 7) | A GPU with more bandwidth, a smaller or FP8 model, shorter answers |
+| The words flowing out | Memory bandwidth (Chapter 7) | A GPU with more bandwidth, or a smaller or FP8 model. Shorter answers also cut the total wait. |
 | The tools | The services Botley calls | Faster tools, calling tools in parallel |
 | The trip across the world | Distance (Chapter 1) | Running the model in a region near your users |
 
@@ -37,7 +37,7 @@ Notebook #2, Chapter 9 has the full cost math.
 
 ## When a plain CPU is enough
 
-Not everything in an agent needs a GPU. Botley's own code, the web server, the database and the tools all run happily on CPUs (Chapter 3). And if you use a managed model service, someone else runs the GPUs and you don't need any of your own.
+Not everything in an agent needs a GPU. Botley's own code, the web server, the database and the tools all run well on CPUs (Chapter 3). And if you use a managed model service, someone else runs the GPUs and you don't need any of your own.
 
 You need GPUs of your own only when you run a model yourself. Notebook #2 helps you decide whether that's worth it.
 
@@ -59,7 +59,7 @@ You need GPUs of your own only when you run a model yourself. Notebook #2 helps 
 ## A checklist for the hardware side
 
 - [ ] I know how big my model's weights are in the number format I use (Chapter 2)
-- [ ] I know the GPU memory, memory bandwidth and dense maths speed of my GPU (Chapter 11)
+- [ ] I know the GPU memory, memory bandwidth and dense math speed of my GPU (Chapter 11)
 - [ ] I have worked out the one-user ceiling: bandwidth ÷ weight size (Chapter 7)
 - [ ] I have load-tested with real requests and many users at once
 - [ ] My model runs in a region close to my users (Chapter 1)
@@ -69,7 +69,7 @@ You need GPUs of your own only when you run a model yourself. Notebook #2 helps 
 
 <QA q={"Will GPUs keep getting faster?"}>
 
-Yes. Each new generation has added more memory, more bandwidth and faster maths. But the ideas in this notebook stay the same, so you will be able to read the next spec sheet too.
+Very likely. Each new generation has added more memory, more bandwidth and faster math. But the ideas in this notebook stay the same, so you will be able to read the next spec sheet too.
 
 </QA>
 

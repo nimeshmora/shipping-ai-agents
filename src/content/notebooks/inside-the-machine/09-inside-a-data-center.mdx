@@ -32,11 +32,11 @@ GPU servers use a lot of electricity, and almost all of it turns into heat.
 | An average rack in a data center today | about 5 to 15 kW |
 | One NVIDIA DGX H100 server (8 GPUs) | up to 10.2 kW |
 | One NVIDIA DGX B200 server (8 GPUs) | about 14.3 kW |
-| One GB200 NVL72 rack (72 GPUs) | about 120 to 130 kW |
+| One GB200 NVL72 rack (72 GPUs) | about 130 kW |
 
 <Note>
 
-Sources: NVIDIA's DGX H100 user guide (10.2 kW maximum) and DGX B200 page (about 14.3 kW). NVIDIA does not publish one figure for the GB200 NVL72 rack, so the range comes from server makers Supermicro (132 kW) and Gigabyte (up to 130 kW). The average-rack range is from Uptime Institute's 2026 survey. An average US home used about 865 kWh a month in 2024 (US EIA), which is about 1.2 kW on average. Checked 26 October 2026.
+Sources: NVIDIA's DGX H100 user guide (10.2 kW maximum) and DGX B200 page (about 14.3 kW). NVIDIA does not publish one figure for the GB200 NVL72 rack, so this figure comes from server makers Supermicro (132 kW) and Gigabyte (up to 130 kW). The average-rack range is from Uptime Institute's 2026 survey. An average US home used about 865 kWh a month in 2024 (US EIA), which is about 1.2 kW on average. Checked 26 October 2026.
 
 </Note>
 
@@ -46,7 +46,7 @@ So a single big AI rack can draw as much power as about 100 average US homes. Ma
 
 <Sketch name="im-ch09-3" />
 
-Most servers are cooled by **air**: fans push cool air through the servers, and the building's air conditioning takes the heat away. For the densest GPU racks, air is not enough. NVIDIA's Blackwell racks use **liquid cooling**: metal plates sit directly on the chips, and liquid flowing through them carries the heat away. NVIDIA says cooling can use up to 40% of a data center's electricity, and that liquid cooling can cut that a lot.
+Most servers are cooled by **air**: fans push cool air through the servers, and the building's air conditioning takes the heat away. For the densest GPU racks, air is not enough. NVIDIA's GB200 NVL72 racks use **liquid cooling**: metal plates sit directly on the chips, and liquid flowing through them carries the heat away. NVIDIA says cooling has historically used up to 40% of a data center's electricity, and that liquid cooling can cut that a lot.
 
 ## Networks: several of them
 
@@ -104,7 +104,7 @@ The answers are at the back.
 <Takeaways>
 
 - A data center hall holds rows of racks. Each rack needs power, cooling and network.
-- An 8-GPU server can draw over 10 kW. A GB200 NVL72 rack draws about 120 to 130 kW, as much as about 100 homes.
+- An 8-GPU server can draw over 10 kW. A GB200 NVL72 rack draws about 130 kW, as much as about 100 homes.
 - The densest GPU racks need liquid cooling.
 - Several separate networks connect GPUs, storage and management.
 - GPUs are scarce. Quota is not the same as capacity, so reserve ahead for important events.

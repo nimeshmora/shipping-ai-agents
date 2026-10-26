@@ -23,7 +23,7 @@ notebook: inside-the-machine
 | SSD | Fast storage that keeps data when the power is off. |
 | PCIe | The connection between a GPU and the rest of the computer. |
 | Multiply-and-add | Multiply numbers by weights and add them up. Most of a model's work. |
-| Layer | One step of a model. The sums inside a layer don't depend on each other. |
+| Layer | One step of a model. Many of the sums inside it can run at the same time. |
 | Parallel work | Work that can be split into pieces done at the same time. |
 | GPU | A chip with thousands of simple cores, built for parallel work. |
 | Streaming multiprocessor (SM) | One station inside a GPU, with its own cores, Tensor Cores and small fast memory. |
@@ -40,6 +40,8 @@ notebook: inside-the-machine
 | NVSwitch | A chip that lets every GPU in a group talk to every other at full NVLink speed. |
 | HGX | NVIDIA's board of 8 GPUs joined by NVSwitch. |
 | Rack | A tall cabinet holding many servers. |
+| CUDA | NVIDIA's way of writing programs for its GPUs. |
+| KV cache | The model's notes on the conversation so far, kept in GPU memory. |
 | kW (kilowatt) | A measure of power. A kettle uses about 1.5 to 3 kW. |
 | Liquid cooling | Cooling chips with liquid flowing through metal plates on top of them. |
 | Quota, capacity | Quota is permission to use GPUs. Capacity is GPUs actually being free. |
@@ -75,7 +77,7 @@ notebook: inside-the-machine
 
 1. 1.0 × 0.5 + 2.0 × 0.5 + 4.0 × 0.25 = 0.5 + 1.0 + 1.0 = **2.5**.
 2. About **70 billion**.
-3. Each sum only needs the inputs and its own weights, not the answer of any other sum.
+3. Within a step, each sum only needs the inputs and its own weights, not the answer of any other sum.
 
 ### Chapter 6, Your turn
 
@@ -86,7 +88,7 @@ notebook: inside-the-machine
 ### Chapter 7, Your turn
 
 1. About **69** tokens per second (4,800 GB/s ÷ 70 GB). Real numbers will be lower.
-2. No, not much. For one user, memory bandwidth sets the pace, not maths speed.
+2. No, not much. For one user, memory bandwidth sets the pace, not math speed.
 3. The GPU brings in the weights once and uses them to write the next token for many users at the same time.
 
 ### Chapter 8, Your turn
@@ -97,7 +99,7 @@ notebook: inside-the-machine
 
 ### Chapter 9, Your turn
 
-1. No. A GB200 NVL72 rack needs about 120 to 130 kW.
+1. No. A GB200 NVL72 rack needs about 130 kW.
 2. They make so much heat in so little space that air can't carry it away fast enough.
 3. Quota is permission, not a guarantee. There may be no free GPUs of that kind in that region or zone right now. Try another zone or region, or reserve capacity ahead.
 
@@ -105,16 +107,16 @@ notebook: inside-the-machine
 
 1. TPU7x (192 GB), Instinct MI300X (192 GB) and Instinct MI355X (288 GB).
 2. That your model, your serving tool and the features you need are supported on that chip. Then measure speed and cost.
-3. It shares the laptop's normal memory, which is too small to hold a large model and much too slow to feed it quickly.
+3. It shares the laptop's normal memory, which is often too small for a large model and far too slow to feed it quickly.
 
 ### Chapter 11, Your turn
 
 1. The H200 (141 GB) and the B200 (180 GB). The H100's 80 GB would leave almost no room for the KV cache.
-2. About **69** tokens per second (4,800 ÷ 70). Real numbers will be lower.
+2. About **114** tokens per second (8,000 ÷ 70). Real numbers will be lower.
 3. The one with more memory bandwidth.
 
 ### Chapter 12, Your turn
 
-1. For example: a GPU with more memory bandwidth, a smaller or FP8 model, or shorter answers.
+1. For example: a GPU with more memory bandwidth, or a smaller or FP8 model.
 2. No. The service runs the GPUs. Botley's own code can run on CPUs.
 3. Keep GPUs busy with batching, and use the smallest model and number format that does the job well.

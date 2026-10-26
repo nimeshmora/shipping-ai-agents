@@ -1,6 +1,6 @@
 ---
 number: 5
-title: "The maths inside a model, gently"
+title: "The math inside a model, gently"
 kicker: "Chapter five"
 subtitle: "No equations. A model is mostly one tiny sum, repeated billions of times."
 question: "What work does a model actually do to write one token?"
@@ -11,7 +11,7 @@ lastChecked: "2026-10-26"
 
 import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
 
-To understand why AI needs special chips, you need to know what kind of work a model does. The surprise is how simple each piece is.
+To understand why AI needs special chips, you need to know what kind of work a model does. Each piece of that work is very simple.
 
 ## One tiny sum
 
@@ -23,7 +23,7 @@ That is it. The “intelligence” of a model is not in any single sum. It is in
 
 ## Many sums at once
 
-A model is built in **layers**. Each layer takes the numbers from the layer before and does thousands of these sums to produce new numbers. Here is the important part: **each sum in a layer does not need the answer of any other sum in the same layer.** They can all be done at the same time.
+A model is built in **layers**. Each layer takes the numbers from the layer before and does thousands of these sums to produce new numbers. Each layer works in a few steps. **Within a step, the thousands of sums don't need each other's answers.** They can all be done at the same time.
 
 <Sketch name="im-ch05-2" />
 
@@ -45,7 +45,7 @@ So an 8B model does about 8 billion multiply-and-adds for each token. A 70B mode
 
 <Think>
 
-A CPU core does a handful of these sums per clock tick. Server CPUs have up to about 200 cores. Is that a good fit for billions of simple sums per token, for many users at once?
+A CPU core can do a few dozen of these sums per clock tick at best. Server CPUs have up to a few hundred cores. Is that a good fit for billions of simple sums per token, for many users at once?
 
 </Think>
 
@@ -69,7 +69,7 @@ Yes, for a normal model: twice the weights means about twice the sums. Mixture-o
 
 1. Work out the sum: inputs 1.0, 2.0 and 4.0; weights 0.5, 0.5 and 0.25. <Blank />
 2. Roughly how many multiply-and-adds does a 70B model do for one token? <Blank />
-3. Why can all the sums in one layer happen at the same time? <Blank />
+3. Why can all the sums in one step of a layer happen at the same time? <Blank />
 
 <Hand>
 

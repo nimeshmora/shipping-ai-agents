@@ -25,11 +25,11 @@ Everything in a computer is stored this way: letters, photos, your messages to B
 
 ## The switch is a transistor
 
-A light switch needs your finger. A computer's switch is a **transistor**: a tiny switch that a small electrical signal turns on or off. A transistor can switch billions of times a second, and because it is turned on and off by electricity, transistors can control other transistors. That is how a chip does logic and maths.
+A light switch needs your finger. A computer's switch is a **transistor**: a tiny switch that a small electrical signal turns on or off. A transistor can switch billions of times a second, and because it is turned on and off by electricity, transistors can control other transistors. That is how a chip does logic and math.
 
 <Sketch name="im-ch02-3" />
 
-They are also incredibly small. NVIDIA's H100 GPU has **80 billion** transistors. Its Blackwell GPUs have **208 billion**, made by TSMC.
+They are also incredibly small. NVIDIA's H100 GPU has **80 billion** transistors. NVIDIA's Blackwell GPUs have **208 billion**. TSMC makes both.
 
 <Note>
 
@@ -52,7 +52,7 @@ This is what the names in Notebook #2 mean:
 | FP8 | 8 | 1 | Rougher |
 | FP4 | 4 | 0.5 | Very rough |
 
-So when someone says “this model is 8B in BF16, so 16 GB”, they mean: 8 billion numbers × 2 bytes each. Fewer bits per number means less memory, less to move around, and faster maths, but rougher numbers.
+So when someone says “this model is 8B in BF16, so 16 GB”, they mean: 8 billion numbers × 2 bytes each. Fewer bits per number means less memory, less to move around, and faster math, but rougher numbers.
 
 <Geek>
 
@@ -65,7 +65,7 @@ FP8 E4M3  1 sign + 4 exponent +  3 mantissa
 FP4 E2M1  1 sign + 2 exponent +  1 mantissa
 ```
 
-BF16 keeps the same 8 exponent bits as FP32, so it can hold numbers just as big or small. It only drops detail. That is why AI models like it so much.
+BF16 keeps the same 8 exponent bits as FP32, so it can hold numbers just as big or small. It only drops detail. That is why it is popular for AI models.
 
 </Geek>
 
@@ -85,7 +85,7 @@ Mostly history. Early computers used different sizes, and 8 became the standard 
 
 <QA q={"If FP4 is so rough, why does anyone use it?"}>
 
-Because it is small and fast. New GPUs have special support for FP4 and FP8 maths. For many models, careful use of fewer bits loses very little quality. You still need to test it on your own tasks (Notebook #2, Chapter 4).
+Because it is small and fast. New GPUs have special support for FP4 and FP8 math. For many models, careful use of fewer bits loses very little quality. You still need to test it on your own tasks (Notebook #2, Chapter 4).
 
 </QA>
 

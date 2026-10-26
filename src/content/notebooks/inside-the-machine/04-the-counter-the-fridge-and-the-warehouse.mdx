@@ -19,7 +19,7 @@ A chef can only cook with ingredients that are close at hand. Computers have the
 
 | In the kitchen | In the computer | Size | Time to reach |
 |---|---|---|---|
-| The chef's hands | **Registers** and **cache**, inside the chip | tiny | about a nanosecond |
+| The chef's hands | **Registers** and **cache**, inside the chip | tiny | about 1 to 10 nanoseconds |
 | The counter | **Memory** (RAM) | gigabytes | about 100 nanoseconds |
 | The fridge | **SSD** storage | terabytes | tens of microseconds, up to about 100 |
 | The warehouse across town | **Network storage**, such as Amazon S3 or Google Cloud Storage | as big as you like | milliseconds |
@@ -30,7 +30,7 @@ The times come from Jeff Dean's “numbers everyone should know” (2009) and SS
 
 </Note>
 
-A nanosecond is a billionth of a second. A microsecond is a thousand nanoseconds, and a millisecond is a thousand microseconds. So reaching the warehouse can take a million times longer than reaching the chef's hands.
+A nanosecond is a billionth of a second. A microsecond is a thousand nanoseconds, and a millisecond is a thousand microseconds. So reaching the warehouse can take up to a million times longer than reaching the chef's hands.
 
 ## The GPU has its own counter
 
@@ -68,7 +68,7 @@ Fast memory is expensive, takes up space on the chip, and uses more power. So co
 
 <QA q={"Does the GPU need the computer's normal memory at all?"}>
 
-Yes, but less for the model itself. The computer's memory and CPU load the weights, run the serving software, and handle requests. The heavy maths happens in the GPU with its own memory.
+Yes, but less for the model itself. The computer's memory and CPU load the weights, run the serving software, and handle requests. The heavy math happens in the GPU with its own memory.
 
 </QA>
 

@@ -86,9 +86,7 @@ How many tokens can share one delivery before the cooks become the slower part? 
 
 The GPU can move one chunk of weights while it works on another. In this simplified picture, the slower clock sets the *best possible* time for a pass:
 
-```text
-time per pass ≈ greater of (4.8 ms to move weights, 0.016 ms × tokens to do math)
-```
+<Sketch name="im-ch07-6" caption="Both jobs overlap. The pass has to wait for whichever one takes longer." />
 
 | Tokens sharing one weight delivery | Moving weights | Doing math | Slower job |
 |---|---|---|---|

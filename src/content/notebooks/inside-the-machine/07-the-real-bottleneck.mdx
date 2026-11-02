@@ -78,6 +78,8 @@ If the weights have to travel anyway, why not use each delivery for more than on
 
 How many tokens can share one delivery before the cooks become the slower part? Let's work it out for an **8B model in BF16 on one H100 SXM**. The weights take about 16 GB. This is a simple example, so we will count the work of using the weights and leave out the KV cache for a moment.
 
+<Sketch name="im-ch07-4" caption="The model's weights live in HBM. They travel to the math workers on each pass." />
+
 **First clock: moving the weights.** The H100's memory belt can move 3.35 TB each second. Moving 16 GB takes at least **16 ÷ 3,350 seconds ≈ 4.8 milliseconds**. That one delivery can serve every token in the batch.
 
 **Second clock: doing the math.** Each of the 8 billion weights takes roughly one multiply and one add for each token: about **16 billion operations per token**. At the H100's peak dense BF16 speed of 989 trillion operations per second, that takes at least **0.016 milliseconds per token**. For a batch of 64 tokens, it is about 64 × 0.016 = **1.0 millisecond**.
@@ -105,7 +107,11 @@ One user receives one new token from each decode pass. If 64 users share a pass,
 
 About **4.8 ÷ 64 = 0.075 milliseconds per token**, compared with 4.8 milliseconds for one user. The delivery is shared. Once math becomes the slower clock, adding more tokens no longer cuts the time per token in this simple model.
 
-This also explains the two stages from Notebook #2, Chapter 3. **Prefill** reads many input tokens together. A 2,000-token request has enough work to keep the cooks busy: 2,000 × 0.016 ≈ **32 milliseconds** of weight math in our example. **Decode** writes one output token per user per pass, so a small batch spends more time moving weights than doing math. This is one reason output tokens can use more GPU time than input tokens.
+This also explains the two stages from Notebook #2, Chapter 3.
+
+<Sketch name="im-ch07-5" caption="The words are only an example; a real tokenizer may split them differently." />
+
+**Prefill** reads many input tokens together. A 2,000-token request has enough work to keep the cooks busy: 2,000 × 0.016 ≈ **32 milliseconds** of weight math in our example. **Decode** writes one output token per user per pass, so a small batch spends more time moving weights than doing math. This is one reason output tokens can use more GPU time than input tokens.
 
 <Careful>
 

@@ -1,0 +1,48 @@
+# Chapter 9. A second Botley with a new greeting, for trying on a few users.
+# Same image as before. Only the greeting and the label are different.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: botley-friendly
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: botley-friendly
+  template:
+    metadata:
+      labels:
+        app: botley-friendly
+    spec:
+      containers:
+      - name: botley
+        image: botley:2.0
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 250m
+            memory: 128Mi
+          limits:
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          periodSeconds: 2
+        env:
+        - name: STARTUP_SECONDS
+          value: "10"
+        - name: GREETING
+          value: "Hi! Botley here, and I'd love to help"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: botley-friendly
+spec:
+  selector:
+    app: botley-friendly
+  ports:
+  - port: 80
+    targetPort: 8080

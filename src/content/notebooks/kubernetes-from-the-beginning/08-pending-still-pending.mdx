@@ -1,0 +1,326 @@
+---
+number: 8
+title: "Pending. Still pending."
+kicker: "Chapter eight"
+subtitle: "Tell Kubernetes how much CPU and memory Botley needs, so it can find room for it, and so one Botley can't take everything."
+question: "How does Kubernetes decide where a pod fits, and what happens when it uses too much?"
+part: "Running it for real"
+quote: {"who": "kai", "text": "Before Botley goes on my cluster: how much CPU and memory does it need?"}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Geek, Blank, Note, Hand } from '../../../components/index.ts';
+
+Kai has agreed to run Botley on the company's cluster. The cluster has many nodes, and many teams share them. Kai has one question before saying yes: how much CPU and memory does Botley need?
+
+Maya doesn't know. So far, she hasn't told Kubernetes either.
+
+## A cluster with more than one node
+
+Up to now, your cluster has had one node. To see how Kubernetes places pods, you need more. kind can make a cluster with several nodes from a small settings file, `k8s/kind-three-nodes.yaml`:
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+```
+
+Delete the old cluster and make the new one:
+
+```bash
+kind delete cluster --name botley
+kind create cluster --name botley --config k8s/kind-three-nodes.yaml
+kubectl get nodes
+```
+
+```text
+NAME                   STATUS   ROLES           AGE   VERSION
+botley-control-plane   Ready    control-plane   30s   v1.37.0
+botley-worker          Ready    <none>          5s    v1.37.0
+botley-worker2         Ready    <none>          6s    v1.37.0
+```
+
+It's a new cluster, so it's empty. Load the images and put back everything from the last few chapters:
+
+```bash
+kind load docker-image botley:1.0 botley:2.0 --name botley
+kubectl apply -f k8s/configmap.yaml -f k8s/service.yaml
+kubectl create secret generic botley-secrets --from-literal=MODEL_API_KEY=sk-pretend-1234
+kubectl apply -f k8s/deployment-v2-probes.yaml
+kubectl run tester --image=curlimages/curl:8.17.0 --restart=Never --command -- sleep 36000
+```
+
+Where did the Botleys go?
+
+```bash
+kubectl get pods -o wide
+```
+
+```text
+NAME                     READY   STATUS    NODE
+botley-89c6c584b-4rsrb   1/1     Running   botley-worker2
+botley-89c6c584b-tt4p4   1/1     Running   botley-worker
+botley-89c6c584b-w2lkh   1/1     Running   botley-worker
+```
+
+(We've left out some columns.) The scheduler spread them over the two workers. None went on the control plane.
+
+<Think title="Brain power">
+
+Why didn't the scheduler put any Botleys on `botley-control-plane`? Try `kubectl describe node botley-control-plane` and look for a line that starts with `Taints`.
+
+</Think>
+
+```text
+Taints:             node-role.kubernetes.io/control-plane:NoSchedule
+```
+
+A **taint** is a mark on a node that says “keep away”. `NoSchedule` means the scheduler won't put pods there, unless a pod says it can live with that taint. Kubernetes' own control plane pods say so. Botley doesn't. That keeps the control plane free for its own work.
+
+## How much room is there?
+
+Each node tells Kubernetes how much CPU and memory it has:
+
+```bash
+kubectl describe node botley-worker
+```
+
+```text
+Allocatable:
+  cpu:                8
+  memory:             4013480Ki
+  pods:               110
+```
+
+`Allocatable` is what's left for pods after the node keeps some for itself. CPU is counted in **cores**. Memory is in bytes; `Ki` means kibibytes, so this is about 4 GiB.
+
+<Careful title="Watch it!">
+
+kind's nodes are all containers on the same laptop. Each one reports the whole laptop's CPU and memory (or what Docker is allowed to use). So two kind workers say they have 16 cores between them, but really they share 8. On a real cluster, each node is its own machine, and the numbers are real.
+
+</Careful>
+
+## Requests and limits
+
+You tell Kubernetes about Botley's needs in the container's `resources`. Open `k8s/deployment-resources.yaml`. It's `deployment-v2-probes.yaml` with this added:
+
+```yaml
+        resources:
+          requests:                  # ← what the scheduler sets aside for each pod
+            cpu: 250m
+            memory: 128Mi
+          limits:                    # ← the most each pod may use
+            memory: 256Mi
+```
+
+`250m` means 250 **millicores**: a quarter of one CPU core. `128Mi` means 128 mebibytes, which is a little more than 128 megabytes.
+
+Requests and limits are two different things:
+
+| | **Requests** | **Limits** |
+|---|---|---|
+| Who uses it | The scheduler, when it picks a node. | The node, while the pod is running. |
+| What it means | “Make sure this much is free for me.” | “Never let me use more than this.” |
+| What happens if the pod uses more | Nothing, if the node has spare room. | CPU: the pod is slowed down. Memory: the container is killed. |
+
+The scheduler doesn't look at what pods are using right now. It adds up their **requests**. If a node has 8 cores and its pods have requested 7.5, a pod that requests 1 core won't fit there, even if the node is doing nothing.
+
+Apply it:
+
+```bash
+kubectl apply -f k8s/deployment-resources.yaml
+kubectl describe node botley-worker
+```
+
+Near the bottom, under `Allocated resources`:
+
+```text
+  Resource           Requests    Limits
+  --------           --------    ------
+  cpu                600m (7%)   100m (1%)
+  memory             306Mi (7%)  562Mi (14%)
+```
+
+That's everything on this node added up: two Botleys at 250m each, plus Kubernetes' own pods.
+
+## When nothing fits
+
+Now see what happens when Botley asks for a lot more. Delete the Deployment, then apply one that asks for 3 cores per pod, with 6 pods:
+
+```bash
+kubectl delete deployment botley
+sed -e 's/cpu: 250m/cpu: "3"/' -e 's/replicas: 3/replicas: 6/' k8s/deployment-resources.yaml | kubectl apply -f -
+```
+
+(`sed` changes the two lines on the way, so you don't have to edit the file.)
+
+<YourTurn title="Sharpen your pencil">
+
+There are two workers, with 8 cores each. Each Botley asks for 3 cores. How many of the 6 Botleys can run? What happens to the rest?
+
+<Blank />
+
+</YourTurn>
+
+```bash
+kubectl get pods -o wide
+```
+
+```text
+NAME                     READY   STATUS    NODE
+botley-6657dc4b5-2564d   1/1     Running   botley-worker2
+botley-6657dc4b5-d665p   1/1     Running   botley-worker
+botley-6657dc4b5-mntbb   1/1     Running   botley-worker
+botley-6657dc4b5-nzwf8   0/1     Pending   <none>
+botley-6657dc4b5-pnzr6   0/1     Pending   <none>
+botley-6657dc4b5-tmmxf   1/1     Running   botley-worker2
+```
+
+Two Botleys on each worker: 6 cores used, 2 left over, and 2 isn't enough for another 3. The other two pods are **Pending**. They have no node, and they'll wait until room appears. `describe` tells you why:
+
+```bash
+kubectl describe pod botley-6657dc4b5-nzwf8
+```
+
+```text
+  Warning  FailedScheduling  21s   default-scheduler  0/3 nodes are available: 1 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }, 2 Insufficient cpu. ...
+```
+
+Read it piece by piece. 0 of the 3 nodes can take this pod. 1 has a taint the pod doesn't accept: the control plane. 2 don't have enough CPU left: the workers.
+
+<Sketch name="kb-ch08-1" caption={"Each worker has 8 cores. Two Botleys take 6 of them, and 2 are left. A Botley that asks for 3 doesn't fit anywhere, so it waits as Pending."} />
+
+<Careful title="Watch it!">
+
+`Pending` is almost always the scheduler saying “I can't find a node for this”. The reason is in the Events at the bottom of `kubectl describe pod`. The usual ones are not enough CPU or memory, a taint, or a volume that can't be attached. On a cloud cluster, the cluster autoscaler can add a node when pods are Pending (Chapter 11).
+
+</Careful>
+
+Put things back:
+
+```bash
+kubectl delete deployment botley
+kubectl apply -f k8s/deployment-resources.yaml
+```
+
+## Going over the memory limit
+
+Now the other side: a Botley that uses more than its limit. The limit is 256Mi. Botley has a page, `/eat`, that makes it grab memory and keep it. Ask one Botley pod to eat 100 MB, then 200 MB more.
+
+You need to call one particular pod, not the Service, so use the pod's own address. Find it with `kubectl get pods -o wide` and use it in place of `10.244.1.5` below:
+
+```bash
+kubectl exec tester -- curl -s "10.244.1.5:8080/eat?mb=100"
+```
+
+```json
+{
+  "eaten_mb": 100
+}
+```
+
+```bash
+kubectl exec tester -- curl -s "10.244.1.5:8080/eat?mb=200"
+```
+
+No answer this time. Look at the pods:
+
+```text
+NAME                      READY   STATUS    RESTARTS     AGE
+botley-78978fb54b-pfmkr   0/1     Running   1 (3s ago)   37s
+```
+
+It restarted. `describe` says why:
+
+```bash
+kubectl describe pod botley-78978fb54b-pfmkr
+```
+
+```text
+    Last State:     Terminated
+      Reason:       OOMKilled
+      Exit Code:    137
+```
+
+**OOMKilled** means “killed for running out of memory”. (OOM stands for out of memory.) Botley went over its 256Mi limit, and the node killed the container straight away. There was no SIGTERM and no 30 seconds to tidy up. The kubelet then restarted it, as you saw in Chapter 3. Notice the `0/1`: the new Botley 2.0 is still loading its airports.
+
+The log shows the last lines Botley printed, and they don't mention memory at all:
+
+```bash
+kubectl logs botley-78978fb54b-pfmkr --previous
+```
+
+```text
+Ate 100 MB. Total eaten: 100 MB
+GET /eat?mb=100 -> 200
+```
+
+<Careful title="Watch it!">
+
+When a container is OOMKilled, its own log usually says nothing about it. It was killed from outside before it could print anything. Look for `OOMKilled` and exit code `137` in `kubectl describe pod`.
+
+</Careful>
+
+## And CPU limits?
+
+Our file has a memory limit but no CPU limit. That's on purpose. When a pod reaches its CPU limit, it isn't killed. It's slowed down, even when the node has CPU to spare. For an app that people are waiting on, that means slow answers for no good reason.
+
+Many teams set a CPU **request**, so the scheduler places pods sensibly, and a memory **limit**, so one pod can't use up a node's memory. They leave the CPU limit off. Others set CPU limits so one team can't take a shared node's CPU from everyone else. If you share a cluster, ask the people who run it which they prefer.
+
+<FaceOff title={"Fireside chat: the request and the limit"} left={"Request"} right={"Limit"} lines={[["L", "I'm a promise. The scheduler only puts the pod on a node where my amount is free."], ["R", "I'm a wall. The pod can't go past me."], ["L", "The pod can use more than me, if the node has room."], ["R", "Not more than me. Go over me on memory, and the container is killed."], ["L", "You're very strict."], ["R", "Somebody has to be. Without me, one hungry Botley could use up the whole node."]]} />
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"How do I know what numbers to use?"}>
+
+Measure. Run Botley under normal load and look at what it really uses. `kubectl top pods` shows this, once the cluster has a tool called metrics-server (Chapter 11). Set the request a bit above normal use, and the memory limit well above the busiest use you've seen.
+
+</QA>
+
+<QA q={"What if I don't set any requests or limits?"}>
+
+The scheduler then thinks Botley needs nothing, and may pack too many pods on one node. And when a node runs low on memory, pods with no requests are among the first ones Kubernetes removes. Always set requests.
+
+</QA>
+
+<QA q={"What is Burstable? I saw it in kubectl get pod -o yaml."}>
+
+It's the pod's **QoS class** (quality of service). Pods with requests lower than their limits, like Botley, are `Burstable`. Pods with requests equal to limits for both CPU and memory are `Guaranteed`. Pods with none are `BestEffort`. When a node runs short of memory, BestEffort pods are removed first and Guaranteed pods last.
+
+</QA>
+
+<QA q={"Can I change a pod's requests without restarting it?"}>
+
+In recent versions of Kubernetes, yes, in many cases. It's called in-place pod resize. When you change the requests in a Deployment, though, it still makes new pods, like any other change to the template.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. A node has 4 cores allocatable. Its pods have requested 3.5 cores, but they're only using 1 core right now. Will a pod that requests 1 core be placed there? <Blank />
+2. A pod's status is `Pending`. Which command tells you why, and where do you look? <Blank />
+3. A pod restarts every few minutes. `kubectl logs --previous` shows nothing wrong. `describe` shows exit code 137. What's happening, and what could you change? <Blank />
+4. What is `500m` of CPU? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- **Requests** are for the scheduler: it only places a pod where its requests fit.
+- **Limits** are enforced on the node. Over the CPU limit: slowed down. Over the memory limit: **OOMKilled** (exit code 137).
+- **Pending** means no node can take the pod. `kubectl describe pod` says why.
+- A **taint** keeps pods off a node. The control plane has one.
+- Always set requests. A memory limit is a good idea. Ask your cluster's owners about CPU limits.
+
+</Takeaways>

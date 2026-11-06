@@ -1,0 +1,294 @@
+---
+number: 4
+title: "Who brings Botley back?"
+kicker: "Chapter four"
+subtitle: "A Deployment remembers how many Botleys you want, and makes new pods when old ones disappear."
+question: "How do I keep a set number of Botleys running, all the time?"
+part: "The building blocks"
+quote: {"who": "maya", "text": "I deleted a Botley pod, and a new one was already starting before I could look."}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+At the end of Chapter 3, Maya deleted her Botley pod and nothing brought it back. She wants three Botleys, and she wants them to stay. For that she needs a **Deployment**.
+
+You saw a Deployment file in Chapter 1. Now you'll use one.
+
+## The Deployment file
+
+Open `k8s/deployment.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: botley
+spec:
+  replicas: 3                # ← how many Botley pods you want
+  selector:
+    matchLabels:
+      app: botley            # ← "the pods with this label are mine"
+  template:                  # ← everything below here is a pod
+    metadata:
+      labels:
+        app: botley          # ← each new pod gets this label
+    spec:
+      containers:
+      - name: botley
+        image: botley:1.0
+        ports:
+        - containerPort: 8080
+```
+
+<YourTurn title="Sharpen your pencil">
+
+Put `pod.yaml` from Chapter 3 next to `deployment.yaml`. Circle the lines that are the same in both files. Where are they in the Deployment file?
+
+<Blank />
+
+</YourTurn>
+
+Did you spot it? The part under `template:` is the pod from Chapter 3, moved to the right. The Deployment holds a pattern for making pods, and it makes as many as `replicas` says.
+
+The `selector` is how the Deployment knows which pods belong to it. It looks for pods with the label `app: botley`. The `template` gives every new pod that same label. These two must match, or Kubernetes won't accept the file.
+
+## Apply it
+
+If the pod from Chapter 3 is still there, delete it first with `kubectl delete pod botley`. Then:
+
+```bash
+kubectl apply -f k8s/deployment.yaml
+```
+
+```text
+deployment.apps/botley created
+```
+
+```bash
+kubectl get deployments
+```
+
+```text
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+botley   3/3     3            3           7s
+```
+
+`3/3` means three pods are ready, out of the three you asked for. Now the pods:
+
+```bash
+kubectl get pods
+```
+
+```text
+NAME                      READY   STATUS    RESTARTS   AGE
+botley-77c4b7b645-clk68   1/1     Running   0          7s
+botley-77c4b7b645-qkbfx   1/1     Running   0          7s
+botley-77c4b7b645-rn6h9   1/1     Running   0          7s
+```
+
+Three Botleys. You didn't give them names, so Kubernetes made them up. Every name starts with `botley-77c4b7b645-`. The middle part comes from here:
+
+```bash
+kubectl get replicasets
+```
+
+```text
+NAME                DESIRED   CURRENT   READY   AGE
+botley-77c4b7b645   3         3         3       7s
+```
+
+There's a third thing you didn't make: a **ReplicaSet**. The Deployment made it. So there are three layers:
+
+<Sketch name="kb-ch04-1" caption={"You make the Deployment. The Deployment makes a ReplicaSet. The ReplicaSet makes the pods."} />
+
+- The **ReplicaSet** has one job: keep the right number of pods running.
+- The **Deployment** looks after the ReplicaSets. It becomes important when you ship a new version of Botley in Chapter 7. Chapter 7 also explains why there are two layers.
+
+You will almost never touch a ReplicaSet yourself. You work with the Deployment, and it handles the rest.
+
+## Now delete a pod
+
+This is the test that failed in Chapter 3. Open a second terminal and watch the pods:
+
+```bash
+kubectl get pods --watch
+```
+
+`--watch` keeps the command running and prints a new line every time a pod changes. In the first terminal, delete one of the Botleys. Use one of your own pod names:
+
+```bash
+kubectl delete pod botley-77c4b7b645-clk68
+```
+
+The watch shows this:
+
+```text
+botley-77c4b7b645-clk68   1/1     Terminating         0          10s
+botley-77c4b7b645-jt55g   0/1     Pending             0          0s
+botley-77c4b7b645-jt55g   0/1     ContainerCreating   0          0s
+botley-77c4b7b645-clk68   0/1     Completed           0          10s
+botley-77c4b7b645-jt55g   1/1     Running             0          1s
+```
+
+Read it from the top. The old pod starts shutting down. In the same second, a new pod appears, called `jt55g`. A second later it's running. You're back to three. (The old pod says `Completed` because Botley stops cleanly when Kubernetes asks it to. Chapter 7 shows how.)
+
+The ReplicaSet saw two pods where it wanted three, so it made one more. It didn't bring the old pod back. It made a new one with a new name. Press Ctrl+C to stop the watch.
+
+<Think title="Brain power">
+
+Back in Chapter 1 you were asked: Maya changes `replicas: 3` to `replicas: 1` and applies the file again. What happens to the other two Botleys? Try it, and watch the pods while you do.
+
+</Think>
+
+## Changing the number
+
+You can change the number of Botleys in two ways. The first is to edit `replicas` in the file and apply it again. The second is a command:
+
+```bash
+kubectl scale deployment botley --replicas=5
+```
+
+```text
+deployment.apps/botley scaled
+```
+
+Now apply the file again:
+
+```bash
+kubectl apply -f k8s/deployment.yaml
+```
+
+```text
+deployment.apps/botley configured
+```
+
+And look:
+
+```bash
+kubectl get deployments
+```
+
+```text
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+botley   3/3     3            3           41s
+```
+
+Back to three. The file said three, so applying it set the number back to three.
+
+<Careful title="Watch it!">
+
+If you change something with a command like `kubectl scale`, your file doesn't know about it. The next time someone applies the file, your change is gone. Most teams change the file, keep it in Git, and apply it. That way the file always says what is really running.
+
+</Careful>
+
+## Labels are how it counts
+
+The ReplicaSet doesn't keep a list of its pods. Every time it checks, it counts the pods that have the label `app: botley`. You can see this for yourself. Pick one Botley pod and change its label:
+
+```bash
+kubectl label pod botley-77c4b7b645-shb2n app=sleepy --overwrite
+```
+
+```bash
+kubectl get pods --show-labels
+```
+
+```text
+NAME                      READY   STATUS    RESTARTS   AGE   LABELS
+botley-77c4b7b645-2bqxw   1/1     Running   0          3s    app=botley,pod-template-hash=77c4b7b645
+botley-77c4b7b645-qkbfx   1/1     Running   0          50s   app=botley,pod-template-hash=77c4b7b645
+botley-77c4b7b645-rn6h9   1/1     Running   0          50s   app=botley,pod-template-hash=77c4b7b645
+botley-77c4b7b645-shb2n   1/1     Running   0          25s   app=sleepy,pod-template-hash=77c4b7b645
+```
+
+Now there are four pods. The one you changed is still running, but the ReplicaSet doesn't count it any more. It only saw two `app=botley` pods, so it made a new one (`2bqxw`, 3 seconds old).
+
+The pod called `shb2n` now belongs to nobody. If it crashes, the kubelet will restart it. If it's deleted, nothing will replace it. It's like the pod in Chapter 3. Clean it up:
+
+```bash
+kubectl delete pod -l app=sleepy
+```
+
+`-l` means “the pods with this label”. You can use it with `get` too: `kubectl get pods -l app=botley` lists only the Botleys.
+
+<FaceOff title={"Fireside chat: the Deployment and the ReplicaSet"} left={"Deployment"} right={"ReplicaSet"} lines={[["L", "Maya talks to me. She doesn't even know your name."], ["R", "She doesn't need to. I keep her pods running. Three pods, every second of every day."], ["L", "Only because I told you to."], ["R", "You tell me a number once. I'm the one counting."], ["L", "Wait until she ships version 2."], ["R", "What do you do then?"], ["L", "I make a second ReplicaSet for version 2, and move the pods over to it a few at a time. You only know about one version. I know about both."]]} />
+
+## Deleting the Deployment
+
+When you delete the Deployment, it takes its ReplicaSet and its pods with it:
+
+```bash
+kubectl delete deployment botley
+```
+
+```text
+deployment.apps "botley" deleted
+```
+
+Apply it again before you go on. You'll need the Botleys in the next chapter.
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"What happens if a whole node breaks?"}>
+
+The pods on it are lost, and the ReplicaSet makes new ones on the nodes that are left. It isn't instant, though. Kubernetes first waits to be sure the node is really gone and not just slow. By default it waits about five minutes before it moves the pods.
+
+</QA>
+
+<QA q={"Should I ever make a pod on its own, without a Deployment?"}>
+
+Hardly ever for an app like Botley. Pods on their own are fine for quick tests, like in Chapter 3. For anything that should keep running, use a Deployment.
+
+</QA>
+
+<QA q={"Can I make a ReplicaSet myself, without a Deployment?"}>
+
+You can, but there's no good reason to. A Deployment gives you everything a ReplicaSet does, plus safe updates (Chapter 7).
+
+</QA>
+
+<QA q={"What is pod-template-hash?"}>
+
+A label the Deployment adds by itself. It's made from the pod template, so every version of the template gets a different value. It keeps the pods of each ReplicaSet apart. It's the same as the middle part of the pod names.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. A Deployment says `replicas: 4`. You delete two of its pods. How many pods are running a few seconds later? Do they have the same names as before? <Blank />
+2. Who makes the new pods: the Deployment, the ReplicaSet or the kubelet? <Blank />
+3. Maya runs `kubectl scale deployment botley --replicas=10`. The next day, Kai applies `deployment.yaml`, which says `replicas: 3`. How many Botleys are running now? <Blank />
+4. This file is refused by Kubernetes. Why?
+
+```yaml
+  selector:
+    matchLabels:
+      app: botley
+  template:
+    metadata:
+      labels:
+        app: bot-ley
+```
+
+<Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- A **Deployment** keeps a set number of pods running. Its `template` is a pod, and `replicas` says how many.
+- The Deployment makes a **ReplicaSet**, and the ReplicaSet makes the pods.
+- When a pod disappears, a new pod with a new name takes its place.
+- Pods are counted by their **labels**. The `selector` must match the labels in the `template`.
+- Change the file and apply it. Changes made only with commands are lost the next time the file is applied.
+
+</Takeaways>

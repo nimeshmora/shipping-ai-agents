@@ -39,6 +39,14 @@ export const notebooks: Notebook[] = [
     cover: 'im-cover',
     edition: 'First edition, October 2026',
   },
+  {
+    slug: 'kubernetes-from-the-beginning',
+    number: 4,
+    title: 'Kubernetes from the Beginning',
+    blurb: 'You run Botley on a Kubernetes cluster on your own laptop, one piece at a time: pods, Deployments, Services, Secrets, updates, resources, the Gateway API, debugging and autoscaling. No cloud account needed.',
+    cover: 'kb-cover',
+    edition: 'First edition, November 2026',
+  },
 ];
 
 export function notebook(slug: string): Notebook {

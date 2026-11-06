@@ -1,0 +1,19 @@
+# Chapter 9. A GatewayClass says which software runs Gateways.
+# On kind we use Envoy Gateway. In the cloud, only gatewayClassName changes (Chapter 12).
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: botley-gateway
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80

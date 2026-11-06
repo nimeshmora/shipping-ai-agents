@@ -1,0 +1,192 @@
+---
+number: 12
+title: "Moving off your laptop"
+kicker: "Chapter twelve"
+subtitle: "Amazon EKS, Google GKE and Azure AKS run the same Kubernetes. Most of your files stay the same. Here is what changes."
+question: "What changes when Botley moves from kind to a cluster in the cloud?"
+part: "Running it for real"
+quote: {"who": "sam", "text": "So it works on your laptop. What do we need to run it for real?"}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+Botley runs on Maya's kind cluster with three replicas, a Service, a Gateway, settings, a Secret, probes, requests and limits, and an autoscaler. Sam is happy. Now Kai will run it on a real cluster in the company's cloud account.
+
+Kubernetes is the same software everywhere. Amazon EKS, Google GKE and Azure AKS all run standard Kubernetes, and they all accept the same YAML files you wrote in this notebook.
+
+<YourTurn title="Sharpen your pencil">
+
+Look at the files in `examples/botley/k8s`. Which ones do you think will need changes to run on EKS, GKE or AKS? Which line in the Deployment will almost certainly change?
+
+<Blank />
+<Blank />
+
+</YourTurn>
+
+## What changes
+
+| | On your laptop (kind) | In the cloud |
+|---|---|---|
+| **Control plane** | A container on your laptop. You can see it. | Run by the cloud provider. You can't see it, and you don't look after it. |
+| **Nodes** | Docker containers sharing your laptop. | Real virtual machines, each with its own CPU and memory. You pay for them. |
+| **Images** | Copied in with `kind load`. | Pushed to a **registry**: Amazon ECR, Google Artifact Registry or Azure Container Registry. Nodes download them from there. |
+| **Getting users in** | Port-forward. | A Gateway or a `LoadBalancer` Service gets a real load balancer from the cloud, with an address on the internet. |
+| **Secrets** | Made by hand with `kubectl create secret`. | Usually kept in the cloud's secret store and copied in by a tool. |
+| **More nodes** | You make a new cluster. | The cluster can add and remove nodes by itself. |
+| **Cost** | Free. | You pay for the nodes, load balancers and storage, and on most clouds a fee for each cluster. |
+
+## The line that always changes
+
+Your Deployment says `image: botley:2.0`. In the cloud, there's no `kind load`, so the image must be in a registry, and the Deployment must say which one. The name of the image gets longer:
+
+```text
+Amazon ECR:               123456789012.dkr.ecr.eu-west-1.amazonaws.com/botley:2.0
+Google Artifact Registry: europe-west1-docker.pkg.dev/my-project/my-repo/botley:2.0
+Azure Container Registry: mycompany.azurecr.io/botley:2.0
+```
+
+You tag the image with the long name and push it:
+
+```bash
+docker tag botley:2.0 mycompany.azurecr.io/botley:2.0
+docker push mycompany.azurecr.io/botley:2.0
+```
+
+Then change the `image` line and apply the Deployment as usual. (Each cloud has a login command for its registry first. Its documentation shows it.)
+
+<Sketch name="kb-ch12-1" caption={"On kind, you copy the image into the nodes yourself. In the cloud, you push it to a registry, and each node downloads it from there."} />
+
+<Careful title="Watch it!">
+
+Your laptop may build images for a different kind of processor than the cloud's nodes. A Mac with Apple silicon builds ARM images, and many cloud nodes are x86 (amd64). The pod then fails with an error like `exec format error`. Build for the nodes' processor with `docker buildx build --platform linux/amd64`, or for both.
+
+</Careful>
+
+## Making a cluster
+
+Each cloud has a quick way to make a cluster where the provider also looks after the nodes for you. You can start with these, and learn the details later:
+
+```bash
+# Amazon EKS, with Auto Mode (using the eksctl tool)
+eksctl create cluster --name botley --region eu-west-1 --enable-auto-mode
+
+# Google GKE, Autopilot mode
+gcloud container clusters create-auto botley --location=europe-west1
+
+# Azure AKS Automatic
+az aks create --resource-group botley-rg --name botley --sku automatic
+```
+
+Then point kubectl at the new cluster. This adds a new **context**, like kind did in Chapter 2:
+
+```bash
+aws eks update-kubeconfig --name botley --region eu-west-1
+gcloud container clusters get-credentials botley --location=europe-west1
+az aks get-credentials --resource-group botley-rg --name botley
+```
+
+Check with `kubectl get nodes`. From here, every `kubectl` command you learned works the same way.
+
+<Note>
+
+EKS Auto Mode, GKE Autopilot and AKS Automatic each manage the nodes for you: they pick machine sizes, add nodes when pods are Pending, and keep the nodes patched. Each cloud also has a “standard” mode where you choose and manage the nodes yourself. Commands and options change often, so check each provider's current “create a cluster” guide before you start.
+
+</Note>
+
+## What it costs
+
+Besides the nodes, load balancers and storage, there's a fee for each cluster:
+
+| | Fee for each cluster | Notes |
+|---|---|---|
+| **Amazon EKS** | $0.10 an hour (about $73 a month) | $0.60 an hour if the cluster runs a Kubernetes version that's only in **extended support**. |
+| **Google GKE** | $0.10 an hour | A free monthly credit covers one zonal or Autopilot cluster for each billing account. |
+| **Azure AKS** | Free tier: no fee. Standard tier: $0.10 an hour | AKS Automatic uses the Standard tier. The Free tier is meant for small and test clusters. |
+
+<Note>
+
+Sources: the Amazon EKS, Google Kubernetes Engine and Azure Kubernetes Service pricing pages, and Microsoft's “Free, Standard, and Premium pricing tiers for AKS” page. Checked 5 November 2026. Prices are in US dollars and can differ by region.
+
+</Note>
+
+<Careful title="Watch it!">
+
+A cloud cluster costs money every hour it exists, even when nothing runs on it. When you've finished practising, delete it. Deleting the cluster doesn't always delete the load balancers and disks it made, so check the cloud console afterwards.
+
+</Careful>
+
+## Getting users in
+
+On kind you used port-forward, because there was nothing in front of the cluster. In the cloud, each provider has its own implementation of the Gateway API from Chapter 9. Your Gateway and HTTPRoute look the same. Only the `gatewayClassName` changes.
+
+- On Amazon EKS, the AWS Load Balancer Controller (version 3 and later) makes AWS load balancers from Gateways.
+- On Google GKE, a Gateway controller is built in. You choose a GatewayClass such as `gke-l7-global-external-managed`.
+- On Azure AKS, Application Gateway for Containers is Azure's Gateway API load balancer.
+
+The simplest option of all is a Service with `type: LoadBalancer`, which you met in Chapter 5. Every cloud gives it a load balancer and a public address. It's fine for a quick test. For real use, a Gateway gives you web addresses, HTTPS and routing rules.
+
+## Keeping up with Kubernetes
+
+A new minor version of Kubernetes comes out about three times a year. Each cloud supports a version for a limited time, and then you must upgrade. On EKS, you can stay on an old version for longer, but it costs six times as much. Plan to upgrade a few times a year.
+
+The usual order: read the release notes for anything your files use that's being removed, upgrade the control plane, then upgrade the nodes. The cloud does most of the work. Your job is to make sure your YAML still works with the new version.
+
+<FaceOff title={"Fireside chat: kind and a cloud cluster"} left={"kind"} right={"Cloud cluster"} lines={[["L", "I'm free, I start in a minute, and you can delete me without asking anybody."], ["R", "I have real nodes. When one breaks, another takes its place. I have a real address on the internet."], ["L", "Everything Maya learned, she learned on me."], ["R", "And every file she wrote on you works on me. Only the image name changed."], ["L", "So I'm not just a toy."], ["R", "No. You're where people practise, and test their files before they get to me."]]} />
+
+## Where to go next
+
+You now know the parts of Kubernetes that almost every app uses. Some things people learn next:
+
+- **Helm**, a tool for packaging a set of YAML files with settings you can change, and installing them in one go.
+- **GitOps** tools like **Argo CD** and **Flux**, which watch a Git repository and apply what's in it to the cluster. It's the same “compare and fix” idea from Chapter 1, applied to your whole cluster.
+- **Namespaces and permissions (RBAC)**, so several teams can share one cluster safely.
+- **Network policies**, which say which pods may talk to which.
+- **Running models on Kubernetes**, with GPUs. That's [Notebook #2, Chapter 7](../../running-your-own-models/07-models-on-kubernetes/). Everything in it should now make sense.
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"Which cloud should I use?"}>
+
+The one your company already uses. All three run the same Kubernetes, and the differences are mostly in how they connect to the rest of their cloud. Notebook #1, Chapter 11, compares the three providers for agents.
+
+</QA>
+
+<QA q={"Can I use the same cluster for test and live?"}>
+
+You can, with different namespaces. Many teams use separate clusters instead, so a mistake in test can't affect live users.
+
+</QA>
+
+<QA q={"How does a pod get permission to use other cloud services, like a storage bucket?"}>
+
+Each cloud links Kubernetes service accounts to its own permissions: EKS Pod Identity, GKE Workload Identity Federation and Microsoft Entra Workload ID on AKS. This means you don't need to put cloud keys in Secrets at all.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. Botley's pods on EKS show `ImagePullBackOff`. The Deployment still says `image: botley:2.0`. What's wrong? <Blank />
+2. The pods on a new cloud cluster crash straight away with `exec format error`. Maya built the image on her Mac. What happened? <Blank />
+3. Sam asks why the cloud bill has a cluster fee even on a weekend when nobody used Botley. What do you say? <Blank />
+4. Which of these files from this notebook can't be used on a cloud cluster at all: `deployment-resources.yaml`, `service.yaml`, `kind-three-nodes.yaml`, `configmap.yaml`? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- EKS, GKE and AKS run standard Kubernetes. Your YAML files work there too.
+- Images must be pushed to a **registry**, and the `image` line must use the full name. Build for the nodes' processor.
+- The cloud runs the control plane. Auto Mode, Autopilot and AKS Automatic can run the nodes too.
+- Each cloud has its own Gateway implementation. Your HTTPRoutes stay the same.
+- Clusters cost money every hour. Delete practice clusters, and plan to upgrade Kubernetes a few times a year.
+
+</Takeaways>

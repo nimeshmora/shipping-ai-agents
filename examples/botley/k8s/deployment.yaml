@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: botley
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: botley
+  template:
+    metadata:
+      labels:
+        app: botley
+    spec:
+      containers:
+      - name: botley
+        image: botley:1.0
+        ports:
+        - containerPort: 8080

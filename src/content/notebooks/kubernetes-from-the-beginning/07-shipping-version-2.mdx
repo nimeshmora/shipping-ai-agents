@@ -1,0 +1,316 @@
+---
+number: 7
+title: "Shipping version 2"
+kicker: "Chapter seven"
+subtitle: "A Deployment swaps old pods for new ones a few at a time. A readiness probe makes sure no user is sent to a Botley that isn't ready."
+question: "How do I update Botley without anybody seeing an error?"
+part: "The building blocks"
+quote: {"who": "maya", "text": "The update worked. It's just that for ten seconds, nobody could use Botley."}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Geek, Blank, Note, Hand } from '../../../components/index.ts';
+
+Maya has finished Botley 2.0. It loads a list of airports when it starts, so it takes about ten seconds before it can answer. Until then, it replies `503 still starting` to everything.
+
+Three Botley 1.0 pods are running and people are using them. Maya wants to switch them all to 2.0.
+
+<YourTurn title="Sharpen your pencil">
+
+If you had to update the three Botleys by hand, with users still using them, what steps would you take? Write them in order.
+
+<Blank />
+<Blank />
+<Blank />
+
+</YourTurn>
+
+## Step 1: build version 2
+
+In `examples/botley`:
+
+```bash
+docker build --build-arg VERSION=2.0 -t botley:2.0 .
+kind load docker-image botley:2.0 --name botley
+```
+
+## Step 2: watch what users see
+
+To see what users would see during the update, keep asking Botley for a plan, five times a second, for 30 seconds. Use the `tester` pod from Chapter 5. (If it's gone, start it again with the `kubectl run` command from Chapter 5.)
+
+```bash
+kubectl exec tester -- sh -c 'for i in $(seq 150); do curl -s -o /dev/null -w "%{http_code}\n" -m 2 botley/plan; sleep 0.2; done' | sort | uniq -c
+```
+
+This prints the HTTP status code of every answer, then counts them. `200` means a good answer. Run it now, before the update, to see what normal looks like:
+
+```text
+ 150 200
+```
+
+## Step 3: ship it
+
+`k8s/deployment-v2.yaml` is the Deployment from Chapter 6 with two changes. The image is `botley:2.0`. And there's a setting that makes our pretend Botley take ten seconds to start, like the real one:
+
+```yaml
+        image: botley:2.0
+        ...
+        env:
+        - name: STARTUP_SECONDS      # ← version 2 takes about 10 seconds to start
+          value: "10"
+```
+
+Start the loop from Step 2 in one terminal. While it runs, apply the new file in another:
+
+```bash
+kubectl apply -f k8s/deployment-v2.yaml
+```
+
+When the loop finishes:
+
+```text
+ 110 200
+  38 503
+   2 000
+```
+
+38 answers were `503 still starting`. Two requests didn't get an answer at all (`000`). Users would have seen errors for about ten seconds.
+
+<Think title="Brain power">
+
+The Deployment replaced the pods one at a time, and it waited for each new pod before it removed an old one. So why did users see errors?
+
+</Think>
+
+The Deployment did wait. But it waited for the wrong thing. It waited for each new pod to be **ready**, and right now Kubernetes thinks a pod is ready as soon as its container has started. Botley 2.0 starts in less than a second and then spends ten seconds loading airports. So Kubernetes saw each new Botley as ready straight away, sent it users, and removed an old Botley. A few seconds later, all three Botleys were new, and all three were still loading.
+
+Kubernetes can't know when Botley is really ready. You have to tell it how to check.
+
+## Step 4: the readiness probe
+
+First, go back to version 1:
+
+```bash
+kubectl rollout undo deployment botley
+```
+
+```text
+deployment.apps/botley rolled back
+```
+
+(You'll see more about `undo` later in this chapter.)
+
+Now open `k8s/deployment-v2-probes.yaml`. It's the same as `deployment-v2.yaml` with one more part in the container:
+
+```yaml
+        readinessProbe:              # ← "only send me traffic when this works"
+          httpGet:
+            path: /health            # ← the kubelet asks for this page...
+            port: 8080
+          periodSeconds: 2           # ← ...every 2 seconds
+```
+
+A **probe** is a check that the kubelet runs on the container, again and again. This one asks for `/health`. If the answer is a 2xx or 3xx status code, the pod is ready. If not, it isn't. Botley's `/health` page answers `503` while it's starting and `200` after that.
+
+Start the loop again, but change `seq 150` to `seq 200`, so it runs for 40 seconds and the whole update fits inside it. While it runs, apply the new file:
+
+```bash
+kubectl apply -f k8s/deployment-v2-probes.yaml
+kubectl get pods
+```
+
+```text
+NAME                      READY   STATUS    RESTARTS   AGE
+botley-7949cbf977-zbqhp   0/1     Running   0          5s
+botley-7c6476665b-5bxtr   1/1     Running   0          21s
+botley-7c6476665b-t94gd   1/1     Running   0          22s
+botley-7c6476665b-tr44r   1/1     Running   0          23s
+```
+
+Look at the first line: `0/1` and `Running`. The container is running, but the pod isn't ready yet. The Service won't send it any users, and the Deployment won't remove an old Botley yet. The old Botleys keep answering.
+
+When the loop finishes:
+
+```text
+ 200 200
+```
+
+Every request got an answer. There were no errors this time.
+
+## How a rolling update works
+
+Here's what happened, step by step:
+
+```bash
+kubectl get replicasets
+```
+
+```text
+NAME                DESIRED   CURRENT   READY   AGE
+botley-5ff8854878   3         3         3       38s
+botley-669c7d5c6c   0         0         0       63s
+botley-77c4b7b645   0         0         0       64s
+botley-7b958864bc   0         0         0       47s
+botley-7d5d4c6c85   0         0         0       44s
+```
+
+There's one ReplicaSet for every version of the pod template you've used so far, in Chapters 4, 6 and 7. Every time you change the pod template, the Deployment makes a new ReplicaSet. Then it moves the pods over: it raises the number on the new ReplicaSet by one, waits until that new pod is ready, lowers the old one by one, and repeats. That's called a **rolling update**. The old ReplicaSets stay, with zero pods, so you can go back to them.
+
+This is the answer to the fireside chat in Chapter 4. A ReplicaSet only knows about one version. The Deployment knows about all of them, and moves pods between them.
+
+<Sketch name="kb-ch07-1" caption={"A rolling update. The new ReplicaSet grows by one, the new pod becomes ready, and the old ReplicaSet shrinks by one."} />
+
+Two settings control how fast it goes. You don't have to set them. These are the defaults:
+
+```yaml
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%          # ← how many extra pods may exist during the update
+      maxUnavailable: 25%    # ← how many pods may be missing during the update
+```
+
+With 3 replicas, 25% is 0.75. Kubernetes rounds `maxSurge` up to 1 and `maxUnavailable` down to 0. So during the update there can be 4 pods, and never fewer than 3 ready ones. That's why you saw four pods above.
+
+## When version 3 is broken
+
+Somebody applies the Deployment with `image: botley:3.0`, an image that doesn't exist. Watch:
+
+```text
+NAME                      READY   STATUS             RESTARTS   AGE
+botley-86bd75d47c-fzv74    0/1     ImagePullBackOff   0          15s
+botley-5ff8854878-hf8kl    1/1     Running            0          40s
+botley-5ff8854878-n2rch    1/1     Running            0          53s
+botley-5ff8854878-zp4xp    1/1     Running            0          28s
+```
+
+The new pod never becomes ready, so the update stops after one pod. The three working Botleys keep running. Nobody notices, except whoever is watching the update:
+
+```bash
+kubectl rollout status deployment botley
+```
+
+```text
+Waiting for deployment "botley" rollout to finish: 1 out of 3 new replicas have been updated...
+```
+
+This would wait for 10 minutes, then stop with an error saying the Deployment has made no progress. The broken pod would still be there. Go back to the version that worked:
+
+```bash
+kubectl rollout undo deployment botley
+```
+
+The broken pod is removed, and you're back to three working Botleys. To see the list of versions:
+
+```bash
+kubectl rollout history deployment botley
+```
+
+```text
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+4         <none>
+5         <none>
+7         <none>
+8         <none>
+```
+
+Each change to the pod template is a revision. 1 is Chapter 4, 2 is the settings from Chapter 6, and 4 is version 2 without the probe. 7 is the broken version 3.
+
+Some numbers seem to be missing, but they are not lost. When `undo` goes back to an old revision, that revision gets a new number. The restart from Chapter 6 was revision 3, and when you went back to it in Step 4 it became 5. Version 2 with the probe was 6, and the `undo` you just ran made it 8.
+
+<Careful title="Watch it!">
+
+A Deployment only protects you if the new pods **fail to become ready**. If Botley 3.0 starts fine and answers `/health` with `200`, but gives terrible trip plans, Kubernetes will roll it out to every pod. Make `/health` check the things that really matter. And keep a person, or a test, watching each update.
+
+</Careful>
+
+## Two more probes
+
+There are two other kinds of probe. They use the same `httpGet` settings.
+
+| Probe | When it fails, Kubernetes... | Use it for |
+|---|---|---|
+| `readinessProbe` | stops sending the pod traffic. Nothing is restarted. | “Can this pod answer users right now?” |
+| `livenessProbe` | restarts the container. | “Is this pod stuck, and does it need a restart to fix it?” |
+| `startupProbe` | restarts the container, but only while it's starting. Until it passes, the other two probes don't run. | Apps that take a long time to start. |
+
+<Careful title="Watch it!">
+
+Be careful with liveness probes. If the check is too strict, or too quick, Kubernetes restarts pods that were only slow. Then the other pods get more traffic, become slow too, and get restarted. Start with a readiness probe. Only add a liveness probe when you have a pod that gets stuck in a way that a restart fixes.
+
+</Careful>
+
+## Stopping politely
+
+When Kubernetes removes a pod, it doesn't kill it straight away. It first sends the container a signal called **SIGTERM**, which means “please stop”. The app has 30 seconds to finish what it's doing and exit. If it's still running after 30 seconds, Kubernetes sends **SIGKILL**, which can't be ignored.
+
+<Geek>
+
+The pretend Botley handles SIGTERM with these lines in `app.py`:
+
+```python
+def stop(signum, frame):
+    print("Kubernetes asked me to stop. Goodbye!", flush=True)
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, stop)
+```
+
+Without them, Botley would ignore SIGTERM, and every pod would take the full 30 seconds to be removed. Try removing those lines, then delete a pod and time it. A real agent would also finish the conversations it's in the middle of before it exits.
+
+</Geek>
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"What does CHANGE-CAUSE mean, and why is it always <none>?"}>
+
+It's a note about why each revision was made. Kubernetes fills it from an annotation called `kubernetes.io/change-cause`, if you set one. Most teams don't. They use Git to remember why each change was made.
+
+</QA>
+
+<QA q={"Can I stop an update halfway?"}>
+
+Yes. `kubectl rollout pause deployment botley` stops it where it is, and `kubectl rollout resume deployment botley` continues it. Some teams use this to try a new version on a few pods first.
+
+</QA>
+
+<QA q={"Why does the ReplicaSet name change when I change a ConfigMap and restart?"}>
+
+`kubectl rollout restart` adds a small note with the time to the pod template. That changes the template, so the Deployment makes a new ReplicaSet, like for any other change.
+
+</QA>
+
+<QA q={"Is there a way to replace all the pods at once?"}>
+
+Yes, set `strategy: type: Recreate`. It removes all the old pods first, then starts the new ones. Users will see errors in between, so only use it when two versions can't run at the same time.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. A pod shows `0/1` and `Running`. What does that mean? Will the Service send it users? <Blank />
+2. A Deployment has 4 replicas and the default settings. How many pods can exist during an update? What is the fewest that are ready at any time? <Blank />
+3. You applied a new version and `kubectl rollout status` has said “1 out of 4 new replicas have been updated” for five minutes. What do you check, and how do you go back? <Blank />
+4. Botley's liveness probe checks `/health` every 2 seconds, and fails after one missed answer. Botley is slow at lunchtime. What might happen? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- Changing the pod template makes a new **ReplicaSet**. The Deployment moves pods to it a few at a time: a **rolling update**.
+- Without a **readiness probe**, a pod counts as ready as soon as its container starts.
+- A readiness probe keeps users away from pods that can't answer yet, and stops a bad update from spreading.
+- `kubectl rollout status`, `history` and `undo` let you watch an update and go back.
+- Kubernetes stops pods with **SIGTERM**, then **SIGKILL** after 30 seconds. Handle SIGTERM.
+
+</Takeaways>

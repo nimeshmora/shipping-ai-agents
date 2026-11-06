@@ -1,0 +1,280 @@
+---
+number: 6
+title: "Don't bake the key into the image"
+kicker: "Chapter six"
+subtitle: "Settings go in a ConfigMap and passwords go in a Secret, so the same Botley image works everywhere."
+question: "Where do Botley's settings and API key go?"
+part: "The building blocks"
+quote: {"who": "kai", "text": "If the API key is in the image, everybody who can download the image has the key."}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+The real Botley needs two things that aren't in its code. It needs some settings, like the greeting it puts at the start of every trip plan. And it needs an API key to call the model.
+
+Maya's first idea is to write them into the Dockerfile:
+
+```dockerfile
+ENV GREETING="Hello from Botley"
+ENV MODEL_API_KEY="sk-live-8f2a..."
+```
+
+<YourTurn title="Sharpen your pencil">
+
+Write down two problems with Maya's idea.
+
+1. <Blank />
+2. <Blank />
+
+</YourTurn>
+
+The first problem is the key. Anybody who can download the image can read every `ENV` line in it with `docker inspect`. Images get copied to registries, laptops and build servers. The key goes everywhere the image goes.
+
+The second problem is the settings. Maya wants a test Botley and a live Botley, with different greetings and different keys. With the settings in the image, she has to build two images. Then the image she tested is not the image she ships.
+
+Kubernetes has two places for these. Settings go in a **ConfigMap**. Passwords and keys go in a **Secret**. The image stays the same everywhere.
+
+## Step 1: the ConfigMap
+
+Open `k8s/configmap.yaml`:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: botley-settings
+data:                              # ← the settings, as name: value pairs
+  GREETING: "Hello from Botley"
+```
+
+```bash
+kubectl apply -f k8s/configmap.yaml
+```
+
+```text
+configmap/botley-settings created
+```
+
+That's all a ConfigMap is: a named list of settings, stored in the cluster. It does nothing by itself until a pod uses it.
+
+## Step 2: tell Botley to use it
+
+Open `k8s/deployment-with-settings.yaml`. It's the Deployment from Chapter 4 with an `env` part added to the container:
+
+```yaml
+      containers:
+      - name: botley
+        image: botley:1.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: GREETING             # ← the variable Botley will see
+          valueFrom:
+            configMapKeyRef:
+              name: botley-settings  # ← from this ConfigMap...
+              key: GREETING          # ← ...take this value
+        - name: MODEL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: botley-secrets   # ← from this Secret...
+              key: MODEL_API_KEY     # ← ...take this value
+```
+
+Each item under `env` becomes an environment variable inside the container. Botley reads `GREETING` and `MODEL_API_KEY` from its environment, in the same way as on your laptop.
+
+You haven't made the Secret yet. Apply the Deployment anyway, and see what happens:
+
+```bash
+kubectl apply -f k8s/deployment-with-settings.yaml
+kubectl get pods -l app=botley
+```
+
+```text
+NAME                      READY   STATUS                       RESTARTS   AGE
+botley-669c7d5c6c-z46wp   0/1     CreateContainerConfigError   0          5s
+botley-77c4b7b645-94qxv   1/1     Running                      0          60s
+botley-77c4b7b645-hqz46   1/1     Running                      0          111s
+botley-77c4b7b645-qjlsr   1/1     Running                      0          111s
+```
+
+<Think title="Brain power">
+
+There are four pods now, not three. One is broken and three are fine. Look at the middle part of the names. What do you think is going on?
+
+</Think>
+
+The new pod (`669c7d5c6c`) can't start. `describe` tells you why:
+
+```bash
+kubectl describe pod botley-669c7d5c6c-z46wp
+```
+
+```text
+  Warning  Failed     11s (x2 over 11s)  kubelet            Error: secret "botley-secrets" not found
+```
+
+The three old pods (`77c4b7b645`) are still running. When you change a Deployment, it doesn't throw the old pods away first. It starts one new pod, and waits for it to work before it goes on. The new pod didn't work, so the old Botleys kept serving users. Chapter 7 explains how this works.
+
+## Step 3: the Secret
+
+You could write the Secret in a YAML file, like the ConfigMap. But then the key would sit in a file, and files end up in Git. So make it with a command instead:
+
+```bash
+kubectl create secret generic botley-secrets \
+  --from-literal=MODEL_API_KEY=sk-pretend-1234
+```
+
+```text
+secret/botley-secrets created
+```
+
+(`generic` means a Secret for any kind of value. There are other kinds, for things like TLS certificates.)
+
+Now look at the pods again:
+
+```text
+NAME                      READY   STATUS    RESTARTS   AGE
+botley-669c7d5c6c-g549r   1/1     Running   0          4s
+botley-669c7d5c6c-gsw9x   1/1     Running   0          5s
+botley-669c7d5c6c-z46wp   1/1     Running   0          20s
+```
+
+You didn't have to do anything else. The kubelet kept trying to start the broken pod. As soon as the Secret existed, the pod started. Then the Deployment continued, made two more new pods, and removed the old ones.
+
+Ask Botley (start the `tester` pod from Chapter 5 again if you deleted it):
+
+```bash
+kubectl exec tester -- curl -s "botley/plan?to=Oslo"
+```
+
+```json
+{
+  "botley": "1.0",
+  "pod": "botley-669c7d5c6c-g549r",
+  "plan": "Hello from Botley: fly to Oslo on Tuesday, stay three nights, eat well."
+}
+```
+
+And `curl -s botley/` shows `"api_key_loaded": "yes"`. Botley got both values.
+
+<Sketch name="kb-ch06-1" caption={"The image has no settings in it. When the container starts, the kubelet reads the ConfigMap and the Secret, and gives their values to Botley as environment variables."} />
+
+## How secret is a Secret?
+
+Look at what Kubernetes stored:
+
+```bash
+kubectl get secret botley-secrets -o yaml
+```
+
+```text
+data:
+  MODEL_API_KEY: c2stcHJldGVuZC0xMjM0
+```
+
+It looks scrambled, but it isn't. That's **base64**, a way of writing any data with plain letters and numbers. Anyone can turn it back:
+
+```bash
+echo c2stcHJldGVuZC0xMjM0 | base64 -d
+```
+
+```text
+sk-pretend-1234
+```
+
+<Careful title="Watch it!">
+
+Base64 is not encryption. A Secret is safer than a ConfigMap only because Kubernetes treats it differently. You can give people permission to read ConfigMaps but not Secrets. `kubectl describe secret` shows only the size of each value, not the value. And your cluster can be set up to encrypt Secrets where it stores them. Anyone who is allowed to read the Secret, or to run `kubectl exec` in the pod, can still see the key.
+
+</Careful>
+
+You can check the last part yourself:
+
+```bash
+kubectl exec deploy/botley -- env | grep MODEL
+```
+
+```text
+MODEL_API_KEY=sk-pretend-1234
+```
+
+(`deploy/botley` means “any one pod of the botley Deployment”. It saves you copying a pod name.)
+
+## Changing a setting
+
+Maya changes the greeting in `configmap.yaml` to `Good news` and applies it:
+
+```bash
+kubectl apply -f k8s/configmap.yaml
+kubectl exec tester -- curl -s "botley/plan?to=Oslo"
+```
+
+```text
+  "plan": "Hello from Botley: fly to Oslo on Tuesday, stay three nights, eat well."
+```
+
+Still the old greeting. Environment variables are set once, when the container starts. Changing the ConfigMap afterwards doesn't change the pods that are already running. To pick up the change, make new pods:
+
+```bash
+kubectl rollout restart deployment botley
+```
+
+```text
+deployment.apps/botley restarted
+```
+
+This replaces the pods one at a time, so Botley keeps answering while it happens. When it's done:
+
+```text
+  "plan": "Good news: fly to Oslo on Tuesday, stay three nights, eat well."
+```
+
+<FaceOff title={"Fireside chat: the ConfigMap and the Secret"} left={"ConfigMap"} right={"Secret"} lines={[["L", "We hold exactly the same kind of thing. Names and values."], ["R", "I hold the values people steal."], ["L", "Your values are only written in base64. I could do that too."], ["R", "Yes, but people set rules about who can read me. Clusters can encrypt me where I'm stored. Nobody bothers doing that for you."], ["L", "Nobody needs to. Anyone can know Botley's greeting."], ["R", "Exactly. So please stop letting people put API keys in you."]]} />
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"Where should the real API key live, if not in a YAML file in Git?"}>
+
+Most teams keep it in their cloud's secret store: AWS Secrets Manager, Azure Key Vault or Google Secret Manager. Then a tool copies it into the cluster. Two common ones are the **External Secrets Operator**, which makes Kubernetes Secrets from the cloud store, and the **Secrets Store CSI Driver**, which gives the pod the secret as a file. Chapter 12 comes back to this.
+
+</QA>
+
+<QA q={"Can a ConfigMap hold a whole file, not just short values?"}>
+
+Yes. You can put a whole settings file in a ConfigMap and give it to the pod as a file, instead of as environment variables. That's called mounting it as a **volume**. Also, when a ConfigMap is mounted as a volume, the file in the pod is updated a while after you change it, without a restart. Your app still has to read the file again to notice.
+
+</QA>
+
+<QA q={"Is there a size limit?"}>
+
+Yes, a ConfigMap or a Secret can hold up to 1 MiB. They're for settings, not for big files or data.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. You change a value in a ConfigMap that Botley reads as an environment variable. Will running Botleys see the change? What do you run? <Blank />
+2. A new pod shows `CreateContainerConfigError`. What is the most likely cause? Which command shows the reason? <Blank />
+3. Your teammate says “It's fine to put the Secret YAML in Git, it's encrypted.” What do you say? <Blank />
+4. Why is it better to have one image and different ConfigMaps for test and live, instead of two images? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- Don't put settings or keys in the image. The same image should run everywhere.
+- A **ConfigMap** holds settings. A **Secret** holds passwords and keys.
+- Pods get them as environment variables (or as files).
+- Secret values are written in **base64**, which anyone can read. Protect Secrets with permissions and encryption, and keep them out of Git.
+- Environment variables are read once, when the container starts. After changing a ConfigMap, run `kubectl rollout restart`.
+
+</Takeaways>

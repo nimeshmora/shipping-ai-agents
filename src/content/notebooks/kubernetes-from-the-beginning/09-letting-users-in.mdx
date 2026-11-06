@@ -1,0 +1,452 @@
+---
+number: 9
+title: "Letting users in"
+kicker: "Chapter nine"
+subtitle: "Give Botley a web address that works from outside the cluster, with a Gateway and an HTTPRoute."
+question: "How do requests from outside the cluster get to Botley?"
+part: "Running it for real"
+quote: {"who": "sam", "text": "The travel desk wants to put Botley on their website. What address do I give them?"}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Geek, Blank, Note, Hand } from '../../../components/index.ts';
+
+The travel desk has a website, and they want Botley on it. Their website doesn't run in the cluster. Sam asks Maya for an address they can use, something like `botley.example.com`.
+
+Inside the cluster, Botley already has an address. Any pod can call `botley` and the Service shares the requests out. But the Service's cluster IP only works inside the cluster. The travel desk's website can't use it, and neither can anyone's laptop.
+
+In Chapter 5 you used `kubectl port-forward` to reach Botley from your laptop. That only works on the laptop where the command is running, and only while it runs. Sam can't give that to the travel desk.
+
+## Something at the edge
+
+What's missing is a program that sits at the edge of the cluster. It takes requests from outside, looks at each one, and sends it to the right Service. Kubernetes has an API for describing this, called the **Gateway API**. You write what you want in YAML, like everything else, and a controller makes it happen.
+
+Kubernetes describes Gateways, but it doesn't come with a program that runs them. You install one yourself. There are many to choose from: Envoy Gateway, NGINX Gateway Fabric, Istio, Cilium, Traefik and others. Each cloud has its own too (Chapter 12). They all read the same YAML.
+
+We'll use **Envoy Gateway**. Install it with one `kubectl apply`. The file is big, so this takes a minute:
+
+```bash
+kubectl apply --server-side -f https://github.com/envoyproxy/gateway/releases/download/v1.9.3/install.yaml
+kubectl wait --timeout=5m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
+```
+
+```text
+deployment.apps/envoy-gateway condition met
+```
+
+It goes in its own namespace, `envoy-gateway-system`, so it stays apart from Botley.
+
+<Careful title="Watch it!">
+
+Type the `kubectl apply` command on one line. If your terminal splits it in two, the shell runs the URL as a separate command and you get `flag needs an argument: 'f' in -f`.
+
+Before you apply a file from the internet, check where it comes from and which version it is. This one is from the Envoy Gateway project's own releases page on GitHub. Newer versions will have come out since we wrote this, and the project's “Quickstart” page has the current command.
+
+</Careful>
+
+<Geek>
+
+The file added new kinds of objects to your cluster. Kubernetes lets projects do this with a **CustomResourceDefinition**, or CRD. After the install, kubectl knows about Gateways:
+
+```bash
+kubectl api-resources | grep gateway.networking.k8s.io
+```
+
+```text
+gatewayclasses     gc       gateway.networking.k8s.io/v1   false   GatewayClass
+gateways           gtw      gateway.networking.k8s.io/v1   true    Gateway
+grpcroutes                  gateway.networking.k8s.io/v1   true    GRPCRoute
+httproutes                  gateway.networking.k8s.io/v1   true    HTTPRoute
+...
+```
+
+(We've left out a few lines and some spaces.) These are the standard Gateway API kinds, the same on every cluster. Envoy Gateway also added some of its own, with `gateway.envoyproxy.io` in their names. You won't need those here.
+
+</Geek>
+
+## A GatewayClass and a Gateway
+
+Open `k8s/gateway.yaml`. It has two objects in it:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller   # ← "Envoy Gateway runs these"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: botley-gateway
+spec:
+  gatewayClassName: eg          # ← which GatewayClass to use
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80                    # ← take plain web requests on port 80
+```
+
+A **GatewayClass** says which software runs Gateways. A cluster can have more than one: for example, one for the internet and one for inside the company. Usually the people who run the cluster make these, once.
+
+A **Gateway** is one entry point to the cluster. It says what it listens for: here, plain HTTP on port 80. It doesn't say anything about Botley yet.
+
+Apply it and look:
+
+```bash
+kubectl apply -f k8s/gateway.yaml
+kubectl get gatewayclass
+kubectl get gateway
+```
+
+```text
+NAME   CONTROLLER                                      ACCEPTED   AGE
+eg     gateway.envoyproxy.io/gatewayclass-controller   True       25s
+
+NAME             CLASS   ADDRESS   PROGRAMMED   AGE
+botley-gateway   eg                False        26s
+```
+
+The GatewayClass is `ACCEPTED`: Envoy Gateway has seen it and agreed to look after it. The Gateway has no address, and `PROGRAMMED` is `False`.
+
+<Think title="Brain power">
+
+Is the Gateway broken? Before you read on, run `kubectl describe gateway botley-gateway` and find the condition whose status is `False`. What does its message say?
+
+</Think>
+
+```text
+    Message:               No addresses have been assigned to the Gateway
+    Reason:                AddressNotAssigned
+    Status:                False
+    Type:                  Programmed
+```
+
+Look at what Envoy Gateway made in its own namespace:
+
+```bash
+kubectl get pods,services -n envoy-gateway-system
+```
+
+```text
+NAME                                                        READY   STATUS
+pod/envoy-default-botley-gateway-c60e41bd-7bc9cbc56-hpx9s   2/2     Running
+pod/envoy-gateway-559c8f589-27k9d                           1/1     Running
+
+NAME                                            TYPE           CLUSTER-IP      EXTERNAL-IP
+service/envoy-default-botley-gateway-c60e41bd   LoadBalancer   10.96.131.248   <pending>
+service/envoy-gateway                           ClusterIP      10.96.176.250   <none>
+```
+
+(We've left out some columns.) There are two pods. `envoy-gateway` is the controller: it reads your Gateways and routes. The other one, with your Gateway's name in it, is the **Envoy proxy**. That's the program that actually takes the requests.
+
+In front of the proxy, Envoy Gateway made a Service of type `LoadBalancer`. You met that type in Chapter 5. It asks the cloud for a load balancer with a public address. On a cloud cluster, an address would appear under `EXTERNAL-IP` within a minute or two, and the Gateway would show it too. On kind there's no cloud to ask, so it stays `<pending>`. The Gateway works, but it has no outside address.
+
+So on your laptop you use port-forward one more time, but this time to the proxy, not to Botley. Open a second terminal and leave this running:
+
+```bash
+kubectl -n envoy-gateway-system port-forward service/envoy-default-botley-gateway-c60e41bd 8888:80
+```
+
+Your Service will have different letters and numbers at the end of its name. Copy yours from `kubectl get services -n envoy-gateway-system`.
+
+Now send a request to the Gateway:
+
+```bash
+curl -i -H "Host: botley.example.com" "localhost:8888/plan?to=Lisbon"
+```
+
+```text
+HTTP/1.1 404 Not Found
+content-length: 0
+```
+
+A request reached the Gateway, and the Gateway had nowhere to send it. That's what should happen, because nothing has told it about Botley yet.
+
+## An HTTPRoute
+
+An **HTTPRoute** tells a Gateway which requests go to which Service. Open `k8s/httproute.yaml`:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: botley
+spec:
+  parentRefs:
+  - name: botley-gateway        # ← attach this route to our Gateway
+  hostnames:
+  - botley.example.com          # ← only for requests to this name
+  rules:
+  - backendRefs:
+    - name: botley              # ← send them to the botley Service
+      port: 80                  # ← on the Service's port
+```
+
+Apply it and try again:
+
+```bash
+kubectl apply -f k8s/httproute.yaml
+curl -i -H "Host: botley.example.com" "localhost:8888/plan?to=Lisbon"
+```
+
+```text
+HTTP/1.1 200 OK
+content-type: application/json
+content-length: 145
+
+{
+  "botley": "2.0",
+  "pod": "botley-69b6f87dd6-kfjkw",
+  "plan": "Hello from Botley: fly to Lisbon on Tuesday, stay three nights, eat well."
+}
+```
+
+Botley answered, through the Gateway.
+
+What's the `-H "Host: botley.example.com"` for? Every web request says which name it was sent to, in a header called `Host`. When someone types `botley.example.com` in a browser, the browser puts that name in the header. The Gateway reads it and picks the route whose `hostnames` match. You don't own `botley.example.com`, and nothing points it at your laptop, so curl adds the header by hand.
+
+<YourTurn title="Sharpen your pencil">
+
+What do you think happens if you leave out the `Host` header? Write down your guess, then try it:
+
+```bash
+curl -i "localhost:8888/plan?to=Lisbon"
+```
+
+<Blank />
+
+</YourTurn>
+
+```text
+HTTP/1.1 404 Not Found
+content-length: 0
+```
+
+The request says it's for `localhost`. No route has that name, so the Gateway has nowhere to send it. This is how one Gateway can serve many apps. Each team's route lists its own names, and the Gateway sorts the requests by name.
+
+<Sketch name="kb-ch09-1" caption={"The controller reads your Gateway and HTTPRoute and sets up the Envoy proxy. The proxy reads the Host of each request, and sends it to one of Botley's pods. A name that no route lists gets a 404."} />
+
+Is the Gateway sharing requests between the Botleys? Ask a few times and look at the `pod` line:
+
+```bash
+for i in 1 2 3 4 5 6; do curl -s -H "Host: botley.example.com" localhost:8888/ | grep pod; done
+```
+
+```text
+  "pod": "botley-69b6f87dd6-9vz7m",
+  "pod": "botley-69b6f87dd6-kfjkw",
+  "pod": "botley-69b6f87dd6-kfjkw",
+  "pod": "botley-69b6f87dd6-d4ccp",
+  "pod": "botley-69b6f87dd6-d4ccp",
+  "pod": "botley-69b6f87dd6-kfjkw",
+```
+
+All three Botleys answer. In Chapter 5, port-forward to the Service stuck to one pod. Now you port-forward to the proxy, and the proxy shares the requests out.
+
+<Geek>
+
+The route names a Service, but the proxy doesn't send requests to the Service's cluster IP. Envoy Gateway reads the Service's EndpointSlices (Chapter 5) and gives the proxy the list of pod addresses. The proxy sends each request straight to a pod. When a pod stops being ready, it drops off the list, just as it does for the Service.
+
+</Geek>
+
+<Sticky>
+
+GatewayClass: which software runs Gateways.<br />
+Gateway: one entry point, and what it listens for.<br />
+HTTPRoute: which requests go to which Service.
+
+</Sticky>
+
+## A route that goes nowhere
+
+Now break it on purpose. A common mistake is to use the pod's port in the route, not the Service's port. Botley listens on 8080, so let's try that:
+
+```bash
+sed 's/port: 80$/port: 8080/' k8s/httproute.yaml | kubectl apply -f -
+curl -i -H "Host: botley.example.com" "localhost:8888/plan?to=Lisbon"
+```
+
+```text
+HTTP/1.1 500 Internal Server Error
+content-length: 0
+```
+
+A 500, and no other clue in the answer. `kubectl get httproute` doesn't help much either. It shows the route exists. The reason is in the route's status:
+
+```bash
+kubectl describe httproute botley
+```
+
+```text
+Status:
+  Parents:
+    Conditions:
+      Message:               Route is accepted
+      Reason:                Accepted
+      Status:                True
+      Type:                  Accepted
+      Message:               Failed to process route rule 0 backendRef 0: TCP Port 8080 not found on Service default/botley.
+      Reason:                PortNotFound
+      Status:                False
+      Type:                  ResolvedRefs
+```
+
+There are two conditions. `Accepted` is `True`: the Gateway took the route. `ResolvedRefs` is `False`: the Service it points to doesn't have port 8080. The `botley` Service has port 80, and sends that on to 8080 in the pods. The route has to use the Service's port.
+
+<Careful title="Watch it!">
+
+When a route doesn't work, look at the conditions under `Status` in `kubectl describe httproute`. If `Accepted` is `False`, the Gateway didn't take the route: check the name in `parentRefs`. If `ResolvedRefs` is `False`, the Service in `backendRefs` is wrong: check its name and port.
+
+</Careful>
+
+Put it back:
+
+```bash
+kubectl apply -f k8s/httproute.yaml
+```
+
+## Trying something on a few users
+
+Sam has an idea. Botley's plans start with “Hello from Botley”. Would people like something friendlier? Sam wants to try a new greeting, but only on some of the travel desk's users at first.
+
+In Chapter 7, a rolling update moved everyone to the new version. A route can do something different: send most requests to one Service and a few to another.
+
+First you need a second Botley with the new greeting. `k8s/botley-friendly.yaml` has a Deployment and a Service, both called `botley-friendly`. It's the same image. Only the label and the greeting are different:
+
+```yaml
+        env:
+        - name: GREETING
+          value: "Hi! Botley here, and I'd love to help"
+```
+
+Then `k8s/httproute-split.yaml` is the route from before, with two Services and a **weight** for each:
+
+```yaml
+  rules:
+  - backendRefs:
+    - name: botley
+      port: 80
+      weight: 90                # ← 90 parts to the usual Botley
+    - name: botley-friendly
+      port: 80
+      weight: 10                # ← 10 parts to the new greeting
+```
+
+Apply both, and wait for the new Botley to be ready:
+
+```bash
+kubectl apply -f k8s/botley-friendly.yaml
+kubectl rollout status deployment botley-friendly
+kubectl apply -f k8s/httproute-split.yaml
+```
+
+Now send 100 requests and count the greetings:
+
+```bash
+for i in $(seq 1 100); do
+  curl -s -H "Host: botley.example.com" "localhost:8888/plan?to=Lisbon" | grep -o '"plan": "[^:]*'
+done | sort | uniq -c
+```
+
+```text
+  90 "plan": "Hello from Botley
+  10 "plan": "Hi! Botley here, and I'd love to help
+```
+
+90 and 10. (You may get numbers a little different from these. The weights are a share, not an exact count.)
+
+If people like the new greeting, Sam can change the weights to 50 and 50, then to 0 and 100. Each change is one `kubectl apply`, and nobody's request fails along the way. If they don't like it, set the weights back to 100 and 0.
+
+<YourTurn title="Sharpen your pencil">
+
+The weights are 3 and 1. What share of requests goes to each Service?
+
+<Blank />
+
+</YourTurn>
+
+When you've finished, put things back:
+
+```bash
+kubectl apply -f k8s/httproute.yaml
+kubectl delete -f k8s/botley-friendly.yaml
+```
+
+Leave the Gateway and the port-forward running. You'll use them again.
+
+<FaceOff title={"Fireside chat: the Service and the Gateway"} left={"Service"} right={"Gateway"} lines={[["L", "I give Botley one name inside the cluster. Any pod can call me."], ["R", "And I give Botley a way in from outside the cluster."], ["L", "I don't look at the requests. I only pick a pod."], ["R", "I read every request: which name it was sent to, which path it's for. Then I pick a Service."], ["L", "So you need me."], ["R", "I do. My routes point at you. Without you, I wouldn't know where the Botleys are."]]} />
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"I've seen Ingress in other Kubernetes guides. What's that?"}>
+
+Ingress is the older way to do the same job. It still works, and many clusters still use it, but the Kubernetes project has stopped adding to it. The Gateway API is where new work happens. Ingress-NGINX, the most common program for running Ingress, was retired by the Kubernetes project in March 2026, and gets no more fixes. If you're starting now, use the Gateway API.
+
+</QA>
+
+<QA q={"Why are the Gateway and the route in separate files?"}>
+
+Because different people usually look after them. On Kai's cluster, Kai makes the GatewayClass and the Gateway, once. Each team writes its own HTTPRoutes and attaches them to that Gateway. Maya can change Botley's route without touching anything that belongs to another team.
+
+</QA>
+
+<QA q={"Can a route send different paths to different Services?"}>
+
+Yes. Add `matches` to a rule. This rule sends everything under `/admin` to a Service called `botley-admin`:
+
+```yaml
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /admin
+    backendRefs:
+    - name: botley-admin
+      port: 80
+```
+
+A route can have many rules. Requests that match none of them get a 404.
+
+</QA>
+
+<QA q={"What about HTTPS?"}>
+
+You add a second listener to the Gateway with `protocol: HTTPS` and `port: 443`, and point it at a Secret that holds the certificate. A tool called cert-manager can get certificates and keep them up to date for you. On a cloud cluster, the cloud can often do it.
+
+</QA>
+
+<QA q={"Why is the proxy pod 2/2?"}>
+
+It has two containers. One is `envoy`, which handles the requests. The other is `shutdown-manager`, a small helper that lets Envoy finish the requests it's in the middle of before the pod is removed. That's the same polite stopping you saw in Chapter 7. A pod can hold a few containers that need to live close together (Chapter 3).
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. You curl through the Gateway and get a 404. Give two different reasons this could happen. <Blank />
+2. Requests through the Gateway get a 500. Which command shows why, and which condition do you look at? <Blank />
+3. On kind, `kubectl get gateway` shows `PROGRAMMED` as `False`. Is something wrong? What would be different on a cloud cluster? <Blank />
+4. Maya puts `port: 8080` in the route's `backendRefs`, because that's the port Botley listens on. What happens, and what should she use? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- A Service's address only works inside the cluster. For users outside, you need a **Gateway**.
+- Kubernetes doesn't run Gateways itself. You install software that does, such as **Envoy Gateway**.
+- A **GatewayClass** says which software runs Gateways. A **Gateway** is one entry point. An **HTTPRoute** says which requests go to which Service.
+- Routes pick requests by the name they were sent to (`hostnames`), and can also pick by path.
+- **Weights** send a share of requests to each Service, so you can try a change on a few users.
+- When a route doesn't work, read its conditions in `kubectl describe httproute`.
+
+</Takeaways>

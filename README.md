@@ -10,73 +10,14 @@ Written by Nimesha Jinarajadasa, with help from [contributors](https://github.co
 
 ## The notebooks
 
-### Notebook #1: [Shipping AI Agents](https://nimeshmora.github.io/shipping-ai-agents/notebooks/shipping-ai-agents/) &nbsp;·&nbsp; [PDF](https://nimeshmora.github.io/shipping-ai-agents/shipping-ai-agents.pdf)
+| # | Notebook | What it's about | Chapters | Extras |
+|---|---|---|---|---|
+| 1 | [Shipping AI Agents](https://nimeshmora.github.io/shipping-ai-agents/notebooks/shipping-ai-agents/) | From "it works on my laptop" to real users on AWS, Microsoft Azure and Google Cloud. | 13 | [PDF](https://nimeshmora.github.io/shipping-ai-agents/shipping-ai-agents.pdf) |
+| 2 | [Running Your Own Models](https://nimeshmora.github.io/shipping-ai-agents/notebooks/running-your-own-models/) | Managed model services or your own GPUs? How each works, and when each one pays off. | 11 | [PDF](https://nimeshmora.github.io/shipping-ai-agents/running-your-own-models.pdf) |
+| 3 | [Inside the Machine](https://nimeshmora.github.io/shipping-ai-agents/notebooks/inside-the-machine/) | How GPUs run your agent, explained from the very beginning. | 12 | [PDF](https://nimeshmora.github.io/shipping-ai-agents/inside-the-machine.pdf) |
+| 4 | [Kubernetes from the Beginning](https://nimeshmora.github.io/shipping-ai-agents/notebooks/kubernetes-from-the-beginning/) | You learn Kubernetes by running Botley on a cluster on your own laptop, one command at a time. | 12 | [Botley's code](examples/04-kubernetes-from-the-beginning/) |
 
-**The basics**
-1. Meet your agent
-2. It worked on my laptop!
-3. Giving your agent an address
-4. Pack it up
-5. Where will it live?
-6. Meet the landlords
-7. Making it safe to trust
-
-**Under the hood**
-
-8. What happens to a conversation?
-9. How agents remember
-10. Who is allowed in?
-
-**Choose, deploy, launch**
-
-11. Choosing where to deploy
-12. Deploying Botley for real
-13. The road to production
-
-### Notebook #2: [Running Your Own Models](https://nimeshmora.github.io/shipping-ai-agents/notebooks/running-your-own-models/) &nbsp;·&nbsp; [PDF](https://nimeshmora.github.io/shipping-ai-agents/running-your-own-models.pdf)
-
-**The basics**
-1. Where does Botley's brain live?
-2. What is a model, really?
-3. How a model writes an answer
-4. Meet the GPU
-
-**The two paths**
-
-5. The managed path
-6. The do-it-yourself path
-7. Models on Kubernetes
-8. Deploying a model for real
-
-**Choose**
-
-9. Does it pay off?
-10. Reasons that aren't money
-11. Choosing your path
-
-### Notebook #3: [Inside the Machine](https://nimeshmora.github.io/shipping-ai-agents/notebooks/inside-the-machine/) &nbsp;·&nbsp; [PDF](https://nimeshmora.github.io/shipping-ai-agents/inside-the-machine.pdf)
-
-*How GPUs run your agent.*
-
-**How any computer works**
-1. What happens when Botley thinks?
-2. Switches all the way down
-3. The CPU: a few very fast chefs
-4. The counter, the fridge and the warehouse
-
-**Why AI needs GPUs**
-
-5. The math inside a model, gently
-6. The GPU: thousands of line cooks
-7. The real bottleneck
-8. When one GPU isn't enough
-
-**From chip to cloud**
-
-9. Inside a data center
-10. Not only NVIDIA
-11. How to read a GPU spec sheet
-12. What this means for your agent
+Click a notebook's name to see all its chapters. Code you run while reading is in [`examples/`](examples/), with one folder for each notebook.
 
 ## Help make it better
 
@@ -116,10 +57,11 @@ The site is built with [Astro](https://astro.build). Each chapter is one MDX fil
 | Notebook cover, how-to-use page, word list | `src/pages/notebooks/<notebook>/` (`index.astro`, `how.astro`, `back.mdx`) |
 | Chapters | `src/content/notebooks/<notebook>/*.mdx` (one file per chapter) |
 | Drawings | `src/sketches/*.svg` |
+| Code readers run, one folder for each notebook | `examples/<number>-<notebook>/` (see `examples/README.md`) |
 | Box components (Careful!, Your turn and so on) | `src/components/` |
 | Page layout, sidebar, Previous and Next | `src/layouts/Base.astro` |
 | Colors, fonts, light and dark mode | `src/styles/notebook.css` and `src/styles/site.css` |
-| The PDF | `public/shipping-ai-agents.pdf` |
+| The PDFs | `public/<notebook>.pdf` |
 
 ### Edit a chapter
 

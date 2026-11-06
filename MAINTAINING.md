@@ -31,6 +31,7 @@ Notebook #1's older addresses (`/chapters/…`, `/how/`, `/back/`) redirect to t
 2. Put its chapters in `src/content/notebooks/<slug>/`.
 3. Add `index.astro` (cover), `how.astro` and `back.mdx` in `src/pages/notebooks/<slug>/`. Copy Notebook #1's and change the `notebook` prop.
 4. If readers run code, put it in `examples/NN-<slug>/` and follow [examples/README.md](examples/README.md). Every notebook folder has a `README.md`, a `versions.env`, a `test.sh` and its own GitHub check. Then set `examples` in `src/lib/notebooks.ts` to the folder name, so the front page shows a button that links to it. Set `examplesButton` to name the example app, like "Botley's code" (the default is "Get the code").
+5. Add a row for it to the table under **The notebooks** in `README.md`. Keep it to one row: the chapters are listed on the website.
 
 ## Talks board
 

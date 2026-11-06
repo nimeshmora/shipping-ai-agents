@@ -46,6 +46,13 @@ stop_port_forward() {
 
 tester() { $K exec tester -- curl -s --max-time 5 "$@"; }
 
+# Right after a rollout, a request can still reach an old pod that is shutting down.
+# So wait until 6 requests in a row all give the new answer.
+every_answer() {  # every_answer <path> <text to find>
+  local i
+  for i in 1 2 3 4 5 6; do tester "$1" | grep -q "$2" || return 1; done
+}
+
 rollout() { $K rollout status deployment/"$1" --timeout=180s >/dev/null || fail "deployment/$1 did not finish rolling out"; }
 
 cleanup() {
@@ -107,8 +114,8 @@ $K apply -f botley/k8s/configmap.yaml >/dev/null
 $K create secret generic botley-secrets --from-literal=MODEL_API_KEY=sk-pretend-1234 >/dev/null
 $K apply -f botley/k8s/deployment-with-settings.yaml >/dev/null
 rollout botley
-tester botley/ | grep -q '"api_key_loaded": "yes"' || fail "Botley did not get MODEL_API_KEY"
-tester "botley/plan?to=Oslo" | grep -q "Hello from Botley" || fail "Botley did not get GREETING"
+retry 60 every_answer botley/ '"api_key_loaded": "yes"' || fail "Botley did not get MODEL_API_KEY"
+retry 60 every_answer "botley/plan?to=Oslo" "Hello from Botley" || fail "Botley did not get GREETING"
 ok "Botley has the key and the greeting"
 
 say "Chapter 7: version 2, then version 2 with a readiness probe"
@@ -116,7 +123,7 @@ $K apply -f botley/k8s/deployment-v2.yaml >/dev/null
 rollout botley
 $K apply -f botley/k8s/deployment-v2-probes.yaml >/dev/null
 rollout botley
-tester botley/ | grep -q '"botley": "2.0"' || fail "Botley is not version 2.0"
+retry 60 every_answer botley/ '"botley": "2.0"' || fail "Botley is not version 2.0"
 ok "all pods run 2.0 and pass the probe"
 
 say "Chapter 8: requests and limits"

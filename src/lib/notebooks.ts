@@ -11,6 +11,9 @@ export type Notebook = {
   edition: string;
   // The notebook's folder in examples/, if it has example code. See examples/README.md.
   examples?: string;
+  // The text on the button that links to that folder. Name the example app, like "Botley's code".
+  // If it's not set, the button says "Get the code".
+  examplesButton?: string;
 };
 
 export const notebooks: Notebook[] = [
@@ -48,6 +51,7 @@ export const notebooks: Notebook[] = [
     blurb: 'You run Botley on a Kubernetes cluster on your own laptop, one piece at a time: pods, Deployments, Services, Secrets, updates, resources, the Gateway API, debugging and autoscaling. No cloud account needed.',
     cover: 'kb-cover',
     examples: '04-kubernetes-from-the-beginning',
+    examplesButton: "Botley's code",
     edition: 'First edition, November 2026',
   },
 ];

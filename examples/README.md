@@ -60,7 +60,7 @@ It makes its own cluster called `botley-test`, so it doesn't touch the cluster y
 1. Make a folder called `examples/NN-<notebook-slug>`, for example `examples/05-agents-in-the-cloud`. The slug is the notebook's address on the website, the same as its `slug` in `src/lib/notebooks.ts`.
 2. Add `README.md`, `versions.env` and `test.sh`. Copy Notebook #4's and change them.
 3. Copy `.github/workflows/examples-04-kubernetes-from-the-beginning.yml` to `examples-NN-<notebook-slug>.yml`, and change the folder name in it.
-4. Set `examples: 'NN-<notebook-slug>'` on the notebook in `src/lib/notebooks.ts`. The front page then shows an **Example code** button.
+4. Set `examples: 'NN-<notebook-slug>'` on the notebook in `src/lib/notebooks.ts`. The front page then shows a button that links to the folder. Set `examplesButton` to name your example app, like `"Botley's code"`. If you leave it out, the button says **Get the code**.
 5. Add the notebook to the table at the top of this file.
 
 ## Something doesn't work?

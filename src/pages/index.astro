@@ -106,7 +106,7 @@ const counts = Object.fromEntries(await Promise.all(notebooks.map(async (n) => [
               <a class="btn primary" href={url(`notebooks/${n.slug}/how/`)}>Start reading</a>
               <a class="btn" href={url(`notebooks/${n.slug}/`)}>See the chapters</a>
               {n.pdf && <a class="btn" href={url(n.pdf)}>PDF</a>}
-              {n.examples && <a class="btn" href={`${EXAMPLES}/${n.examples}`}>Example code</a>}
+              {n.examples && <a class="btn" href={`${EXAMPLES}/${n.examples}`}>{n.examplesButton ?? 'Get the code'}</a>}
             </div>
           </div>
         </article>

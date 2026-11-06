@@ -3,6 +3,7 @@ import Base from '../../../layouts/Base.astro';
 import Sketch from '../../../components/Sketch.astro';
 import { url } from '../../../lib/url';
 import { allChapters, chapterHref } from '../../../lib/chapters';
+import { EXAMPLES } from '../../../lib/site';
 const NB = 'kubernetes-from-the-beginning';
 const chapters = await allChapters(NB);
 ---
@@ -21,6 +22,7 @@ const chapters = await allChapters(NB);
     <a class="btn primary" href={url(`notebooks/${NB}/how/`)}>Start reading</a>
     <a class="btn" id="resume" href={url()} hidden>Continue reading</a>
     {chapters.length > 1 && <a class="btn" href={url(chapterHref(chapters[1].id))}>Make your cluster</a>}
+    <a class="btn" href={`${EXAMPLES}/04-kubernetes-from-the-beginning`}>Example code</a>
   </div>
   <div class="two" style="margin-top:14px">
     <div class="sticky">What does Kubernetes do for me?</div>

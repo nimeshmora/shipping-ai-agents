@@ -1,0 +1,33 @@
+name: Example code doesn't work
+description: A command or file from a notebook gives a different result from the book.
+labels: ["examples"]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Notebook and chapter
+      placeholder: "Notebook #4, Chapter 9"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The command, and the file if you changed it.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: What it printed
+      description: Paste the whole output. Please remove any real keys first.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: Your versions
+      description: "The output of: docker version --format '{{.Server.Version}}'; kind version; kubectl version"
+      render: text

@@ -1,0 +1,39 @@
+name: "Examples: Notebook #4, Kubernetes from the Beginning"
+
+# Runs the notebook's test.sh on a fresh kind cluster.
+on:
+  pull_request:
+    paths:
+      - "examples/04-kubernetes-from-the-beginning/**"
+      - ".github/workflows/examples-04-kubernetes-from-the-beginning.yml"
+  push:
+    branches: [main]
+    paths:
+      - "examples/04-kubernetes-from-the-beginning/**"
+  schedule:
+    - cron: "0 3 1 * *"   # 03:00 UTC on the 1st of each month, to catch tools that changed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: examples/04-kubernetes-from-the-beginning
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kind and kubectl at the versions the book uses
+        run: |
+          source versions.env
+          curl -sLo kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          curl -sLo kubectl "https://dl.k8s.io/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
+          chmod +x kind kubectl
+          sudo mv kind kubectl /usr/local/bin/
+          kind version
+          kubectl version --client
+      - name: Run every chapter
+        run: ./test.sh

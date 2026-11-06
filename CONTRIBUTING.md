@@ -10,6 +10,7 @@ You don't need to be an expert, and you don't need to write code for most kinds 
 | Fix a typo or a small mistake | Click **Edit this page** at the bottom of any chapter. GitHub opens the file and helps you send a change. |
 | Report something that is wrong or out of date | Click **Report a mistake or outdated fact** at the bottom of the chapter, or [open an issue](https://github.com/nimeshmora/shipping-ai-agents/issues/new/choose). |
 | Share an example (code, a story from production, a diagram) | Click **Suggest an example**, or send a pull request that adds it to the chapter. |
+| Fix or add example code that you run | Example code is in [`examples/`](examples/), with one folder for each notebook. [examples/README.md](examples/README.md) explains the rules and how to run the tests. |
 | Suggest a topic for a new notebook or chapter | [Suggest a topic](https://github.com/nimeshmora/shipping-ai-agents/issues/new?template=chapter-idea.yml) first so we can agree on the plan before you write it. |
 | Ask a question | Use [Discussions](https://github.com/nimeshmora/shipping-ai-agents/discussions) if they are turned on, otherwise open an issue. |
 

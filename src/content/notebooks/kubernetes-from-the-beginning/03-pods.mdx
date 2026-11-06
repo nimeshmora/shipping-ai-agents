@@ -17,11 +17,11 @@ In this chapter you'll make one pod by hand. (In Chapter 4 you'll stop doing tha
 
 ## Step 1: build Botley
 
-The example Botley is in the notebook's repository, in `examples/botley`. It's a small Python app that pretends to plan trips. It doesn't call a real model, so you don't need an API key. It also has a few extra pages for breaking it on purpose, which you'll use a lot.
+The example Botley is in the notebook's repository, in the folder `examples/04-kubernetes-from-the-beginning/botley`. It's a small Python app that pretends to plan trips. It doesn't call a real model, so you don't need an API key. It also has a few extra pages for breaking it on purpose, which you'll use a lot.
 
 ```bash
 git clone https://github.com/nimeshmora/shipping-ai-agents.git
-cd shipping-ai-agents/examples/botley
+cd shipping-ai-agents/examples/04-kubernetes-from-the-beginning/botley
 docker build -t botley:1.0 .
 ```
 

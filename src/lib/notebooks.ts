@@ -9,6 +9,8 @@ export type Notebook = {
   pdf?: string;
   cover: string;
   edition: string;
+  // The notebook's folder in examples/, if it has example code. See examples/README.md.
+  examples?: string;
 };
 
 export const notebooks: Notebook[] = [
@@ -45,6 +47,7 @@ export const notebooks: Notebook[] = [
     title: 'Kubernetes from the Beginning',
     blurb: 'You run Botley on a Kubernetes cluster on your own laptop, one piece at a time: pods, Deployments, Services, Secrets, updates, resources, the Gateway API, debugging and autoscaling. No cloud account needed.',
     cover: 'kb-cover',
+    examples: '04-kubernetes-from-the-beginning',
     edition: 'First edition, November 2026',
   },
 ];

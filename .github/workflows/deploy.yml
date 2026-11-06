@@ -3,6 +3,8 @@ name: Publish the notebook to GitHub Pages
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "examples/**"   # example code has its own checks, and isn't part of the site
   workflow_dispatch:
 
 permissions:

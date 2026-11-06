@@ -1,0 +1,301 @@
+---
+number: 3
+title: "Pods"
+kicker: "Chapter three"
+subtitle: "You put Botley on the cluster for the first time, talk to it, crash it, and then delete it for good."
+question: "What is a pod, and what happens to it when things go wrong?"
+part: "The building blocks"
+quote: {"who": "maya", "text": "I deleted the pod and Botley never came back. Is that normal?"}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, Blank, Note, Hand } from '../../../components/index.ts';
+
+Kubernetes doesn't run containers on their own. It always puts them inside something called a **pod**. A pod is the smallest thing Kubernetes runs. Most pods hold exactly one container, and for now you can think of “a pod” as “one running copy of Botley”.
+
+In this chapter you'll make one pod by hand. (In Chapter 4 you'll stop doing that.)
+
+## Step 1: build Botley
+
+The example Botley is in the notebook's repository, in `examples/botley`. It's a small Python app that pretends to plan trips. It doesn't call a real model, so you don't need an API key. It also has a few extra pages for breaking it on purpose, which you'll use a lot.
+
+```bash
+git clone https://github.com/nimeshmora/shipping-ai-agents.git
+cd shipping-ai-agents/examples/botley
+docker build -t botley:1.0 .
+```
+
+## Step 2: give the image to the cluster
+
+Many people get this wrong the first time. Your cluster can't see the images on your laptop. In a real cluster, nodes download images from a **registry**, such as Docker Hub or your cloud's registry. kind has a shortcut: it can copy an image straight from your laptop into the node.
+
+```bash
+kind load docker-image botley:1.0 --name botley
+```
+
+```text
+Image: "botley:1.0" with ID "sha256:5b4c5764…" not yet present on node "botley-control-plane", loading...
+```
+
+## Step 3: describe the pod
+
+Open `k8s/pod.yaml`:
+
+```yaml
+apiVersion: v1          # ← which version of the Kubernetes API this kind of thing belongs to
+kind: Pod               # ← what you're describing
+metadata:
+  name: botley          # ← its name. Must be unique in the namespace
+  labels:
+    app: botley         # ← a sticky label. You'll need it in Chapter 4
+spec:                   # ← "spec" is short for specification: what you want
+  containers:
+  - name: botley
+    image: botley:1.0   # ← the image you just loaded
+    ports:
+    - containerPort: 8080
+```
+
+Almost every Kubernetes file you'll ever see has these same four top-level parts: `apiVersion`, `kind`, `metadata` and `spec`. Learn to look for them first.
+
+## Step 4: hand it over
+
+```bash
+kubectl apply -f k8s/pod.yaml
+```
+
+```text
+pod/botley created
+```
+
+`kubectl apply` sends the file to the API server. That's all it does. It doesn't wait for Botley to start. Look at what's happening:
+
+```bash
+kubectl get pods
+```
+
+```text
+NAME     READY   STATUS              RESTARTS   AGE
+botley   0/1     ContainerCreating   0          1s
+```
+
+Run it again after a second or two:
+
+```text
+NAME     READY   STATUS    RESTARTS   AGE
+botley   1/1     Running   0          4s
+```
+
+`1/1` means one container in the pod, and one of them is ready.
+
+<Think title="Brain power">
+
+Look back at Chapter 2. Between `kubectl apply` and `Running`, at least four parts of Kubernetes did something. Which ones, and in what order?
+
+</Think>
+
+## Step 5: talk to Botley
+
+The pod has its own IP address inside the cluster, but your laptop can't reach it. For testing, kubectl can make a tunnel from your laptop into the pod:
+
+```bash
+kubectl port-forward pod/botley 8080:8080
+```
+
+Leave that running, and in a second terminal:
+
+```bash
+curl "localhost:8080/plan?to=Lisbon"
+```
+
+```json
+{
+  "botley": "1.0",
+  "pod": "botley",
+  "plan": "Here is a plan: fly to Lisbon on Tuesday, stay three nights, eat well."
+}
+```
+
+Botley is running on Kubernetes. To see what Botley printed, use `kubectl logs`:
+
+```bash
+kubectl logs botley
+```
+
+```text
+Botley 1.0 starting on port 8080 (pod botley)
+GET /plan?to=Lisbon -> 200
+```
+
+<Careful title="Watch it!">
+
+`kubectl port-forward` is for testing only. It runs on your laptop and stops when you close the terminal. Real users reach Botley in a different way, which you'll set up in Chapters 5 and 9.
+
+</Careful>
+
+## Step 6: crash it
+
+Botley has a page that makes it quit straight away. Visit it:
+
+```bash
+curl localhost:8080/crash
+```
+
+Now look at the pod:
+
+```bash
+kubectl get pods
+```
+
+```text
+NAME     READY   STATUS    RESTARTS     AGE
+botley   1/1     Running   1 (3s ago)   13s
+```
+
+Botley is running again, and `RESTARTS` went up to 1. The kubelet saw the container stop and started it again, inside the same pod. You didn't do anything.
+
+The log you saw before belonged to the old container. To see what it said before it died, add `--previous`:
+
+```bash
+kubectl logs botley --previous
+```
+
+```text
+Botley 1.0 starting on port 8080 (pod botley)
+GET /plan?to=Lisbon -> 200
+Someone asked me to crash. Goodbye!
+GET /crash -> 200
+```
+
+Remember `--previous`. When something keeps crashing, the reason is usually in the last lines it printed before it stopped.
+
+## Step 7: delete it
+
+So the kubelet brings Botley back when it crashes. What if the pod itself goes away? That happens for real when a node breaks or is shut down. You can do it by hand:
+
+```bash
+kubectl delete pod botley
+```
+
+```text
+pod "botley" deleted
+```
+
+```bash
+kubectl get pods
+```
+
+```text
+No resources found in default namespace.
+```
+
+Botley is gone, and nothing brings it back.
+
+<Sketch name="kb-ch03-1" caption={"A crash inside the pod: the kubelet restarts the container. The pod itself is lost: nobody makes a new one."} />
+
+This is the most important thing to know about pods. A container in a pod can be restarted. A pod that's gone stays gone. The kubelet looks after the pods on its node, but it has no idea that you *wanted* a Botley to be running. To get that, you need something that remembers “there should always be a Botley” and makes new pods when old ones disappear. That's Chapter 4.
+
+## When Botley won't start
+
+Try this on purpose. Change the image in `pod.yaml` to `botley:9.9`, an image that doesn't exist, and apply it:
+
+```bash
+kubectl apply -f k8s/pod.yaml
+kubectl get pods
+```
+
+```text
+NAME     READY   STATUS         RESTARTS   AGE
+botley   0/1     ErrImagePull   0          8s
+```
+
+A few seconds later the status changes to `ImagePullBackOff`. “Back off” means Kubernetes will keep trying, but it waits a bit longer between each try. To find out why, use `describe` and read the **Events** at the bottom:
+
+```bash
+kubectl describe pod botley
+```
+
+```text
+Events:
+  Type     Reason     Age   From               Message
+  ----     ------     ----  ----               -------
+  Normal   Scheduled  8s    default-scheduler  Successfully assigned default/botley to botley-control-plane
+  Normal   Pulling    8s    kubelet            Pulling image "botley:9.9"
+  Warning  Failed     4s    kubelet            Failed to pull image "botley:9.9": ... pull access denied, repository does not exist or may require authorization ...
+  Warning  Failed     4s    kubelet            Error: ErrImagePull
+  Normal   BackOff    3s    kubelet            Back-off pulling image "botley:9.9"
+  Warning  Failed     3s    kubelet            Error: ImagePullBackOff
+```
+
+Read it from the top. The scheduler found a node. The kubelet tried to download the image. It couldn't find it. You've just watched the scheduler and the kubelet from Chapter 2 do their jobs.
+
+Put the image back to `botley:1.0` and apply the file again:
+
+```bash
+kubectl apply -f k8s/pod.yaml
+```
+
+```text
+pod/botley configured
+```
+
+`configured` means Kubernetes changed the pod you already had. The image is one of the few things you're allowed to change in a pod after it's made. Try changing `containerPort` to `9090` and applying again:
+
+```text
+The Pod "botley" is invalid: spec: Forbidden: pod updates may not change fields other than `spec.containers[*].image`, ...
+```
+
+Kubernetes refuses. To change almost anything else, you have to delete the pod and make a new one. That's another reason people don't make pods by hand. (Put the port back to `8080` before you go on.)
+
+<Careful title="Watch it!">
+
+Don't tag your images `latest` with kind. When the tag is `latest`, Kubernetes always tries to download the image from a registry, even when kind has already loaded it into the node, and you'll get `ErrImagePull`. Use a real version like `1.0`.
+
+</Careful>
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"Why does Kubernetes need pods at all? Why not just containers?"}>
+
+Sometimes a few containers have to live very close together: share the same network address, or the same files. A pod gives them that. For example, a pod might hold Botley and a small helper container that ships Botley's logs somewhere. For most of this notebook, one pod holds one container.
+
+</QA>
+
+<QA q={"Does the pod keep its IP address when it restarts?"}>
+
+When the container restarts inside the same pod, yes. When the pod is replaced by a new pod, no: the new one gets a new address. That's a problem if other things need to find Botley. Chapter 5 solves it.
+
+</QA>
+
+<QA q={"What's the difference between kubectl apply and kubectl create?"}>
+
+`create` makes something new, and fails if it already exists. `apply` makes it if it doesn't exist, or changes it to match your file if it does. Most people use `apply` for everything.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. A pod shows `RESTARTS 4`. What happened four times, and who fixed it each time? <Blank />
+2. Botley keeps crashing. Which command shows you what it printed just before the last crash? <Blank />
+3. You applied a pod and it says `ImagePullBackOff`. You built the image on your laptop a minute ago. What did you forget? <Blank />
+4. A node breaks and its pods are lost. Will the kubelet on another node bring Botley back? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- A **pod** is the smallest thing Kubernetes runs. It usually holds one container.
+- `kubectl apply -f` sends your file to the API server. It doesn't wait for anything to start.
+- If the container crashes, the kubelet restarts it inside the same pod. `RESTARTS` counts how often.
+- If the pod itself is deleted or lost, nothing brings it back. You need a Deployment for that (Chapter 4).
+- `kubectl get`, `kubectl logs` (with `--previous`) and `kubectl describe` are the three commands you'll use most.
+
+</Takeaways>

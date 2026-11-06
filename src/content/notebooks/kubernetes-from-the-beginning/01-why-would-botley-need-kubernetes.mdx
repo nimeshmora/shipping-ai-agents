@@ -1,0 +1,166 @@
+---
+number: 1
+title: "Why would Botley need Kubernetes?"
+kicker: "Chapter one"
+subtitle: "One container on one machine works until people really start using it. This chapter shows what Kubernetes does about that."
+question: "What problem does Kubernetes solve, and how does it think?"
+part: "Getting started"
+quote: {"who": "sam", "text": "Can every office use Botley by the end of the month?"}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, Blank, Note, Hand } from '../../../components/index.ts';
+
+Maya runs Botley in one Docker container on one virtual machine. The travel team has used it for a month without problems. Now Sam wants every office in the company to use it.
+
+<YourTurn title="Sharpen your pencil">
+
+Botley is one container on one machine. Write down what could go wrong when ten times more people start using it.
+
+1. <Blank />
+2. <Blank />
+3. <Blank />
+4. <Blank />
+
+<Hand>
+
+There's no single right list. Ours is at the back of the book.
+
+</Hand>
+
+</YourTurn>
+
+## How Maya runs Botley today
+
+This is the command Maya uses:
+
+```bash
+docker run -d -p 8080:8080 --name botley botley:1.0
+#          ↑   ↑                        ↑
+#          |   traffic to port 8080     which image, and which version
+#          run it in the background
+```
+
+Docker starts the container, and then its job is done. If Botley crashes, it stays crashed. (Docker has a `--restart` flag that helps a little, but only on that one machine. If the machine itself dies, so does Botley.)
+
+Look at your list from the exercise again. You probably wrote down things like these:
+
+- Botley crashes and nobody restarts it.
+- The machine dies, and Botley with it.
+- One copy can't keep up with all the users.
+- Maya can't update Botley without stopping it first.
+
+You could fix each one yourself. A script that checks whether Botley is running and starts it again. A second machine. Something in front of both machines that shares out the requests. A careful update plan: stop one, update it, check it, then do the other.
+
+That's a lot of scripts to write and look after. Kubernetes already does all of those jobs. Many companies have used it for more than ten years.
+
+<Sketch name="kb-ch01-1" caption={"Left: what Maya has now. Right: what Kubernetes gives her."} />
+
+## So what is Kubernetes?
+
+**Kubernetes** is software that runs containers for you across a group of machines. The group of machines is called a **cluster**. Each machine in the cluster is called a **node**.
+
+You tell Kubernetes what you want running. Kubernetes decides which nodes to put it on, starts it, and keeps it running.
+
+<Note>
+
+Google released Kubernetes as open source in 2014. It is now looked after by the Cloud Native Computing Foundation, and thousands of people from many companies work on it. The name comes from the Greek word for the person who steers a ship. People often write it **K8s**, because there are 8 letters between the K and the s.
+
+</Note>
+
+## Saying what you want
+
+Here is Botley written down for Kubernetes. Don't worry about every line yet. You will write this file yourself in Chapter 4.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment          # ← the kind of thing you're describing
+metadata:
+  name: botley
+spec:
+  replicas: 3             # ← Maya wants three copies of Botley
+  selector:
+    matchLabels:
+      app: botley
+  template:
+    metadata:
+      labels:
+        app: botley
+    spec:
+      containers:
+      - name: botley
+        image: botley:1.0 # ← the same image Maya runs with Docker
+        ports:
+        - containerPort: 8080
+```
+
+Compare it with the Docker command. The Docker command was something to **do**, once: start this container now. This file says what Maya **wants**: three copies of Botley 1.0, all the time.
+
+Kubernetes reads the file and starts three copies. Then it keeps watching. If one copy stops, Kubernetes counts two, sees that the file says three, and starts another one. It keeps doing that check for as long as the file is in the cluster.
+
+<Sketch name="kb-ch01-2" caption={"Kubernetes keeps comparing what you asked for with what is running, and fixes any difference."} />
+
+What you write down is called the **desired state**. What is running right now is the **actual state**. Kubernetes has many small programs that do this. Each one looks after one kind of thing. It compares what you asked for with what is running, and fixes any difference. You will see this in every chapter.
+
+<Think title="Brain power">
+
+Maya changes `replicas: 3` to `replicas: 1` and gives the file to Kubernetes again. What happens to the other two copies of Botley?
+
+</Think>
+
+<Careful title="Watch it!">
+
+Kubernetes keeps Botley **running**. It doesn't make Botley **correct**. If Botley gives bad answers, Kubernetes will keep three copies of it running, all giving bad answers. You will see in Chapter 7 how to tell Kubernetes whether Botley is actually healthy.
+
+</Careful>
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"So Kubernetes replaces Docker?"}>
+
+No. You still build Botley's image the same way, with Docker. Kubernetes runs containers from that image across many machines. Inside each node it uses a container runtime such as containerd to start them, and images built with Docker work fine.
+
+</QA>
+
+<QA q={"Do I need a cloud account for this notebook?"}>
+
+No. In Chapter 2 you'll make a cluster on your own laptop with a tool called kind. It's free. Chapter 12 shows what changes when you use a cluster on Amazon, Google or Microsoft's cloud.
+
+</QA>
+
+<QA q={"Does every app need Kubernetes?"}>
+
+No. If one container on one machine is enough, or if your cloud has a simpler service that runs containers for you (such as Google Cloud Run or Azure Container Apps), use that. Kubernetes is worth it when you run many containers, or when your company already uses it.
+
+</QA>
+
+<QA q={"Why is everything written in YAML?"}>
+
+YAML is a way of writing settings in a text file. Kubernetes also accepts JSON, but YAML is easier to read. You will get used to it quickly. Most of the time you copy a file and change it. You don't write it from nothing.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn>
+
+1. What is the difference between a cluster and a node? <Blank />
+2. A Botley copy crashes. The file says `replicas: 3`. What does Kubernetes do? <Blank />
+3. Which one is the desired state: the YAML file, or the containers running right now? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- Kubernetes runs containers for you across a group of machines.
+- The group is a **cluster**. Each machine in it is a **node**.
+- You write down what you want (the **desired state**). Kubernetes keeps comparing it with what is running and fixes any difference.
+- Kubernetes keeps Botley running. It can't tell whether Botley's answers are any good.
+
+</Takeaways>

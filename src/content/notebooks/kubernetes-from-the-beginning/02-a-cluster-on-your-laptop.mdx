@@ -1,0 +1,227 @@
+---
+number: 2
+title: "A cluster on your laptop"
+kicker: "Chapter two"
+subtitle: "You install two small tools, make a real Kubernetes cluster in about a minute, and look at what is inside it."
+question: "How do I get a Kubernetes cluster to practise on, and what is running inside it?"
+part: "Getting started"
+quote: {"who": "kai", "text": "Make one on your laptop. If you break it, delete it and make another."}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+Kai runs the company's Kubernetes clusters, and Kai isn't going to let Maya practise on them. That's fine. Maya can make her own cluster on her laptop, use it to learn, and throw it away when she's done.
+
+## The tools
+
+You need three things:
+
+| Tool | What it does |
+|---|---|
+| **Docker** | Runs containers. You probably have it already. |
+| **kind** | Makes a Kubernetes cluster out of Docker containers. The name stands for “Kubernetes in Docker”. |
+| **kubectl** | The command you use to talk to any Kubernetes cluster. People say “cube control”, “cube C T L” or “cube cuddle”. All are fine. |
+
+Install kind and kubectl:
+
+```bash
+# Mac (with Homebrew)
+brew install kind kubectl
+
+# Windows (with winget)
+winget install Kubernetes.kind
+winget install Kubernetes.kubectl
+```
+
+On Linux, follow the kind quick start page (kind.sigs.k8s.io) and the kubectl install page (kubernetes.io/docs/tasks/tools). Each is one download.
+
+Check that they work:
+
+```bash
+kind version
+kubectl version --client
+```
+
+## Make the cluster
+
+Make sure Docker is running, then:
+
+```bash
+kind create cluster --name botley
+```
+
+The first time, kind downloads an image of several hundred megabytes, so give it a minute or two. You should see this:
+
+```text
+Creating cluster "botley" ...
+ ✓ Ensuring node image (kindest/node:v1.37.0) 🖼
+ ✓ Preparing nodes 📦
+ ✓ Writing configuration 📜
+ ✓ Starting control-plane 🕹️
+ ✓ Installing CNI 🔌
+ ✓ Installing StorageClass 💾
+Set kubectl context to "kind-botley"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-botley
+```
+
+That's a real Kubernetes cluster, the same software that Amazon, Google and Microsoft run for their customers. It has just one node.
+
+Look at the line `Set kubectl context to "kind-botley"`. kubectl can talk to many clusters. A **context** tells it which one to use. kind has just set it to your new cluster, so every `kubectl` command from now on goes there.
+
+## Look around
+
+Ask Kubernetes for its nodes:
+
+```bash
+kubectl get nodes
+```
+
+```text
+NAME                   STATUS   ROLES           AGE   VERSION
+botley-control-plane   Ready    control-plane   40s   v1.37.0
+```
+
+One node, called `botley-control-plane`, and it's `Ready`. Now ask Docker what it is running:
+
+```bash
+docker ps --format '{{.Names}}  {{.Image}}'
+```
+
+```text
+botley-control-plane  kindest/node:v1.37.0
+```
+
+Your “node” is a Docker container pretending to be a whole computer. In a real cluster, each node is a real machine or a virtual machine. Kubernetes doesn't mind either way.
+
+<Sketch name="kb-ch02-1" caption={"Your laptop runs Docker. Docker runs one container that acts as a node. Inside it, Kubernetes runs more containers."} />
+
+## What's already running?
+
+You haven't put anything on the cluster yet, but it's already busy. Kubernetes runs its own parts as containers too, in a separate area called `kube-system`:
+
+```bash
+kubectl get pods -n kube-system
+```
+
+```text
+NAME                                           READY   STATUS    RESTARTS   AGE
+coredns-7d764666f9-8xk2p                       1/1     Running   0          2m
+coredns-7d764666f9-tq9wd                       1/1     Running   0          2m
+etcd-botley-control-plane                      1/1     Running   0          2m
+kindnet-5jv7c                                  1/1     Running   0          2m
+kube-apiserver-botley-control-plane            1/1     Running   0          2m
+kube-controller-manager-botley-control-plane   1/1     Running   0          2m
+kube-proxy-rq4mz                               1/1     Running   0          2m
+kube-scheduler-botley-control-plane            1/1     Running   0          2m
+```
+
+(The `-n kube-system` part means “look in the `kube-system` namespace”. A **namespace** is a named area inside a cluster that keeps things apart. Your own work goes in the one called `default`.)
+
+You will see these names a lot. Here is what each one does:
+
+| Name | Its job |
+|---|---|
+| **kube-apiserver** | The API server. Every `kubectl` command goes to it. The other parts of Kubernetes also go through it to read and change the desired state. |
+| **etcd** | A small database that stores everything you've asked for: the desired state from Chapter 1. Only the API server talks to it. |
+| **kube-scheduler** | When a new container needs a home, the scheduler picks which node it goes on. |
+| **kube-controller-manager** | Runs the controllers: the small programs that compare what you asked for with what is running, and fix any difference. |
+| **coredns** | Lets containers find each other by name. You'll need it in Chapter 5. |
+| **kube-proxy** | Sends network traffic to the right containers. Also Chapter 5. |
+| **kindnet** | kind's way of connecting containers on different nodes. Real clusters use other tools for this job. |
+
+The first four together are called the **control plane**. It's the part of Kubernetes that makes the decisions. The nodes that run your own containers are called **worker nodes**. In kind, one node does both jobs.
+
+<Sketch name="kb-ch02-2" caption={"Everything goes through the API server. You never talk to etcd or the scheduler yourself."} />
+
+<Think title="Brain power">
+
+Something is missing from that list. Somebody has to start the containers on each node. Which program does that, and why isn't it in the list?
+
+</Think>
+
+It's called the **kubelet**. Every node runs one. The kubelet asks the API server “what should be running on my node?”, starts those containers, and reports back how they're doing.
+
+It isn't in the list because it isn't a container. The kubelet is an ordinary program running directly on the node. It has to be: it's the thing that starts containers, so it can't wait for someone to start it inside one. You can see it in kind if you look inside the node:
+
+```bash
+docker exec botley-control-plane ps -e | grep kubelet
+```
+
+```text
+    656 ?        00:00:07 kubelet
+```
+
+<FaceOff title={"Fireside chat: the scheduler and the kubelet"} left={"Scheduler"} right={"Kubelet"} lines={[["L", "I decide where every new container goes. I look at every node, how busy it is, what it has free. Then I pick one."], ["R", "And then you write a note on it and walk away."], ["L", "I write the node's name into the API server. That's my whole job. It's a good job."], ["R", "Then I see the note, download the image, start the container, and watch it all day. If it crashes, I start it again."], ["L", "You only look after one node."], ["R", "And you never start a single container. We need each other."]]} />
+
+## Clean up (or don't)
+
+When you're done for the day, you can delete the cluster:
+
+```bash
+kind delete cluster --name botley
+```
+
+Making a new one takes less than a minute, so don't be afraid to delete it if something goes wrong. The rest of this notebook assumes you have a cluster called `botley` running.
+
+<Careful title="Watch it!">
+
+If `kubectl` says `The connection to the server ... was refused`, it can't reach a cluster. Either the cluster doesn't exist any more (make it again), or Docker isn't running (start Docker, and the kind node usually starts again with it). Check which cluster kubectl is pointing at with `kubectl config current-context`.
+
+</Careful>
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"Isn't a one-node cluster cheating?"}>
+
+A little. Real clusters have several nodes, so a node can fail without taking everything down. But the software is the same, and every command in this notebook works the same on a big cluster. kind can make clusters with several nodes too, and you'll do that in Chapter 8.
+
+</QA>
+
+<QA q={"What about minikube, k3d or Docker Desktop's own Kubernetes?"}>
+
+They all work. They are other ways to run a small cluster on a laptop. We use kind because it's small, quick to make and throw away, and the Kubernetes project uses it to test Kubernetes itself.
+
+</QA>
+
+<QA q={"Why can't I see the control plane on Amazon EKS or Google GKE?"}>
+
+On those services the cloud provider runs the control plane for you, out of sight, and you only see your worker nodes. This is part of what you pay them for. Chapter 12 covers this.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+Match each part to its job.
+
+| Part | Job |
+|---|---|
+| 1. kube-apiserver | A. Picks a node for each new container |
+| 2. etcd | B. Starts and watches the containers on one node |
+| 3. kube-scheduler | C. Stores the desired state |
+| 4. kubelet | D. Compares what you asked for with what is running |
+| 5. kube-controller-manager | E. The only way in. Everything talks to it |
+
+1. <Blank /> 2. <Blank /> 3. <Blank /> 4. <Blank /> 5. <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- **kind** makes a real Kubernetes cluster out of Docker containers on your laptop.
+- **kubectl** is how you talk to any cluster. A **context** says which cluster.
+- The **control plane** makes the decisions: the API server, etcd, the scheduler and the controllers.
+- Every node runs a **kubelet**, which starts and watches the containers on that node.
+- Everything goes through the **API server**.
+
+</Takeaways>

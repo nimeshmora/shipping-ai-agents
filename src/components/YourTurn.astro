@@ -1,4 +1,6 @@
 ---
 import Box from './Box.astro';
+// title is optional. Notebook #4 uses the Head First names, for example "Brain power".
+const { title = 'Your turn' } = Astro.props as { title?: string };
 ---
-<Box kind="turn" icon="pencil" title="Your turn"><slot /></Box>
+<Box kind="turn" icon="pencil" title={title}><slot /></Box>

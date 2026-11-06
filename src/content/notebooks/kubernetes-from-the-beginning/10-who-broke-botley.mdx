@@ -1,0 +1,459 @@
+---
+number: 10
+title: "Who broke Botley?"
+kicker: "Chapter ten"
+subtitle: "Kai breaks Botley three times, and you use kubectl to find out what's wrong. Along the way you learn where to look, and in what order."
+question: "When something goes wrong, where do you start looking?"
+part: "Running it for real"
+quote: {"who": "kai", "text": "I've broken Botley three times. Find out what I did, using only kubectl."}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Geek, Blank, Note, Hand } from '../../../components/index.ts';
+
+Kai looks after the company's cluster. Before Botley goes on it, Kai wants to know that Maya can fix Botley when something goes wrong, without calling Kai.
+
+So Kai has made three files. Each one is a copy of one of Botley's files with one small change, and each change breaks Botley in a different way. The files are in `k8s/mysteries/`. Don't open them. Apply each one, then find out what's wrong using kubectl, the way you would if you didn't know.
+
+You have met most of the commands already, one or two at a time. In this chapter you use them together.
+
+## Where to look
+
+When something is wrong, it helps to look in the same places, in the same order, every time. Start with the widest view and move closer:
+
+<Sticky>
+
+1. `kubectl get`: what state is everything in?<br />
+2. `kubectl describe`: read the Events at the bottom.<br />
+3. `kubectl logs`: what did the app itself say? Add `--previous` if it restarted.<br />
+4. `kubectl events`: what's been happening in the whole namespace?
+
+</Sticky>
+
+Two of these are new.
+
+`kubectl events` lists the events for everything in the namespace, oldest first. `describe` only shows the events for one object. Add `--types=Warning` to hide the normal ones.
+
+And you can read the logs of several pods at once. `-l` picks pods by label, as a selector does, and `--prefix` puts the pod's name in front of each line:
+
+```bash
+kubectl logs -l app=botley --prefix --tail=2
+```
+
+```text
+[pod/botley-69b6f87dd6-9vz7m/botley] GET /health -> 200
+[pod/botley-69b6f87dd6-9vz7m/botley] GET /plan?to=Oslo -> 200
+[pod/botley-69b6f87dd6-d4ccp/botley] GET /plan?to=Oslo -> 200
+[pod/botley-69b6f87dd6-d4ccp/botley] GET /plan?to=Oslo -> 200
+[pod/botley-69b6f87dd6-kfjkw/botley] GET /health -> 200
+[pod/botley-69b6f87dd6-kfjkw/botley] GET /health -> 200
+```
+
+`--tail=2` means the last two lines from each pod. Without it, you get the whole log.
+
+Before you start, check that Botley is working. You should have the cluster from Chapter 9, with the Gateway, and the port-forward to it running in a second terminal:
+
+```bash
+kubectl get pods
+curl -s -H "Host: botley.example.com" "localhost:8888/plan?to=Oslo"
+```
+
+Three Botleys `1/1 Running`, and a trip plan. Now for Kai's first file.
+
+## Mystery 1: the update that won't finish
+
+```bash
+kubectl apply -f k8s/mysteries/mystery-1.yaml
+kubectl rollout status deployment botley
+```
+
+```text
+deployment.apps/botley configured
+Waiting for deployment "botley" rollout to finish: 1 out of 3 new replicas have been updated...
+```
+
+And it waits there. Press Ctrl+C.
+
+<YourTurn title="Sharpen your pencil">
+
+Find out what's wrong before you read on. Follow the four steps on the sticky note. Write down which step told you the answer.
+
+<Blank />
+<Blank />
+
+</YourTurn>
+
+Step 1, `kubectl get`:
+
+```bash
+kubectl get pods
+```
+
+```text
+NAME                      READY   STATUS             RESTARTS     AGE
+botley-69b6f87dd6-9vz7m   1/1     Running            0            17m
+botley-69b6f87dd6-d4ccp   1/1     Running            0            17m
+botley-69b6f87dd6-kfjkw   1/1     Running            0            17m
+botley-7bf8944494-ns65r   0/1     CrashLoopBackOff   4 (8s ago)   90s
+tester                    1/1     Running            0            17m
+```
+
+The three old Botleys are fine. There's one new pod, from a new ReplicaSet, and it has restarted four times. **CrashLoopBackOff** means the container keeps stopping, and the kubelet is waiting a while before it starts it again.
+
+Step 2, `kubectl describe`:
+
+```bash
+kubectl describe pod botley-7bf8944494-ns65r
+```
+
+```text
+    State:          Terminated
+      Reason:       Error
+      Exit Code:    1
+...
+Events:
+  Type     Reason     Age                From      Message
+  ----     ------     ----               ----      -------
+  Normal   Started    32s (x4 over 68s)  kubelet   Container started
+  Warning  Unhealthy  32s (x7 over 68s)  kubelet   Readiness probe failed: Get "http://10.244.2.6:8080/health": dial tcp 10.244.2.6:8080: connect: connection refused
+  Warning  BackOff    31s (x4 over 66s)  kubelet   Back-off restarting failed container botley in pod botley-7bf8944494-ns65r_default(78f2fa43-...)
+```
+
+(We've cut some lines.) Exit code 1 means the app stopped by itself, with an error. It wasn't killed from outside: that would be 137, like the OOMKilled Botley in Chapter 8. The readiness probe couldn't even connect, so Botley stopped before it started listening. But the Events don't say why it stopped. Only the app knows that.
+
+Step 3, `kubectl logs`:
+
+```bash
+kubectl logs botley-7bf8944494-ns65r
+```
+
+```text
+Traceback (most recent call last):
+  File "/app/app.py", line 30, in <module>
+    STARTUP_SECONDS = float(os.environ.get("STARTUP_SECONDS", "0"))
+ValueError: could not convert string to float: 'ten'
+```
+
+Botley reads `STARTUP_SECONDS` and expects a number. Kai changed it from `"10"` to `"ten"`. Python can't turn `ten` into a number, so Botley stops on its first line of real work, every time.
+
+<Careful title="Watch it!">
+
+While a container is waiting to restart, `kubectl logs` shows the log of the run that just failed. Once it has restarted, you need `kubectl logs --previous` to see the failed run. If one of them says `unable to retrieve container logs`, try the other.
+
+</Careful>
+
+<Think title="Brain power">
+
+A Botley was crashing over and over, and the update never finished. Did any users get an error during all this? Why, or why not?
+
+</Think>
+
+No. The three old Botleys were never touched. In a rolling update, Kubernetes only removes an old pod after a new one is ready (Chapter 7). The new pod never became ready, so the old ones stayed, and the Service kept sending users to them.
+
+Put it back. `rollout undo` goes back to the last version that worked:
+
+```bash
+kubectl rollout undo deployment botley
+```
+
+## Mystery 2: running, but not ready
+
+```bash
+kubectl apply -f k8s/mysteries/mystery-2.yaml
+kubectl rollout status deployment botley
+```
+
+```text
+Waiting for deployment "botley" rollout to finish: 1 out of 3 new replicas have been updated...
+```
+
+The same message as before. Press Ctrl+C and look:
+
+```bash
+kubectl get pods
+```
+
+```text
+NAME                      READY   STATUS    RESTARTS   AGE
+botley-69b6f87dd6-9vz7m   1/1     Running   0          18m
+botley-69b6f87dd6-d4ccp   1/1     Running   0          18m
+botley-69b6f87dd6-kfjkw   1/1     Running   0          18m
+botley-6d768fbdff-l892c   0/1     Running   0          46s
+```
+
+This time the new pod hasn't restarted at all. Its status is `Running`. But `READY` is `0/1`, and it has been for 46 seconds. Botley 2.0 takes about 10 seconds to start, so that's too long.
+
+<YourTurn title="Sharpen your pencil">
+
+Which of the four steps will tell you why the pod isn't ready? Try it, and write down what you find.
+
+<Blank />
+
+</YourTurn>
+
+```bash
+kubectl describe pod botley-6d768fbdff-l892c
+```
+
+```text
+Events:
+  Type     Reason     Age                From      Message
+  ----     ------     ----               ----      -------
+  Normal   Started    45s                kubelet   Container started
+  Warning  Unhealthy  45s                kubelet   Readiness probe failed: Get "http://10.244.2.7:8080/ready": dial tcp 10.244.2.7:8080: connect: connection refused
+  Warning  Unhealthy  36s (x5 over 44s)  kubelet   Readiness probe failed: HTTP probe failed with statuscode: 503
+  Warning  Unhealthy  0s (x18 over 34s)  kubelet   Readiness probe failed: HTTP probe failed with statuscode: 404
+```
+
+There are three warnings. Read them oldest first:
+
+- `connection refused`: Botley hadn't started listening yet. That's normal for the first second.
+- `503`: Botley was listening, and answering “still starting”. That's normal for the first 10 seconds.
+- `404`: Botley has started, and says there's no such page. This one has happened 18 times, and it's still happening.
+
+The last one is the real problem. Look at the address: the probe is asking for `/ready`. Botley's health page is `/health`. Kai changed the probe's path.
+
+<Careful title="Watch it!">
+
+When there are several warnings in the Events, look at the newest one, and at the count, such as `x18`. The early warnings are often from the normal start-up of the app.
+
+</Careful>
+
+You don't need the logs this time. Botley is working fine. The probe is asking for the wrong page.
+
+```bash
+kubectl rollout undo deployment botley
+```
+
+## Mystery 3: the Gateway says 503
+
+```bash
+kubectl apply -f k8s/mysteries/mystery-3.yaml
+```
+
+```text
+service/botley configured
+```
+
+This time it's the Service file. No pods change. Try Botley through the Gateway:
+
+```bash
+curl -i -H "Host: botley.example.com" "localhost:8888/plan?to=Lisbon"
+```
+
+```text
+HTTP/1.1 503 Service Unavailable
+content-length: 0
+```
+
+And the pods?
+
+```bash
+kubectl get pods
+```
+
+```text
+NAME                      READY   STATUS    RESTARTS   AGE
+botley-69b6f87dd6-9vz7m   1/1     Running   0          18m
+botley-69b6f87dd6-d4ccp   1/1     Running   0          18m
+botley-69b6f87dd6-kfjkw   1/1     Running   0          18m
+```
+
+All three are running and ready. So the problem is somewhere between the Gateway and the pods. Start at the Gateway end, where the error came from, and follow the request in.
+
+<YourTurn title="Sharpen your pencil">
+
+A request goes from the Gateway, to the HTTPRoute, to the Service, to the pods. Which command would you use to check each one? Then try them.
+
+<Blank />
+<Blank />
+
+</YourTurn>
+
+The route first:
+
+```bash
+kubectl describe httproute botley
+```
+
+```text
+    Conditions:
+      Message:               Route is accepted
+      Reason:                Accepted
+      Status:                True
+      Type:                  Accepted
+      Message:               Failed to find endpoints: no ready endpoints for the related Service default/botley.
+      Reason:                EndpointsNotFound
+      Status:                False
+      Type:                  BackendsAvailable
+      Message:               Resolved all the Object references for the Route
+      Reason:                ResolvedRefs
+      Status:                True
+      Type:                  ResolvedRefs
+```
+
+The route is fine, and it found the Service. But the Service has no pods behind it. Move one step in, to the Service's list of addresses:
+
+```bash
+kubectl get endpointslices -l kubernetes.io/service-name=botley
+```
+
+```text
+NAME           ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+botley-h64dw   IPv4          <unset>   <unset>     18m
+```
+
+Empty. In Chapter 5 you saw what makes a Service find its pods: its selector has to match their labels. Compare them:
+
+```bash
+kubectl describe service botley | grep Selector
+kubectl get pods --show-labels
+```
+
+```text
+Selector:          app=botly
+```
+
+```text
+NAME                      READY   STATUS    ...   LABELS
+botley-69b6f87dd6-9vz7m   1/1     Running   ...   app=botley,pod-template-hash=69b6f87dd6
+```
+
+`botly`, with no `e`. One letter, and the Service matches no pods at all. Put the right Service back:
+
+```bash
+kubectl apply -f k8s/service.yaml
+```
+
+<Sketch name="kb-ch10-1" caption={"The four checks for Mystery 3. The route is fine, but the Service's list of pods is empty, because its selector doesn't match the pods' labels."} />
+
+<Note>
+
+The `BackendsAvailable` condition comes from Envoy Gateway. Other Gateway software may not show it. Then you go straight to the EndpointSlices, which work the same on every cluster.
+
+</Note>
+
+## Looking inside a pod
+
+Sometimes the Events and the logs aren't enough, and you want to test from inside the pod itself. Is Botley answering on its own port? In Chapter 3 you used `kubectl exec` to run a command in a container. Try curl inside a Botley:
+
+```bash
+kubectl exec botley-69b6f87dd6-9vz7m -- curl -s localhost:8080/health
+```
+
+```text
+error: ... exec: "curl": executable file not found in $PATH
+```
+
+The Botley image doesn't have curl. That's on purpose. Images for running apps are kept small, with only what the app needs. There's less to download, and less for an attacker to use.
+
+So bring your own tools. `kubectl debug` adds a short-lived extra container to a running pod, from any image you choose. It shares the pod's network, so `localhost` is Botley:
+
+```bash
+kubectl debug -it botley-69b6f87dd6-9vz7m --image=busybox:1.37 --target=botley -- sh
+```
+
+```text
+Targeting container "botley". If you don't see processes from this container it may be because the container runtime doesn't support this feature.
+Defaulting debug container name to debugger-mgxfl.
+If you don't see a command prompt, try pressing enter.
+/ #
+```
+
+BusyBox is a tiny image with many small Unix tools in it. Now you're in a shell, inside Botley's pod. Ask Botley directly, and look at what's running:
+
+```bash
+wget -qO- localhost:8080/health
+ps
+```
+
+```text
+{
+  "status": "ok"
+}
+PID   USER     TIME  COMMAND
+    1 1000      0:04 python app.py
+  630 root      0:00 ps
+```
+
+You can see Botley's own process, because of `--target=botley`. Type `exit` to leave.
+
+<Careful title="Watch it!">
+
+A debug container stays listed in the pod until the pod is deleted. You can't remove it. That's fine for testing, but on a cluster you share, tell the people who run it before you add tools to a live pod. On some clusters, you won't be allowed to.
+
+</Careful>
+
+<FaceOff title={"Fireside chat: the logs and the Events"} left={"Logs"} right={"Events"} lines={[["L", "I'm everything the app printed. If Botley says why it stopped, it says it to me."], ["R", "I'm everything Kubernetes did to the pod: placed it, started it, probed it, restarted it."], ["L", "In Mystery 1, you only said Botley had stopped. I said why."], ["R", "In Mystery 2, you had nothing useful at all. Botley was fine. The probe was asking for the wrong page, and only I saw that."], ["L", "And when a container is OOMKilled, I don't get a word in."], ["R", "So people should read both of us."]]} />
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"How long does a stuck rollout wait? Will it give up?"}>
+
+After 10 minutes with no progress, the Deployment marks itself as failed. `kubectl describe deployment` then shows the condition `Progressing` as `False`, with the reason `ProgressDeadlineExceeded`. The setting is `progressDeadlineSeconds`. But it doesn't go back to the old version by itself. You still run `rollout undo`, or fix the file and apply it again.
+
+</QA>
+
+<QA q={"What's the difference between kubectl events and kubectl get events?"}>
+
+They show the same events. `kubectl events` is the newer command. It sorts them by time, and it has handy options such as `--types=Warning` and `--for pod/<name>`.
+
+</QA>
+
+<QA q={"I came back after lunch and the Events were gone. Why?"}>
+
+The cluster only keeps events for a while, one hour by default. They're meant for “what just happened”. If you need them for longer, a monitoring tool has to collect them.
+
+</QA>
+
+<QA q={"Can I debug a node, too?"}>
+
+Yes. `kubectl debug node/botley-worker -it --image=busybox:1.37` starts a pod on that node, with the node's files mounted under `/host`. It's useful on clusters where you can't log in to the nodes.
+
+</QA>
+
+<QA q={"Couldn't I just delete the broken pod?"}>
+
+You can, but the Deployment makes a new one from the same template, and it breaks in the same way. Fix the file, or undo the rollout. Deleting a pod only helps when the problem is with that one pod, such as a node that's having trouble.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+Match each thing you see with the first command you'd run. Use each command once.
+
+1. A pod is `CrashLoopBackOff`. Its Events only say it keeps stopping.
+2. A pod is `Running` but `0/1` for minutes.
+3. The Gateway gives a 503, and all pods are ready.
+4. A pod is `Pending`.
+5. You don't know which pod is the problem, and want to see everything that went wrong recently.
+
+<Blank />
+
+- A. `kubectl describe pod <name>` (look at the scheduler's message)
+- B. `kubectl events --types=Warning`
+- C. `kubectl logs <name> --previous`
+- D. `kubectl get endpointslices -l kubernetes.io/service-name=botley`
+- E. `kubectl describe pod <name>` (look at the probe's messages)
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- Look in the same order each time: `get`, then `describe`, then `logs`, then `events`.
+- **CrashLoopBackOff** means the container keeps stopping. The logs usually say why. Exit code 1 is the app's own error. Exit code 137 means it was killed.
+- `Running` but `0/1` means the readiness probe is failing. The Events say what the probe got back.
+- When there are several warnings, the newest one, with the highest count, is usually the real one.
+- For a 503 through the Gateway, follow the request in: route, Service, EndpointSlices, pod labels.
+- `kubectl debug` adds a container with your own tools to a running pod.
+- During a failed rolling update, the old pods keep serving users. `kubectl rollout undo` takes you back.
+
+</Takeaways>

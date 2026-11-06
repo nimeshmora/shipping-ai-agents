@@ -1,0 +1,197 @@
+---
+layout: ../../../layouts/Prose.astro
+title: "Word list and answers"
+kicker: "Back of the book"
+subtitle: "Every Kubernetes word in this notebook, in plain English, and the answers to the exercises"
+slug: back
+notebook: kubernetes-from-the-beginning
+---
+
+| Word | What it means |
+|---|---|
+| Kubernetes, K8s | Software that runs containers for you across a group of machines. |
+| Cluster | A group of machines that Kubernetes looks after as one. |
+| Node | One machine in a cluster. It can be a real machine, a virtual machine or, with kind, a container. |
+| Desired state | What you have asked Kubernetes to run, written in YAML files. |
+| Actual state | What is really running right now. |
+| Controller | A small program that compares the desired state with the actual state for one kind of thing, and fixes any difference. |
+| Control plane | The parts of Kubernetes that make decisions: the API server, etcd, the scheduler and the controllers. |
+| Worker node | A node that runs your own containers. |
+| kube-apiserver, API server | The part of Kubernetes that every request goes through. kubectl talks to it, and so does every other part. |
+| etcd | The database where Kubernetes stores the desired state. |
+| kube-scheduler | Picks a node for each new pod. |
+| kubelet | A program on every node that starts the containers for that node and watches them. |
+| kind | A tool that makes a Kubernetes cluster out of Docker containers. |
+| kubectl | The command you use to talk to a cluster. |
+| Context | A kubectl setting that says which cluster to talk to. |
+| Namespace | A named area inside a cluster that keeps things apart. Your own things go in `default`. |
+| Pod | The smallest thing Kubernetes runs. It holds one container, or a few that need to live close together. |
+| Registry | A place where images are stored, so nodes can download them. |
+| `ErrImagePull`, `ImagePullBackOff` | The node couldn't download the image, and is waiting longer and longer between tries. |
+| Deployment | Keeps a set number of pods running from a template, and moves them to new versions safely. |
+| ReplicaSet | Made by a Deployment. Keeps the right number of pods for one version of the template. |
+| Label | A name: value tag on a pod, such as `app: botley`. |
+| Selector | A rule that picks things by their labels. |
+| Service | One name and one address for a group of pods, which shares requests between them. |
+| Cluster IP | A Service's address. It only works inside the cluster. |
+| DNS | Turns names into addresses. In a cluster, coredns does this. |
+| EndpointSlice | The list of pod addresses behind a Service. |
+| `port`, `targetPort` | The port callers use on a Service, and the port the app listens on inside the pod. |
+| ConfigMap | A named list of settings stored in the cluster. |
+| Secret | Like a ConfigMap, for passwords and keys. Values are written in base64, which is not encryption. |
+| base64 | A way of writing any data with plain letters and numbers. Anyone can turn it back. |
+| Rolling update | Replacing pods with a new version a few at a time. |
+| Revision | One version of a Deployment's pod template. |
+| Probe | A check the kubelet runs on a container again and again. |
+| Readiness probe | Decides whether a pod gets traffic. |
+| Liveness probe | Restarts a container that has stopped working. |
+| Startup probe | Gives a slow app time to start before the other probes run. |
+| Taint | A mark on a node that keeps pods away, unless they say they accept it. |
+| Requests | How much CPU and memory the scheduler sets aside for a container. |
+| Limits | The most CPU and memory a container may use. |
+| Millicore (`m`) | A thousandth of a CPU core. `250m` is a quarter of a core. |
+| `Mi`, `Gi` | Mebibytes and gibibytes. `128Mi` is 128 × 1,048,576 bytes. |
+| Pending | The pod has no node yet, usually because no node has room for it. |
+| OOMKilled | The container went over its memory limit and was killed. Exit code 137. |
+| QoS class | Guaranteed, Burstable or BestEffort. Decides which pods go first when a node is short of memory. |
+| Gateway API | The Kubernetes API for getting requests from outside the cluster to the right Service. |
+| CustomResourceDefinition, CRD | Adds a new kind of object to a cluster. The Gateway API's kinds are added this way. |
+| GatewayClass | Says which software runs Gateways, such as Envoy Gateway. |
+| Gateway | One entry point to the cluster, and what it listens for, such as HTTP on port 80. |
+| HTTPRoute | Says which web requests go to which Service. It is attached to a Gateway. |
+| Envoy Gateway | One program that runs Gateways. It starts an Envoy proxy for each Gateway. |
+| Proxy | A program that takes requests and passes them on to somewhere else. |
+| `Host` header | The part of a web request that says which name it was sent to. |
+| Weight | How big a share of requests a route sends to each Service. |
+| Ingress | The older API for the same job as the Gateway API. It still works, but nothing new is being added to it. |
+| Debugging, `kubectl debug` | Finding out what's wrong. `kubectl debug` adds a short-lived container, with your own tools, to a running pod. |
+| CrashLoopBackOff | The container keeps stopping, and the kubelet waits longer and longer before starting it again. |
+| Exit code | The number a program leaves behind when it stops. 0 means all went well, 1 usually means the app's own error, 137 means it was killed. |
+| Event | A short note Kubernetes keeps about something that happened to an object. Kept for about an hour. |
+| BusyBox | A tiny image with many small Unix tools in it. |
+| metrics-server | Measures how much CPU and memory each pod and node is using. `kubectl top` and the HPA need it. |
+| HorizontalPodAutoscaler, HPA | Changes the number of replicas to keep usage near a target. |
+| Utilization | How much a pod uses, as a percentage of what it requests. |
+| Cluster autoscaler, Karpenter | Add nodes when pods are Pending, and remove nodes that are almost empty. Used on cloud clusters. |
+| KEDA | A tool that scales pods on other numbers, such as the length of a queue, and can scale to zero. |
+| VerticalPodAutoscaler, VPA | Changes pods' requests and limits, so each pod gets bigger or smaller. |
+| Managed Kubernetes | EKS, GKE or AKS: the cloud runs the control plane for you. |
+| SIGTERM, SIGKILL | “Please stop” and “stop now”. Kubernetes sends SIGTERM, waits 30 seconds, then sends SIGKILL. |
+
+## Answers
+
+### Chapter 1, Sharpen your pencil
+
+There's no single right list. Ours:
+
+- Botley crashes, and nobody starts it again.
+- The machine dies, and Botley with it.
+- One copy of Botley can't keep up with all the users.
+- Updating Botley means stopping it, so users see an error.
+- When the machine is full, there's nowhere to put more copies.
+
+### Chapter 1, Your turn
+
+1. A cluster is the whole group of machines. A node is one machine in it.
+2. It sees that only two copies are running, while the file asks for three, so it starts a new one.
+3. The YAML file.
+
+### Chapter 2, Sharpen your pencil
+
+1–E, 2–C, 3–A, 4–B, 5–D.
+
+### Chapter 3, Sharpen your pencil
+
+1. The container in the pod stopped four times. The kubelet on that node started it again each time.
+2. `kubectl logs <pod name> --previous`.
+3. To copy the image into the cluster with `kind load docker-image`.
+4. No. Each kubelet only looks after its own node, and nothing remembers that you wanted a Botley. You need a Deployment (Chapter 4).
+
+### Chapter 4, Sharpen your pencil (first)
+
+Everything under `template:` in the Deployment is the same as the pod file: the labels, the container name, the image and the port. Only the pod's `name` is missing. The Deployment makes up names for its pods.
+
+### Chapter 4, Sharpen your pencil (second)
+
+1. Four. The two new pods have new names.
+2. The ReplicaSet.
+3. Three. Applying the file set the number back to what the file says.
+4. The selector looks for `app: botley`, but the template gives pods the label `app: bot-ley`. Kubernetes says: `` `selector` does not match template `labels` ``.
+
+### Chapter 5, Sharpen your pencil
+
+1. `botley.default` (or the full name, `botley.default.svc.cluster.local`).
+2. The Service sends the request to port 5000 in the pod, where nothing is listening, so the connection fails.
+3. Compare the Service's selector with the pods' labels: `kubectl describe service` and `kubectl get pods --show-labels`. Also check that the pods are ready (`1/1`).
+4. The address belongs to the Service, not to any pod. Only the list of pods behind it changes.
+
+### Chapter 6, Sharpen your pencil
+
+1. No. Environment variables are set when the container starts. Run `kubectl rollout restart deployment botley`.
+2. A ConfigMap or Secret that the pod needs doesn't exist, or doesn't have the key it asks for. `kubectl describe pod` shows the reason under Events.
+3. It isn't encrypted. It's base64, and anyone can decode it. Keep Secrets out of Git.
+4. You test the exact image you ship. Only the settings change.
+
+### Chapter 7, Sharpen your pencil
+
+1. The container is running, but the readiness probe hasn't passed yet. The Service won't send it users.
+2. 25% of 4 is 1. So up to 5 pods can exist, and at least 3 are ready at all times.
+3. Look at the new pod with `kubectl get pods` and `kubectl describe pod`. Go back with `kubectl rollout undo deployment botley`.
+4. Botley answers slowly, misses a check, and gets restarted. That puts more load on the other Botleys, which then miss checks too. Use a readiness probe, and if you need a liveness probe, give it more time and allow several failures (`failureThreshold`).
+
+### Chapter 8, Sharpen your pencil (first)
+
+Four. Each worker fits two (6 of its 8 cores). The other two stay Pending.
+
+### Chapter 8, Sharpen your pencil (second)
+
+1. No. The scheduler adds up requests (3.5 + 1 = 4.5, more than 4), not what the pods are using.
+2. `kubectl describe pod <name>`, in the Events at the bottom.
+3. The container is going over its memory limit and is OOMKilled. Raise the memory limit, or find out why the app uses so much memory.
+4. Half of one CPU core.
+
+### Chapter 9, Sharpen your pencil (first)
+
+It gets a 404. The request says it's for `localhost`, and no route has that name.
+
+### Chapter 9, Sharpen your pencil (second)
+
+3 in every 4 to the first Service, 1 in every 4 to the second.
+
+### Chapter 9, Sharpen your pencil (third)
+
+1. No route is attached to the Gateway, or the request's `Host` doesn't match any route's `hostnames`. (A route with path rules gives a 404 when no rule matches, too.)
+2. `kubectl describe httproute <name>`. Look at the `ResolvedRefs` condition. If it's `False`, the Service in `backendRefs` has the wrong name or port.
+3. Nothing is wrong with the Gateway. Its LoadBalancer Service has no outside address, because kind has no cloud to ask for one. On a cloud cluster, the cloud gives it an address, and `PROGRAMMED` turns `True`.
+4. The route can't find port 8080 on the Service, and users get a 500. She should use the Service's port, 80. The Service passes it on to 8080 in the pods.
+
+### Chapter 10, Sharpen your pencil
+
+Mystery 1: the logs (step 3). Mystery 2: `describe` (step 2), in the probe's messages. Mystery 3: `kubectl describe httproute`, then the EndpointSlices, then the Service's selector and the pods' labels.
+
+### Chapter 10, Sharpen your pencil (last)
+
+1–C, 2–E, 3–D, 4–A, 5–B.
+
+### Chapter 11, Sharpen your pencil (first)
+
+1. 4 × (90 ÷ 50) = 7.2, rounded up to 8.
+2. 6 × (90 ÷ 50) = 10.8, rounded up to 11. But `maxReplicas` is 8, so it asks for 8.
+
+### Chapter 11, Sharpen your pencil (second)
+
+1. metrics-server isn't installed or isn't ready, or the pods have no CPU request. It also shows `<unknown>` for a short while after the HPA is made.
+2. No. The HPA waits about five minutes after things go quiet before it removes pods.
+3. About 250m: 50% of the 500m request.
+4. The Deployment goes to 3 for a moment, then the HPA sets it back to 5. She should take the `replicas` line out of the file.
+
+### Chapter 12, Sharpen your pencil (first)
+
+Mostly only the Deployment's `image` line, which needs the registry's full name. `kind-three-nodes.yaml` isn't used at all. The Gateway's `gatewayClassName` changes to the cloud's own class.
+
+### Chapter 12, Sharpen your pencil (second)
+
+1. The nodes try to download `botley:2.0` from Docker Hub, where it doesn't exist. Push the image to the cloud's registry and use its full name in the Deployment.
+2. The image was built for ARM (Apple silicon), and the nodes are x86. Build with `--platform linux/amd64`.
+3. Each cluster has an hourly fee for the control plane, whether or not anything runs on it. The nodes cost money too while they exist.
+4. `kind-three-nodes.yaml`. It's a kind settings file, not a Kubernetes file.

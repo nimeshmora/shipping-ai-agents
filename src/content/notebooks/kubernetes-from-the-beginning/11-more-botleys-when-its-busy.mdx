@@ -1,0 +1,355 @@
+---
+number: 11
+title: "More Botleys when it's busy"
+kicker: "Chapter eleven"
+subtitle: "Measure what Botley really uses, then let a HorizontalPodAutoscaler add Botleys when they're busy and remove them when they're not."
+question: "Can Kubernetes change the number of Botleys by itself?"
+part: "Running it for real"
+quote: {"who": "sam", "text": "Monday mornings, everyone books trips and Botley is slow. At night, nobody uses it. Can the number of Botleys change by itself?"}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Geek, Blank, Note, Hand } from '../../../components/index.ts';
+
+So far you've picked the number of Botleys yourself: three in the file, or `kubectl scale` when you wanted more. Sam has noticed that the travel desk is very busy on Monday mornings and almost empty at night. Three Botleys are too few on Monday and too many at night.
+
+Kubernetes can change the number for you. The object that does it is called a **HorizontalPodAutoscaler**, or HPA. “Horizontal” means it adds more pods, not bigger ones. But before it can decide anything, it has to know how busy each Botley is.
+
+## Measuring
+
+In Chapter 8 you set Botley's CPU request to `250m`, a quarter of a core. You guessed. To check the guess, you need to see what Botley really uses. Try:
+
+```bash
+kubectl top pods
+```
+
+```text
+error: Metrics API not available
+```
+
+Kubernetes doesn't measure pods by itself. You install a small program called **metrics-server**. It asks each node's kubelet, every 15 seconds or so, how much CPU and memory each pod is using, and keeps the latest numbers. Install it:
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.1/components.yaml
+```
+
+It goes in the `kube-system` namespace, with Kubernetes' own pods. Wait a minute, then look:
+
+```bash
+kubectl get deployment metrics-server -n kube-system
+```
+
+```text
+NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+metrics-server   0/1     1            0           40s
+```
+
+<Think title="Brain power">
+
+`0/1`, and it stays that way. You know what to do from Chapter 10. Which command would you run first?
+
+</Think>
+
+It's running but not ready, so look at what the app says:
+
+```bash
+kubectl logs -n kube-system deployment/metrics-server --tail=3
+```
+
+```text
+E1105 16:16:47.061184   1 scraper.go:149] "Failed to scrape node" err="Get \"https://172.19.0.2:10250/metrics/resource\": tls: failed to verify certificate: x509: cannot validate certificate for 172.19.0.2 because it doesn't contain any IP SANs"
+E1105 16:16:47.061993   1 scraper.go:149] "Failed to scrape node" err="Get \"https://172.19.0.4:10250/metrics/resource\": tls: failed to verify certificate: x509: cannot validate certificate for 172.19.0.4 because it doesn't contain any IP SANs"
+I1105 16:16:47.776290   1 server.go:192] "Failed probe" probe="metric-storage-ready" err="no metrics to serve"
+```
+
+(We've cut some spaces.) metrics-server talks to each kubelet over HTTPS, and checks the kubelet's certificate first. On kind, the kubelets make their own certificates, and these don't pass the check. So metrics-server gets no numbers, and says it isn't ready.
+
+On a practice cluster, it's fine to tell metrics-server to skip the check. This adds one option, `--kubelet-insecure-tls`, to its container:
+
+```bash
+kubectl patch -n kube-system deployment metrics-server --type=json \
+  -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+```
+
+`kubectl patch` changes one part of an object without a whole file. Changing the pod template makes a new pod, as any change to a Deployment does.
+
+<Careful title="Watch it!">
+
+Only skip the certificate check on a practice cluster. GKE and AKS install metrics-server for you, set up properly. On EKS, you add it yourself, as one of the EKS add-ons.
+
+</Careful>
+
+Wait half a minute, then try again:
+
+```bash
+kubectl top nodes
+kubectl top pods
+```
+
+```text
+NAME                   CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
+botley-control-plane   237m         2%     1329Mi          33%
+botley-worker          62m          0%     348Mi           8%
+botley-worker2         77m          0%     398Mi           10%
+
+NAME                      CPU(cores)   MEMORY(bytes)
+botley-69b6f87dd6-9vz7m   2m           14Mi
+botley-69b6f87dd6-d4ccp   2m           13Mi
+botley-69b6f87dd6-kfjkw   2m           17Mi
+tester                    0m           0Mi
+```
+
+With nobody using it, each Botley uses 2m of CPU, and 13 to 17 MiB of memory. That's far below the 250m request and the 256Mi limit. That's what you'd expect when nobody is asking it anything. The number that matters is how much it uses when it's busy.
+
+## The autoscaler
+
+Open `k8s/hpa.yaml`:
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: botley
+spec:
+  scaleTargetRef:               # ← what to change: the botley Deployment
+    apiVersion: apps/v1
+    kind: Deployment
+    name: botley
+  minReplicas: 2                # ← never fewer than 2
+  maxReplicas: 8                # ← never more than 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50  # ← aim for 50% of the CPU request
+```
+
+Read the last part carefully. `50` doesn't mean half a core, or half the node. It means 50% of what each pod **requests**. Botley requests 250m, so the HPA aims for each Botley to use about 125m on average. When they use more, it adds Botleys. When they use less, it removes some.
+
+<Careful title="Watch it!">
+
+The HPA works out percentages from the pods' CPU **requests**. If a pod has no CPU request, the HPA can't work out a percentage, and it won't scale. This is one more reason to always set requests (Chapter 8).
+
+</Careful>
+
+Apply it, and look:
+
+```bash
+kubectl apply -f k8s/hpa.yaml
+kubectl get hpa
+```
+
+```text
+NAME     REFERENCE           TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+botley   Deployment/botley   cpu: 0%/50%   2         8         3          30s
+```
+
+`cpu: 0%/50%` means the Botleys are using 0% of their request on average, and the target is 50%. There are 3 Botleys, and they have nothing to do. A few minutes later there will be 2, the minimum.
+
+## Making Botley busy
+
+To see the HPA work, Botley needs users. You don't have a travel desk, so make a pod that asks Botley for trip plans, one after another, as fast as it can:
+
+```bash
+kubectl run load --image=busybox:1.37 --restart=Never -- /bin/sh -c \
+  "while true; do wget -q -O- 'http://botley/plan?to=Rome' >/dev/null; done"
+```
+
+In another terminal, watch the HPA. `--watch` prints a new line each time something changes:
+
+```bash
+kubectl get hpa botley --watch
+```
+
+```text
+NAME     REFERENCE           TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+botley   Deployment/botley   cpu: 1%/50%    2         8         2          11m
+botley   Deployment/botley   cpu: 41%/50%   2         8         2          11m
+botley   Deployment/botley   cpu: 65%/50%   2         8         2          12m
+botley   Deployment/botley   cpu: 66%/50%   2         8         3          12m
+botley   Deployment/botley   cpu: 47%/50%   2         8         3          12m
+botley   Deployment/botley   cpu: 42%/50%   2         8         3          13m
+botley   Deployment/botley   cpu: 44%/50%   2         8         3          13m
+```
+
+Read it from the top. There were 2 Botleys, doing nothing. The load started, and their CPU went up to 65% of their request. That's above 50%, so the HPA made it 3 Botleys. Now the same work is shared by three, and each one uses about 44%. That's under 50%, so the HPA leaves it at 3.
+
+Press Ctrl+C to stop watching, and look at the pods:
+
+```bash
+kubectl top pods -l app=botley
+```
+
+```text
+NAME                      CPU(cores)   MEMORY(bytes)
+botley-69b6f87dd6-7qjqg   113m         13Mi
+botley-69b6f87dd6-9vz7m   111m         14Mi
+botley-69b6f87dd6-kf747   109m         14Mi
+```
+
+About 110m each, with a lot of work to do. So the 250m request from Chapter 8 was a fair guess: a busy Botley uses less than half of it.
+
+<Geek>
+
+How did the HPA pick 3? It uses this sum:
+
+```text
+new number = current number × (current use ÷ target), rounded up
+           = 2 × (65 ÷ 50)
+           = 2.6, rounded up to 3
+```
+
+It does this about every 15 seconds. If the answer is within 10% of the current number, it does nothing, so it doesn't keep adding and removing one pod.
+
+</Geek>
+
+<Sketch name="kb-ch11-1" caption={"metrics-server measures the pods. The HPA works out how many Botleys there should be, and changes the Deployment's replicas. Then it checks again."} />
+
+<YourTurn title="Sharpen your pencil">
+
+Use the sum from the box above. There are 4 Botleys, using 90% of their CPU request on average. The target is 50%, and `maxReplicas` is 8.
+
+1. How many Botleys will the HPA ask for? <Blank />
+2. What if there were 6 Botleys using 90%? <Blank />
+
+</YourTurn>
+
+## Quiet again
+
+Now stop the load:
+
+```bash
+kubectl delete pod load
+kubectl get hpa botley --watch
+```
+
+```text
+NAME     REFERENCE           TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+botley   Deployment/botley   cpu: 13%/50%   2         8         6          3m41s
+botley   Deployment/botley   cpu: 3%/50%    2         8         6          4m16s
+botley   Deployment/botley   cpu: 0%/50%    2         8         6          4m31s
+botley   Deployment/botley   cpu: 1%/50%    2         8         6          7m1s
+botley   Deployment/botley   cpu: 0%/50%    2         8         6          7m31s
+botley   Deployment/botley   cpu: 0%/50%    2         8         2          7m46s
+```
+
+(This one is from a run where we'd pushed it up to 6 Botleys.) The CPU drops to almost nothing within a minute. But the HPA waits about five minutes before it removes any Botleys. Then it goes straight down to 2.
+
+<Think title="Brain power">
+
+Adding Botleys happened within a minute. Removing them took five. Why would Kubernetes be slow on purpose when going down?
+
+</Think>
+
+Because users often come in waves. If the HPA removed Botleys the moment things went quiet, the next wave would find too few of them, and wait while new ones started. Botley 2.0 takes 10 seconds to start. A real agent might take much longer. So by default, the HPA scales up quickly and scales down slowly. You can change both with the `behavior` part of the HPA.
+
+The HPA keeps a record of what it did:
+
+```bash
+kubectl describe hpa botley
+```
+
+```text
+Events:
+  Type    Reason             Age    From                       Message
+  ----    ------             ----   ----                       -------
+  Normal  SuccessfulRescale  8m21s  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  8m6s   horizontal-pod-autoscaler  New size: 6; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  2m50s  horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+```
+
+## Who decides the number now?
+
+There's one problem left. Botley's Deployment file says `replicas: 3`. The HPA says 2. What happens when you apply the file again, for example to ship a new version?
+
+```bash
+kubectl apply -f k8s/deployment-resources.yaml
+kubectl get deployment botley
+```
+
+```text
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+botley   2/3     3            2           32m
+```
+
+The file wins for a moment, and there are 3. A few seconds later, the HPA sets it back to 2. They'll fight like this every time you apply the file. Once an HPA looks after a Deployment, the number of replicas belongs to the HPA. Take the `replicas` line out of the file. `k8s/deployment-autoscaled.yaml` is `deployment-resources.yaml` without it.
+
+<Careful title="Watch it!">
+
+The first time you apply the file without `replicas`, Kubernetes sees that you removed the line, and sets the Deployment back to its default: **1** replica. When we did it:
+
+```text
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+botley   1/1     1            1           33m
+```
+
+The HPA fixed it within 20 seconds, because 1 is below `minReplicas`. But for those seconds, one Botley served everyone. On a busy live cluster, run `kubectl apply edit-last-applied deployment botley` first, and delete the `replicas` line there. That tells kubectl you never set it, so removing it from the file changes nothing. After that, applying the file is safe.
+
+</Careful>
+
+## And when the nodes are full?
+
+The HPA adds pods. It doesn't add nodes. If the HPA asks for 8 Botleys and the nodes only have room for 6, the other two are `Pending`, as in Chapter 8.
+
+On a cloud cluster, a second autoscaler can fix that. The **cluster autoscaler**, or a newer tool called **Karpenter**, watches for pods that are Pending because there's no room. It asks the cloud for a new node, and the scheduler puts the pods there. When nodes are almost empty for a while, it moves their pods and removes the nodes, so you stop paying for them. EKS Auto Mode, GKE Autopilot and AKS Automatic (Chapter 12) do this for you. On kind, there's no cloud to ask, so the number of nodes never changes.
+
+<FaceOff title={"Fireside chat: the HPA and the cluster autoscaler"} left={"HPA"} right={"Cluster autoscaler"} lines={[["L", "I watch how busy the Botleys are, and change how many there are."], ["R", "I don't look at Botleys at all. I look for pods with nowhere to go."], ["L", "When I add Botleys and there's no room, they just sit there, Pending."], ["R", "That's when I start a new node. It takes a minute or two."], ["L", "And when it's quiet, I remove Botleys first."], ["R", "Then I see nodes with almost nothing on them, and I remove those. That's when the bill goes down."]]} />
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"A real Botley spends most of its time waiting for the model to answer. Is CPU the right thing to measure?"}>
+
+Often it isn't. An agent that waits on a model API can be very busy while using almost no CPU, so a CPU target would never add Botleys. You can scale on other numbers: requests per second, how many conversations are in progress, or how many jobs are waiting in a queue. The HPA can use these, but you need a tool that gives it the numbers. **KEDA** is a popular one. It can scale on a queue, a database, or many other things, and it can even scale to zero when nothing is happening.
+
+</QA>
+
+<QA q={"Can it scale on memory?"}>
+
+Yes: use `name: memory` in the metric. But many apps don't give memory back when they get less busy, so the HPA may add pods and never remove them. Botley is like this: the memory it grabs with `/eat` stays until it restarts. CPU, or a number from the app itself, usually works better.
+
+</QA>
+
+<QA q={"What about making each Botley bigger, not adding more?"}>
+
+That's vertical scaling. The **VerticalPodAutoscaler** (VPA) watches what pods use and changes their requests and limits. It isn't part of Kubernetes itself. You install it. Don't let an HPA and a VPA both act on CPU for the same pods: they work against each other.
+
+</QA>
+
+<QA q={"Can I make one with a command, without a file?"}>
+
+Yes: `kubectl autoscale deployment botley --min=2 --max=8 --cpu-percent=50` makes the same HPA. A file is better to keep in Git, next to the Deployment.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. `kubectl get hpa` shows `cpu: <unknown>/50%`. Give two reasons this could happen. <Blank />
+2. The load stopped two minutes ago, and there are still 6 Botleys. Is something wrong? <Blank />
+3. Botley's CPU request is 500m, and the HPA target is 50%. About how much CPU is each Botley using when the HPA stops adding pods? <Blank />
+4. Maya applies the Deployment file, which still says `replicas: 3`, and an HPA says 5. What does she see, and what should she change? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+Before you move on, delete the load pod if it's still running. Leave the HPA and metrics-server where they are.
+
+<Takeaways title="Bullet points">
+
+- **metrics-server** measures what pods use. `kubectl top pods` and the HPA both need it. On kind, it needs `--kubelet-insecure-tls`.
+- A **HorizontalPodAutoscaler** changes the number of replicas to keep usage near a target, between `minReplicas` and `maxReplicas`.
+- The CPU target is a percentage of the **request**. With no request, the HPA can't scale.
+- It scales up quickly and down slowly: by default, about five minutes after things go quiet.
+- Once an HPA looks after a Deployment, take `replicas` out of the Deployment file.
+- The HPA adds pods. The **cluster autoscaler** (or Karpenter) adds nodes when pods are Pending.
+- For agents that mostly wait on a model, scale on requests or queue length, with a tool such as KEDA.
+
+</Takeaways>

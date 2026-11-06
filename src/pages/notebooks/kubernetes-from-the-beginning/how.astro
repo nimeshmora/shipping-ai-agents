@@ -1,0 +1,48 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Sketch from '../../../components/Sketch.astro';
+import { url } from '../../../lib/url';
+import { allChapters, chapterHref } from '../../../lib/chapters';
+const NB = 'kubernetes-from-the-beginning';
+const chapters = await allChapters(NB);
+---
+<Base title="How to use this notebook" page="how" notebook={NB}>
+  <section class="chapter">
+    <div class="ch-head"><div><div class="ch-kicker">Before we start</div><h1>How to use this notebook</h1>
+      <div class="ch-sub">This notebook is for doing. Keep a terminal open next to it.</div></div></div>
+    <p>This notebook teaches Kubernetes from zero. You will make a small Kubernetes cluster on your own laptop, put Botley on it, and type every command yourself.</p>
+    <p>If you read the first three notebooks, you know Botley, the trip-planning agent Maya built. You don't need to have read them. You only need to know what a container and a container image are. If those words are new, read <a href={url('notebooks/shipping-ai-agents/04-pack-it-up/')}>Notebook #1, Chapter 4</a> first. It is short.</p>
+    <Sketch name="cast4" />
+    <p class="small"><b>Maya</b> builds agents. <b>Botley</b> is the agent she built. <b>Sam</b> is her boss. <b>Kai</b> runs the company's servers.</p>
+
+    <h2>What you need</h2>
+    <ul>
+      <li>A laptop with at least 8 GB of memory. Mac, Windows or Linux all work.</li>
+      <li><b>Docker</b> (Docker Desktop on Mac and Windows). Podman also works.</li>
+      <li>Two small tools, <b>kind</b> and <b>kubectl</b>. Chapter 2 shows how to install them.</li>
+      <li>The Botley example files. Get them with <code>git clone https://github.com/nimeshmora/shipping-ai-agents.git</code>, then look in <code>examples/botley</code>.</li>
+    </ul>
+    <p>You don't need a cloud account, and nothing in this notebook costs money. Chapter 12 shows what changes when you move to Amazon EKS, Google GKE or Azure AKS.</p>
+
+    <h2>Boxes you will see</h2>
+    <div class="tw"><table class="t">
+      <tr><th style="width:36%">Box</th><th>What it is for</th></tr>
+      <tr><td>Sharpen your pencil</td><td>An exercise. Do it before you read on. The answers are at the back.</td></tr>
+      <tr><td>Brain power</td><td>A question to think about. There may not be one right answer.</td></tr>
+      <tr><td>Watch it!</td><td>Something that catches almost everybody the first time.</td></tr>
+      <tr><td>There are no dumb questions</td><td>Questions people often want to ask but don't.</td></tr>
+      <tr><td>Fireside chat</td><td>Two parts of Kubernetes talk about each other.</td></tr>
+      <tr><td>Bullet points</td><td>The main points of the chapter.</td></tr>
+    </table></div>
+
+    <h2>About the commands</h2>
+    <p>Every command and every piece of output in this notebook was run on a real kind cluster in November 2026, with kind v0.33.0, which runs Kubernetes 1.37. Your pod names and times will be different from ours. Everything else should match. If it doesn't, please <a href="https://github.com/nimeshmora/shipping-ai-agents/issues/new/choose">tell us</a>.</p>
+
+    <h2>What's inside</h2>
+    <div class="tw"><table class="t">
+      <tr><th style="width:7%">#</th><th style="width:34%">Chapter</th><th>The question it answers</th></tr>
+      {chapters.map((c) => <tr><td>{c.data.number}</td><td><a href={url(chapterHref(c.id))}>{c.data.title}</a></td><td>{c.data.question}</td></tr>)}
+      <tr><td></td><td><a href={url(`notebooks/${NB}/back/`)}>Back of the book</a></td><td>Word list and exercise answers.</td></tr>
+    </table></div>
+  </section>
+</Base>

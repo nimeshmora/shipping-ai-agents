@@ -1,0 +1,39 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Sketch from '../../../components/Sketch.astro';
+import { url } from '../../../lib/url';
+import { allChapters, chapterHref } from '../../../lib/chapters';
+const NB = 'kubernetes-from-the-beginning';
+const chapters = await allChapters(NB);
+---
+<Base title="Kubernetes from the Beginning" page="cover" notebook={NB} description="An illustrated notebook that teaches Kubernetes from zero by running a small agent on a cluster on your own laptop.">
+  <div class="hero-top">
+    <div>
+      <p class="kick">Notebook #4 from Ship It with Nimesha</p>
+      <h1 class="hero-title">Kubernetes from<br />the Beginning</h1>
+      <p class="hero-sub">You learn Kubernetes by running Botley on it, one command at a time.</p>
+    </div>
+    <div class="badge">You don't need a cloud account</div>
+  </div>
+  <div class="scene"><Sketch name="kb-cover" /></div>
+  <p class="hero-blurb">You make a Kubernetes cluster on your own laptop and put Botley on it. Each chapter adds one new piece, and you type every command yourself. You will also break Botley on purpose, many times, and see what Kubernetes does about it. You need to know what a container is, and nothing else.</p>
+  <div class="actions">
+    <a class="btn primary" href={url(`notebooks/${NB}/how/`)}>Start reading</a>
+    <a class="btn" id="resume" href={url()} hidden>Continue reading</a>
+    {chapters.length > 1 && <a class="btn" href={url(chapterHref(chapters[1].id))}>Make your cluster</a>}
+  </div>
+  <div class="two" style="margin-top:14px">
+    <div class="sticky">What does Kubernetes do for me?</div>
+    <div class="sticky r blue">Why did my pod disappear?</div>
+    <div class="sticky green">What do all those YAML lines mean?</div>
+  </div>
+  <p class="byline"><b>Nimesha Jinarajadasa</b><br />First edition, November 2026</p>
+  <div class="paper index" slot="after">
+    <h2><span>What's inside</span></h2>
+    <ol>
+      {chapters.map((c) => (
+        <li><a href={url(chapterHref(c.id))}><span class="n">{c.data.number}</span><span class="t">{c.data.title}<span class="q">{c.data.question}</span></span></a></li>
+      ))}
+    </ol>
+  </div>
+</Base>

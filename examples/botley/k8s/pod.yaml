@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: botley
+  labels:
+    app: botley
+spec:
+  containers:
+  - name: botley
+    image: botley:1.0
+    ports:
+    - containerPort: 8080

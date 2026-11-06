@@ -1,0 +1,259 @@
+---
+number: 5
+title: "Where did Botley go?"
+kicker: "Chapter five"
+subtitle: "Pods come and go, and each new pod has a new address. A Service gives the Botleys one name and one address that stay the same."
+question: "How do other programs find Botley when its pods keep changing?"
+part: "The building blocks"
+quote: {"who": "maya", "text": "The website had Botley's address saved. Then the pod was replaced and the address stopped working."}
+lastChecked: "2026-11-05"
+---
+
+import { Sketch, Sticky, Careful, Think, YourTurn, Takeaways, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+
+Maya has three Botleys running. The company website needs to send trip questions to them. Which address should the website use?
+
+Look at the pods' addresses:
+
+```bash
+kubectl get pods -o wide
+```
+
+```text
+NAME                      READY   STATUS    RESTARTS   AGE   IP            NODE
+botley-77c4b7b645-6dcrq   1/1     Running   0          5s    10.244.0.20   botley-control-plane
+botley-77c4b7b645-hqz46   1/1     Running   0          5s    10.244.0.21   botley-control-plane
+botley-77c4b7b645-qjlsr   1/1     Running   0          5s    10.244.0.19   botley-control-plane
+```
+
+(`-o wide` adds a few more columns. We've left out the last two.)
+
+<YourTurn title="Sharpen your pencil">
+
+The website saves the address `10.244.0.20` and sends every question there. List what could go wrong.
+
+<Blank />
+<Blank />
+
+</YourTurn>
+
+Here are some. That pod could crash and be replaced, and the new pod gets a new address. You might scale Botley down, and that pod is removed. You ship version 2 in Chapter 7, and every pod is replaced. And even when everything works, all the questions go to one Botley while the other two do nothing.
+
+What the website needs is one address that always works, and that shares the questions between whichever Botleys are running right now. In Kubernetes, that's called a **Service**.
+
+## The Service file
+
+Open `k8s/service.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: botley          # ← other programs will use this name
+spec:
+  selector:
+    app: botley         # ← send traffic to the pods with this label
+  ports:
+  - port: 80            # ← the port other programs connect to
+    targetPort: 8080    # ← the port Botley listens on inside the pod
+```
+
+The `selector` should look familiar. A Service finds its pods the same way a ReplicaSet does: by their labels. It doesn't care which Deployment made them.
+
+Apply it:
+
+```bash
+kubectl apply -f k8s/service.yaml
+```
+
+```bash
+kubectl get service botley
+```
+
+```text
+NAME     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+botley   ClusterIP   10.96.196.207   <none>        80/TCP    6s
+```
+
+The Service has its own address, `10.96.196.207`. This is called the **cluster IP**. It doesn't belong to any pod, and it stays the same for as long as the Service exists.
+
+## Try it from inside the cluster
+
+A cluster IP only works inside the cluster. To try it, start a small pod that has `curl` in it, and run commands from there:
+
+```bash
+kubectl run tester --image=curlimages/curl:8.17.0 --restart=Never --command -- sleep 3600
+```
+
+This makes one pod called `tester` that does nothing for an hour. Now ask it to call Botley a few times:
+
+```bash
+kubectl exec tester -- curl -s botley/
+```
+
+`kubectl exec` runs a command inside a pod that's already running. Do it six times and look at the `pod` line each time:
+
+```text
+  "pod": "botley-77c4b7b645-6dcrq",
+  "pod": "botley-77c4b7b645-6dcrq",
+  "pod": "botley-77c4b7b645-6dcrq",
+  "pod": "botley-77c4b7b645-qjlsr",
+  "pod": "botley-77c4b7b645-6dcrq",
+  "pod": "botley-77c4b7b645-hqz46",
+```
+
+Two things to notice. First, the tester used the name `botley`, not an address, and it worked. Second, the answers came from different Botleys. The Service shares the requests between all the pods it found. The order is random, so you won't see a neat “one, two, three”.
+
+<Sketch name="kb-ch05-1" caption={"The tester asks for “botley”. DNS gives it the Service's address. The Service sends each request to one of the Botley pods."} />
+
+## How did the name work?
+
+Remember `coredns` from Chapter 2? It's the cluster's **DNS** server: the thing that turns names into addresses. Every Service gets a name in it. The full name of Botley's Service is:
+
+```text
+botley.default.svc.cluster.local
+   ↑      ↑
+   |      the namespace
+   the Service's name
+```
+
+Inside the same namespace, the short name `botley` is enough. From a pod in another namespace, use `botley.default`.
+
+<Think title="Brain power">
+
+You delete one of the Botley pods. The ReplicaSet makes a new one with a new address. What does the Service need to do, and who tells it?
+
+</Think>
+
+## The list of addresses
+
+Kubernetes keeps a list of the pod addresses behind each Service. The list is called an **EndpointSlice**. Look at it:
+
+```bash
+kubectl get endpointslices -l kubernetes.io/service-name=botley
+```
+
+```text
+NAME           ADDRESSTYPE   PORTS   ENDPOINTS                             AGE
+botley-nl89c   IPv4          8080    10.244.0.19,10.244.0.20,10.244.0.21   6s
+```
+
+Now delete one Botley pod and look again:
+
+```text
+NAME           ADDRESSTYPE   PORTS   ENDPOINTS                             AGE
+botley-nl89c   IPv4          8080    10.244.0.19,10.244.0.21,10.244.0.23   55s
+```
+
+`.20` is gone and `.23`, the new pod, is in. A controller in the control plane watches for pods with the label `app: botley` and keeps this list up to date. Then `kube-proxy` on every node (also from Chapter 2) reads the list and sends traffic for `10.96.196.207` to one of those addresses.
+
+It's the same idea you have seen since Chapter 1. Something compares what should be true with what is true, and fixes the difference.
+
+## When the Service finds nothing
+
+Almost everybody makes this mistake at least once. Here is the Service with a small typo in the selector:
+
+```yaml
+  selector:
+    app: botly
+```
+
+Apply it and try to call Botley:
+
+```bash
+kubectl exec tester -- curl -sS botley/
+```
+
+```text
+curl: (7) Failed to connect to botley port 80 after 1 ms: Could not connect to server
+```
+
+The name `botley` still works, and the Service still exists. But no pods have the label `app: botly`, so the Service has nowhere to send the request. The EndpointSlice shows it:
+
+```text
+NAME           ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+botley-nl89c   IPv4          <unset>   <unset>     57s
+```
+
+<Careful title="Watch it!">
+
+When a Service doesn't work, look at its endpoints first. If the list is empty, the selector doesn't match the pods' labels, or the pods aren't ready yet. Compare `kubectl describe service botley` (look for `Selector`) with `kubectl get pods --show-labels`.
+
+</Careful>
+
+Fix the typo and apply the file again before you go on.
+
+## port and targetPort
+
+A Service has two ports, and people often mix them up.
+
+- `port` is the port **on the Service**. Programs that call Botley use it. We chose 80, so they can leave it out: `http://botley/`.
+- `targetPort` is the port **inside the pod**, where Botley is listening. That's 8080, because that's what Botley's code uses.
+
+If you set `targetPort` to the wrong number, the Service sends requests to a port where nothing is listening, and the connection fails.
+
+## Reaching Botley from your laptop
+
+The cluster IP doesn't work from outside the cluster. For testing, you can use port-forward with the Service, like you did with a pod in Chapter 3:
+
+```bash
+kubectl port-forward service/botley 8080:80
+```
+
+Then `curl localhost:8080/` on your laptop. Port-forward picks one pod and sends everything to that pod, so you won't see the requests shared out. For real users from outside the cluster, you need the Gateway API, which is Chapter 9.
+
+Delete the tester when you're done: `kubectl delete pod tester`.
+
+<NoSillyQuestions title="There are no dumb questions">
+
+<QA q={"Is a Service a program that runs somewhere?"}>
+
+No. There's no Botley Service container. A Service is a record in the API server: a name, an address and a selector. kube-proxy on each node sets up the network rules that make the address work.
+
+</QA>
+
+<QA q={"What does TYPE ClusterIP mean? Are there other types?"}>
+
+ClusterIP is the normal type: an address that works inside the cluster only. There are others. `NodePort` also opens a port on every node. `LoadBalancer` asks your cloud provider for a real load balancer with an address on the internet. You'll meet LoadBalancer in Chapter 12.
+
+</QA>
+
+<QA q={"Why not use kubectl get endpoints?"}>
+
+That's the older way, and it still works, but recent versions of Kubernetes print a warning that it is deprecated. EndpointSlices replaced it.
+
+</QA>
+
+<QA q={"Does the Service check whether Botley is healthy?"}>
+
+It sends traffic only to pods that are **ready**. Right now, Kubernetes thinks Botley is ready as soon as the container starts. In Chapter 7 you'll tell it how to check properly.
+
+</QA>
+
+</NoSillyQuestions>
+
+<YourTurn title="Sharpen your pencil">
+
+1. A pod in the namespace `shop` wants to call Botley. Botley's Service is in `default`. What name should it use? <Blank />
+2. A Service has `port: 80` and `targetPort: 5000`. Botley listens on 8080. What happens when you call the Service? <Blank />
+3. `kubectl get endpointslices` shows no addresses for your Service, but `kubectl get pods` shows three Botleys running. What's the first thing you check? <Blank />
+4. Why doesn't the Service's address change when pods are replaced? <Blank />
+
+<Hand>
+
+The answers are at the back.
+
+</Hand>
+
+</YourTurn>
+
+<Takeaways title="Bullet points">
+
+- Pod addresses change all the time. Don't save them anywhere.
+- A **Service** gives a set of pods one name and one address that stay the same.
+- A Service finds its pods by **labels**, like a ReplicaSet does.
+- Inside the cluster, call the Service by name: `botley`, or `botley.<namespace>` from another namespace.
+- An empty **EndpointSlice** means the selector matches no ready pods.
+- `port` is where callers connect. `targetPort` is where the app listens.
+
+</Takeaways>

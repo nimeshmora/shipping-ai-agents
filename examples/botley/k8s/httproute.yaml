@@ -1,0 +1,14 @@
+# Chapter 9. Requests for botley.example.com go to the botley Service.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: botley
+spec:
+  parentRefs:
+  - name: botley-gateway
+  hostnames:
+  - botley.example.com
+  rules:
+  - backendRefs:
+    - name: botley
+      port: 80

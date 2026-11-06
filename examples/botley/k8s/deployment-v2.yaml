@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: botley
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: botley
+  template:
+    metadata:
+      labels:
+        app: botley
+    spec:
+      containers:
+      - name: botley
+        image: botley:2.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: STARTUP_SECONDS      # ← version 2 takes about 10 seconds to start
+          value: "10"
+        - name: GREETING
+          valueFrom:
+            configMapKeyRef:
+              name: botley-settings
+              key: GREETING
+        - name: MODEL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: botley-secrets
+              key: MODEL_API_KEY

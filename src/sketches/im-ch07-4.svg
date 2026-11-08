@@ -1,0 +1,28 @@
+<svg viewBox="0 0 680 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description">
+  <title id="title">Weights travel from GPU memory to the math workers</title>
+  <desc id="description">An H100 GPU holds an example model's 16 gigabytes of weights in 80 gigabytes of HBM. A 3.35 terabyte-per-second belt carries them to the math workers, whose on-chip caches are measured in megabytes. The workers can do up to 989 trillion dense BF16 operations per second.</desc>
+  <defs>
+    <marker id="memory-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#23406e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="16" y="14" width="648" height="179" rx="16" fill="#f5f6f3" stroke="#1b1b1b" stroke-width="1.5" stroke-dasharray="7 7"/>
+  <text class="hb" x="38" y="42" font-size="16">One H100 GPU</text>
+  <rect x="34" y="61" width="187" height="113" rx="9" fill="#ffd9e2" stroke="#1b1b1b" stroke-width="2.3" stroke-linejoin="round"/>
+  <text class="hb" x="127" y="92" text-anchor="middle" font-size="16">Main memory (HBM)</text>
+  <text class="hk" x="127" y="116" text-anchor="middle" font-size="13">80 GB of room</text>
+  <text class="hk" x="127" y="137" text-anchor="middle" font-size="13">16 GB of weights here</text>
+  <rect x="89" y="147" width="11" height="10" rx="2" fill="#fff1a6" stroke="#1b1b1b"/>
+  <rect x="108" y="147" width="11" height="10" rx="2" fill="#fff1a6" stroke="#1b1b1b"/>
+  <rect x="127" y="147" width="11" height="10" rx="2" fill="#fff1a6" stroke="#1b1b1b"/>
+  <rect x="146" y="147" width="11" height="10" rx="2" fill="#fff1a6" stroke="#1b1b1b"/>
+  <path d="M233 116 H446" fill="none" stroke="#23406e" stroke-width="2.5" stroke-linecap="round" marker-end="url(#memory-arrow)"/>
+  <text class="h" x="339" y="96" text-anchor="middle" font-size="15">3.35 TB each second</text>
+  <text class="hk" x="339" y="144" text-anchor="middle" font-size="13">the memory belt</text>
+  <rect x="460" y="61" width="187" height="113" rx="9" fill="#dcf5d6" stroke="#1b1b1b" stroke-width="2.3" stroke-linejoin="round"/>
+  <text class="hb" x="553" y="92" text-anchor="middle" font-size="16">Math workers</text>
+  <text class="hk" x="553" y="116" text-anchor="middle" font-size="13">989 trillion BF16</text>
+  <text class="hk" x="553" y="135" text-anchor="middle" font-size="13">operations each second</text>
+  <text class="hk" x="553" y="156" text-anchor="middle" font-size="12">fast caches: MB, not GB</text>
+  <text class="h" x="340" y="220" text-anchor="middle" font-size="14">The weights cannot stay in the small caches. Each pass brings them from HBM.</text>
+</svg>

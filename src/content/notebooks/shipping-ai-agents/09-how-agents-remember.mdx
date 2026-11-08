@@ -93,6 +93,155 @@ The results come back with a relevance score. Your agent adds the best ones to t
 
 </Geek>
 
+
+## Try it yourself: Memory that survives a restart
+
+Imagine a student using an AI study assistant. The student says, "I'm preparing for a Python exam." Then the application closes.
+
+When the student returns, will the assistant still know what exam they are studying for?
+
+Let's test this using **LangGraph and SQLite**. SQLite saves the conversation state in a file on your computer. No cloud account or API key is needed.
+
+For this small demo, the assistant's replies are scripted. That lets us focus on how memory works without needing an AI model.
+
+<Geek>
+
+First, install the required Python packages:
+
+```bash
+python -m pip install langgraph langgraph-checkpoint-sqlite
+```
+
+Save this code as `memory_demo.py`:
+
+```python
+import sys
+
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+
+def study_assistant(state: MessagesState):
+    # Read the user messages saved in this conversation.
+    user_messages = [
+        message.content.lower()
+        for message in state["messages"]
+        if message.type == "human"
+        and isinstance(message.content, str)
+    ]
+
+    current = user_messages[-1]
+    earlier = user_messages[:-1]
+
+    if "python exam" in current:
+        reply = "Good luck with your Python exam!"
+    elif any("python exam" in msg for msg in earlier):
+        reply = "You told me you're preparing for a Python exam."
+    else:
+        reply = "I don't know which exam yet."
+
+    return {"messages": [{"role": "assistant", "content": reply}]}
+
+
+# Build a simple LangGraph workflow.
+builder = StateGraph(MessagesState)
+builder.add_node("assistant", study_assistant)
+builder.add_edge(START, "assistant")
+builder.add_edge("assistant", END)
+
+mode = sys.argv[1] if len(sys.argv) > 1 else "start"
+
+questions = {
+    "start": "I'm preparing for a Python exam.",
+    "resume": "What exam am I preparing for?",
+    "new": "What exam am I preparing for?",
+}
+
+if mode not in questions:
+    raise SystemExit("Use: start, resume, or new")
+
+# A new thread has no access to the old conversation.
+thread_id = "student-002" if mode == "new" else "student-001"
+
+with SqliteSaver.from_conn_string("study_memory.sqlite") as saver:
+    graph = builder.compile(checkpointer=saver)
+
+    result = graph.invoke(
+        {"messages": [
+            {"role": "user", "content": questions[mode]}
+        ]},
+        {"configurable": {"thread_id": thread_id}},
+    )
+
+    print(result["messages"][-1].content)
+```
+
+**First run — Start the conversation**
+
+```bash
+python memory_demo.py start
+```
+
+Output:
+
+```text
+Good luck with your Python exam!
+```
+
+Now close the program. The checkpoint has been saved to `study_memory.sqlite`.
+
+**Second run — Return to the same conversation**
+
+```bash
+python memory_demo.py resume
+```
+
+Expected output:
+
+```text
+You told me you're preparing for a Python exam.
+```
+
+The program has restarted, but LangGraph loads the previous conversation state from SQLite because we used the same `thread_id`.
+
+**Third run — Start a different conversation**
+
+```bash
+python memory_demo.py new
+```
+
+Expected output:
+
+```text
+I don't know which exam yet.
+```
+
+The new thread does not have the first student's conversation history.
+
+</Geek>
+
+### What actually happened?
+
+The SQLite checkpointer saved snapshots of the graph's state, including its messages. When the program started again, LangGraph loaded the saved state associated with `student-001`.
+
+The assistant did not learn anything new. It simply received messages from the previous conversation.
+
+<Careful>
+
+**Persistent conversation state is not the same as long-term semantic memory.** This example saves messages within a conversation thread. It does not extract useful facts, create embeddings, or automatically share memories across different conversations.
+
+In a real application, thread IDs must be associated with authenticated users. Do not trust a user-supplied thread ID as proof of identity. Treat the SQLite database as sensitive data and do not commit it to GitHub.
+
+</Careful>
+
+<YourTurn>
+
+Try changing the `thread_id` in the code. Does the assistant still remember the Python exam?
+
+Now try using the original thread ID again. What changes?
+
+</YourTurn>
+
 <NoSillyQuestions>
 
 <QA q={"Does memory train the AI model?"}>

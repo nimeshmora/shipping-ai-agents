@@ -254,7 +254,11 @@ html:not([data-theme="light"]) .byline{border-top:2px solid var(--rule)}
 html:not([data-theme="light"]) .nb{border:2px solid var(--rule);border-radius:16px;box-shadow:none}
 html:not([data-theme="light"]) .nb:hover{box-shadow:none;border-color:var(--blue)}
 html:not([data-theme="light"]) .nb h3 a:hover{background:none;color:var(--amber)}
-html:not([data-theme="light"]) .nb-cover{background:#fff;border:0;border-radius:10px}
+html:not([data-theme="light"]) .nb-cover{background:#fff;border:0;border-radius:10px;box-shadow:0 2px 0 rgba(0,0,0,.4)}
+html:not([data-theme="light"]) article.nb .nb-cover svg:not(.ic){filter:none}
+html:not([data-theme="light"]) .nb-cover svg .h{fill:#23406e}
+html:not([data-theme="light"]) .nb-cover svg .hb,html:not([data-theme="light"]) .nb-cover svg .hk,html:not([data-theme="light"]) .nb-cover svg .s,html:not([data-theme="light"]) .nb-cover svg .m{fill:#1b1b1b}
+html:not([data-theme="light"]) .nb:hover .nb-cover{box-shadow:0 0 0 2px var(--blue)}
 html:not([data-theme="light"]) .nb.next{border-color:var(--rule)}
 html:not([data-theme="light"]) .index a:hover .t{background:none;color:var(--amber)}
 html:not([data-theme="light"]) .index .n{color:var(--amber)}

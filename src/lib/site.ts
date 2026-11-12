@@ -10,5 +10,5 @@ export const EXAMPLES = `${REPO}/tree/main/examples`;
 export const GOATCOUNTER = 'shipping-ai-agents';
 
 // Your Buttondown username, for the "Get the next notebook by email" box. Set it to '' to hide the box.
-// The box is on the front page and at the end of each notebook's last chapter.
+// The box is on the front page, under the notebooks.
 export const BUTTONDOWN = '';

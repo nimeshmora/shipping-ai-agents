@@ -3,7 +3,6 @@ import { render, getCollection } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Strip from '../../../components/Strip.astro';
 import GoDeeper from '../../../components/GoDeeper.astro';
-import Subscribe from '../../../components/Subscribe.astro';
 import { allChapters, notebookOf, slugOf } from '../../../lib/chapters';
 import { notebook } from '../../../lib/notebooks';
 import { REPO } from '../../../lib/site';
@@ -29,7 +28,6 @@ const label = encodeURIComponent(`Chapter ${d.number}: ${d.title}`);
     {d.quote && <Strip who={d.quote.who} text={d.quote.text} />}
     <Content />
     {deeper && <GoDeeper nb={nb} intro={deeper.intro} courses={deeper.courses} />}
-    {isLast && <Subscribe where={nb} />}
     {checked && <p class="checked">Facts in this chapter last checked on {checked}.</p>}
     <p class="contribute">
       <a href={`${REPO}/edit/main/src/content/notebooks/${entry.id}.mdx`}>Edit this page</a>

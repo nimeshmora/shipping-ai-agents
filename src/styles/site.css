@@ -191,3 +191,28 @@ html:has(.stage-panel[open]){overflow:hidden}
 .visits{display:inline-block;margin:6px 0 2px;padding:5px 12px;border:2px dashed var(--ink);border-radius:999px;font-family:var(--f-hand);font-size:.95rem;background:var(--paper);transform:rotate(-1deg)}
 .visits b{font-family:var(--f-marker);font-weight:400;font-size:1.05rem}
 .visits[hidden]{display:none}
+
+/* "Go deeper" box at the end of a notebook's last chapter: course cards with a big button, and a peek at what a lab is */
+.go-deeper{margin:30px 0 6px;padding:18px 18px 14px;background:var(--sg);border:2px solid var(--ink);border-radius:10px}
+.go-deeper h2{margin:0 0 6px;font-family:var(--f-marker);font-weight:400;font-size:1.35rem;background:none;padding:0}
+.go-deeper>p{margin:0 0 12px}
+.lab-peek{background:#0f1216;border:2px solid #1b1b1b;border-radius:10px;overflow:hidden;margin:0 0 14px;transform:rotate(-.5deg)}
+.lab-top{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#1f252d;font-family:var(--f-hand);font-size:.78rem;color:#c9d1d9}
+.lab-top i{width:9px;height:9px;border-radius:50%;background:#ff5f57}.lab-top i:nth-child(2){background:#febc2e}.lab-top i:nth-child(3){background:#28c840}
+.lab-top span{margin-left:6px}
+.go-deeper .lab-peek pre{margin:0;border:0;border-radius:0;background:none;color:#d6dde6;font-size:.66rem;line-height:1.55;padding:10px 12px;white-space:pre;overflow-x:auto}
+.lab-peek .p{color:#28c840}
+.lab-peek .task{display:inline-block;margin-top:4px;color:#febc2e;font-family:var(--f-hand);font-size:.85rem}
+.gd-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.gd-card{display:flex;flex-direction:column;gap:6px;padding:14px 14px 12px;background:var(--paper);border:2px solid var(--ink);border-radius:12px;color:var(--ink);text-decoration:none;box-shadow:3px 3px 0 var(--ink);transition:transform .15s ease,box-shadow .15s ease}
+.gd-card:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.gd-label{font-family:var(--f-hand);font-weight:700;color:var(--hand);font-size:.85rem}
+.gd-name{font-family:var(--f-sans);font-weight:800;font-size:1rem;line-height:1.25}
+.gd-for{font-size:.8rem;line-height:1.4}
+.gd-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.gd-tags span{font-family:var(--f-sans);font-weight:700;font-size:.62rem;letter-spacing:.03em;padding:3px 9px;border-radius:999px;background:var(--sy);border:1.5px solid var(--ink)}
+.gd-tags span:first-child{background:#28c840;border-color:#1b7d2b;color:#08240c}
+.gd-btn{margin-top:auto;padding:9px 12px;border-radius:10px;background:var(--hl);border:2px solid var(--ink);font-family:var(--f-sans);font-weight:800;font-size:.78rem;text-align:center}
+.gd-card:hover .gd-btn{background:var(--ink);color:var(--paper)}
+.go-deeper small{display:block;margin-top:12px;font-family:var(--f-hand);color:var(--muted);font-size:.8rem;line-height:1.3}
+@media (prefers-reduced-motion:reduce){.gd-card,.gd-card:hover{transition:none;transform:none}}

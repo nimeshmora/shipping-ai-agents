@@ -48,10 +48,10 @@ const nbTitle = (coverHtml.match(/<h1 class="hero-title">(.*?)<\/h1>/s) || [])[1
 
 // ---- the print styles ----
 const esc = (s) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-const footer = (name, text) => `@page ${name} { @bottom-left { content: "${esc(text)}"; font: 9.5pt Kalam, cursive; color: #5d6166; vertical-align: middle; } }`;
+const footer = (name, text) => `@page ${name} { @bottom-left { content: "${esc(text)}"; font: 9.5pt Itim, cursive; color: #5d6166; vertical-align: middle; } }`;
 const printCss = `
 @page { size: A4; margin: 15mm 15mm 19mm;
-  @bottom-right { content: counter(page); font: 700 9pt Inter, sans-serif; color: #fff; background: #1b1b1b; border-radius: 4px; padding: 3px 0; margin: 7mm 0 7mm auto; width: 10mm; text-align: center; vertical-align: middle; }
+  @bottom-right { content: counter(page); font: 800 9pt Nunito, sans-serif; color: #fff; background: #1b1b1b; border-radius: 4px; padding: 3px 0; margin: 7mm 0 7mm auto; width: 10mm; text-align: center; vertical-align: middle; }
   @bottom-left { vertical-align: middle; } }
 @page cover { margin: 11mm; @bottom-right { content: none; background: none; } }
 ${footer('how', 'How to use this notebook')}

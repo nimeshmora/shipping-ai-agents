@@ -37,7 +37,7 @@ const fullTitle = hub ? 'Ship It with Nimesha' : page === 'cover' ? `${nb!.title
   <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono&family=Kalam:wght@400;700&family=Permanent+Marker&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Itim&family=JetBrains+Mono&family=Nunito:ital,wght@0,400;0,700;0,800;1,400&display=swap" />
   <script is:inline>
     try { var s = JSON.parse(localStorage.getItem('sai-notebook') || '{}'); if (s.theme) document.documentElement.setAttribute('data-theme', s.theme); } catch (e) {}
   </script>
@@ -109,7 +109,8 @@ const fullTitle = hub ? 'Ship It with Nimesha' : page === 'cover' ? `${nb!.title
     var resume = document.getElementById('resume');
     if (resume && st.last && st.last !== location.pathname) { resume.hidden = false; resume.href = st.last; }
     var themeBtn = document.getElementById('theme');
-    function isDark() { return root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches); }
+    // Dark is the default look. Light only when the reader picks it.
+    function isDark() { return root.getAttribute('data-theme') !== 'light'; }
     // The button names the mode you would switch to: "Go dark" in light mode, "Go light" in dark mode.
     function label() {
       var dark = isDark();

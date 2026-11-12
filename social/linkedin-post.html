@@ -1,0 +1,51 @@
+<!-- LinkedIn image for a weekly lesson post, in the notebook-page style. Change the text and paste in the chapter sketch from src/sketches/, then render at 1080x1350:
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --virtual-time-budget=6000 --window-size=1080,1350 --screenshot=$PWD/post.png file://$PWD/social/linkedin-post.html -->
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Permanent+Marker&family=JetBrains+Mono:wght@500&family=Source+Serif+4:wght@400;700&family=Inter:wght@700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;width:1080px;height:1350px}
+body{background:#fbf9f1;color:#1b1b1b;font-family:'Source Serif 4',serif;position:relative;overflow:hidden;
+ background-image:linear-gradient(#dfe7f1 1.5px,transparent 1.5px);background-size:100% 44px;background-position:0 30px}
+body:before{content:"";position:absolute;top:0;bottom:0;left:92px;width:3px;background:#e7a3a3}
+.wrap{position:relative;padding:58px 64px 0 130px}
+.kick{font-family:Kalam;font-weight:700;color:#23406e;font-size:30px;margin:0;transform:rotate(-1deg)}
+h1{font-family:'Permanent Marker';font-weight:400;font-size:80px;line-height:1.05;margin:8px 0 22px}
+h1 span{background:linear-gradient(transparent 55%,#ffe46b 55%,#ffe46b 92%,transparent 92%);padding:0 6px}
+.bubble{display:flex;align-items:center;gap:16px;margin:0 0 26px}
+.who{font-family:Kalam;font-weight:700;font-size:30px}
+.say{border:3px solid #1b1b1b;border-radius:26px;background:#fff;padding:12px 22px;font-family:Kalam;font-size:29px;line-height:1.25;position:relative}
+.say:before{content:"";position:absolute;left:-15px;top:22px;width:22px;height:22px;background:#fff;border-left:3px solid #1b1b1b;border-bottom:3px solid #1b1b1b;transform:rotate(45deg)}
+.photo{position:relative;background:#fff;border:2px solid #cfd3d8;padding:22px 18px 10px;transform:rotate(-1.2deg);box-shadow:3px 4px 0 rgba(0,0,0,.08)}
+.photo svg{display:block;width:100%;height:auto}
+.tape{position:absolute;top:-16px;width:120px;height:34px;background:rgba(255,228,107,.75)}
+.tape.l{left:30px;transform:rotate(-6deg)} .tape.r{right:30px;transform:rotate(5deg)}
+svg .h{font-family:Kalam;fill:#23406e} svg .hb{font-family:Kalam;font-weight:700;fill:#1b1b1b}
+svg .hk{font-family:Kalam;fill:#1b1b1b} svg .s{font-family:Inter;fill:#1b1b1b} svg .m{font-family:'Permanent Marker';fill:#1b1b1b}
+.fix{position:relative;margin:58px 0 0 6px;height:120px}
+.fix .old{font-family:'JetBrains Mono';font-size:38px;position:absolute;left:0;top:50px}
+.fix .old s{text-decoration:none;position:relative}
+.fix .old s:after{content:"";position:absolute;left:-6px;right:-6px;top:52%;height:4px;background:#c62828;transform:rotate(-2deg);border-radius:2px}
+.fix .new{position:absolute;left:150px;top:-6px;font-family:Kalam;font-weight:700;font-size:40px;color:#c62828;transform:rotate(-2deg)}
+.fix .caret{position:absolute;left:186px;top:44px;font-family:Kalam;font-weight:700;color:#c62828;font-size:40px}
+.sticky{position:absolute;right:56px;bottom:120px;width:330px;background:#fff1a6;padding:20px 22px;transform:rotate(2.5deg);box-shadow:2px 4px 8px rgba(0,0,0,.18);font-family:Kalam;font-size:26px;line-height:1.25}
+.sticky b{font-family:'Permanent Marker';font-weight:400;font-size:30px;display:block;margin-bottom:4px;color:#c62828}
+.sticky code{font-family:'JetBrains Mono';font-size:21px;background:rgba(255,255,255,.6);padding:0 3px}
+.note{position:absolute;left:130px;bottom:150px;width:470px;font-family:Kalam;font-size:28px;line-height:1.3;color:#23406e;transform:rotate(-1deg)}
+.foot{position:absolute;left:130px;right:64px;bottom:44px;display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid #1b1b1b;padding-top:14px}
+.foot b{font-family:'Permanent Marker';font-weight:400;font-size:34px}
+.foot span{font-family:Kalam;font-size:27px;color:#5d6166}
+</style></head><body><div class="wrap">
+<p class="kick">Kubernetes from the Beginning, chapter 12</p>
+<h1>The line that <span>always changes</span></h1>
+<div class="bubble"><span class="who">Sam:</span><div class="say">So it works on your laptop. What do we need to run it for real?</div></div>
+<div class="photo"><i class="tape l"></i><i class="tape r"></i><svg viewBox='0 0 680 300'><defs><marker id='kb121' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' orient='auto'><path d='M0 0 L10 5 L0 10' fill='none' stroke='#23406e' stroke-width='2'/></marker><marker id='kb121r' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' orient='auto'><path d='M0 0 L10 5 L0 10' fill='none' stroke='#c62828' stroke-width='2'/></marker></defs><text class='hb' x='14' y='26' font-size='14'>On your laptop (kind)</text><rect x='14' y='40' width='170' height='60' rx='8' fill='#fff' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='99' y='64' font-size='12' text-anchor='middle'>image</text><text class='hk' x='99' y='86' font-size='12' text-anchor='middle'>botley:2.0</text><path d='M186 70 H404' fill='none' stroke='#23406e' stroke-width='2' marker-end='url(#kb121)'/><text class='hk' x='295' y='62' font-size='11' text-anchor='middle'>kind load docker-image</text><text class='h' x='295' y='88' font-size='10' text-anchor='middle'>copies it into every node</text><rect x='410' y='42' width='80' height='56' rx='6' fill='#f5f6f3' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='450' y='66' font-size='12' text-anchor='middle'>node</text><text class='h' x='450' y='84' font-size='10' text-anchor='middle'>has it</text><rect x='498' y='42' width='80' height='56' rx='6' fill='#f5f6f3' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='538' y='66' font-size='12' text-anchor='middle'>node</text><text class='h' x='538' y='84' font-size='10' text-anchor='middle'>has it</text><rect x='586' y='42' width='80' height='56' rx='6' fill='#f5f6f3' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='626' y='66' font-size='12' text-anchor='middle'>node</text><text class='h' x='626' y='84' font-size='10' text-anchor='middle'>has it</text><path d='M10 124 H670' stroke='#9aa0a6' stroke-width='1.4' stroke-dasharray='4 6'/><text class='hb' x='14' y='152' font-size='14'>In the cloud</text><rect x='14' y='166' width='196' height='62' rx='8' fill='#fff' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='112' y='188' font-size='12' text-anchor='middle'>image</text><text class='hk' x='112' y='210' font-size='10' text-anchor='middle'>mycompany.azurecr.io/botley:2.0</text><path d='M212 197 H262' fill='none' stroke='#23406e' stroke-width='2' marker-end='url(#kb121)'/><text class='hk' x='237' y='188' font-size='10' text-anchor='middle'>docker</text><text class='hk' x='237' y='218' font-size='10' text-anchor='middle'>push</text><rect x='266' y='166' width='140' height='62' rx='8' fill='#d9ecff' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='336' y='190' font-size='13' text-anchor='middle'>registry</text><text class='h' x='336' y='210' font-size='9' text-anchor='middle'>ECR, Artifact Registry</text><text class='h' x='336' y='222' font-size='9' text-anchor='middle'>or ACR</text><rect x='450' y='168' width='68' height='56' rx='6' fill='#f5f6f3' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='484' y='194' font-size='12' text-anchor='middle'>node</text><path d='M408 197 H446' fill='none' stroke='#23406e' stroke-width='2' marker-end='url(#kb121)'/><rect x='526' y='168' width='68' height='56' rx='6' fill='#f5f6f3' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='560' y='194' font-size='12' text-anchor='middle'>node</text><path d='M408 184 Q480 132 552 166' fill='none' stroke='#23406e' stroke-width='2' marker-end='url(#kb121)'/><rect x='602' y='168' width='68' height='56' rx='6' fill='#f5f6f3' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hb' x='636' y='194' font-size='12' text-anchor='middle'>node</text><path d='M408 176 Q520 96 628 166' fill='none' stroke='#23406e' stroke-width='2' marker-end='url(#kb121)'/><text class='h' x='560' y='246' font-size='10' text-anchor='middle'>each node downloads it</text><text class='h' x='560' y='260' font-size='10' text-anchor='middle'>when a pod needs it</text><g transform='rotate(-1.5 200 270)'><rect x='14' y='248' width='380' height='40' rx='3' fill='#fff1a6' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round'/><text class='hk' x='204' y='273' font-size='10' text-anchor='middle'>The Deployment must say: image: mycompany.azurecr.io/botley:2.0</text></g></svg></div>
+<div class="fix">
+ <div class="new">mycompany.azurecr.io/botley:2.0</div>
+ <div class="caret">&#8964;</div>
+ <div class="old">image: <s>botley:2.0</s></div>
+</div>
+</div>
+<div class="note">There's no kind load in the cloud. Push the image to a registry, and change the image line.</div>
+<div class="sticky"><b>Watch it!</b>Built it on a Mac with Apple silicon? Many cloud nodes are x86. Use <code>--platform linux/amd64</code> or the pod fails with <code>exec format error</code>.</div>
+<div class="foot"><b>Ship It with Nimesha</b><span>free notebook, link in the comments</span></div>
+</body></html>

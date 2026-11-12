@@ -11,4 +11,4 @@ export const GOATCOUNTER = 'shipping-ai-agents';
 
 // Your Buttondown username, for the "Get the next notebook by email" box. Set it to '' to hide the box.
 // The box is on the front page, under the notebooks.
-export const BUTTONDOWN = '';
+export const BUTTONDOWN = 'nimesha';

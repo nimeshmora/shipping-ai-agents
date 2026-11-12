@@ -6,21 +6,26 @@ import { BUTTONDOWN } from '../lib/site';
 type Props = { where: string };
 const { where } = Astro.props;
 const id = `bd-email-${where.replace(/[^a-z0-9]+/gi, '-')}`;
+// On your laptop (npm run dev) the box always shows, so you can see it before BUTTONDOWN is set.
+// The live site only shows it once BUTTONDOWN is set.
+const show = BUTTONDOWN || import.meta.env.DEV;
+const preview = !BUTTONDOWN;
 ---
-{BUTTONDOWN && (
+{show && (
   <aside class="subscribe">
     <h2>Get the next notebook by email</h2>
     <p>One email when a new notebook or a big update comes out. Nothing else, and you can leave with one click.</p>
-    <form action={`https://buttondown.com/api/emails/embed-subscribe/${BUTTONDOWN}`} method="post" target="_blank" data-where={where}>
+    <form action={`https://buttondown.com/api/emails/embed-subscribe/${BUTTONDOWN || 'your-username'}`} method="post" target="_blank" data-where={where}>
       <label for={id} class="sr">Your email address</label>
       <input type="email" name="email" id={id} placeholder="you@example.com" required autocomplete="email" />
       <input type="hidden" name="embed" value="1" />
       <button type="submit">Send me the next one</button>
     </form>
     <small>Buttondown keeps the list. You'll get an email to confirm first.</small>
+    {preview && <p class="sub-preview">Preview on your laptop only. Set BUTTONDOWN in src/lib/site.ts to show this box on the live site.</p>}
   </aside>
 )}
-{BUTTONDOWN && <script is:inline>
+{show && <script is:inline>
   document.querySelectorAll('.subscribe form').forEach(function (f) {
     f.addEventListener('submit', function () {
       if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: 'subscribe/' + f.dataset.where, title: 'Email signup', event: true });

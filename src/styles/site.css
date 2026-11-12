@@ -297,6 +297,7 @@ html:not([data-theme="light"]) .gd-card:hover .gd-btn{background:#fff;border-col
 .subscribe button{flex:0 0 auto;font-family:var(--f-sans);font-weight:800;font-size:.8rem;padding:10px 16px;border:2px solid var(--ink);border-radius:10px;background:var(--hl);color:var(--ink);cursor:pointer}
 .subscribe button:hover{background:var(--ink);color:var(--paper)}
 .subscribe small{display:block;margin-top:10px;font-family:var(--f-hand);color:var(--muted);font-size:.8rem}
+.subscribe .sub-preview{margin:10px 0 0;padding:6px 10px;border:2px dashed var(--red);border-radius:8px;color:var(--red);font-family:var(--f-sans);font-size:.72rem;font-weight:700}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 html:not([data-theme="light"]) .subscribe{background:var(--sy);border-color:var(--amber);border-radius:14px}
 html:not([data-theme="light"]) .sub-wrap .subscribe{background:none}

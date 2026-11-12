@@ -1,0 +1,29 @@
+---
+// "Get the next notebook by email" box. The email list is kept by Buttondown (set BUTTONDOWN in src/lib/site.ts).
+// Buttondown sends a confirmation email first, so only people who click it are added.
+// GoatCounter counts each signup as "subscribe/<where>", so you can see which page brings people in.
+import { BUTTONDOWN } from '../lib/site';
+type Props = { where: string };
+const { where } = Astro.props;
+const id = `bd-email-${where.replace(/[^a-z0-9]+/gi, '-')}`;
+---
+{BUTTONDOWN && (
+  <aside class="subscribe">
+    <h2>Get the next notebook by email</h2>
+    <p>One email when a new notebook or a big update comes out. Nothing else, and you can leave with one click.</p>
+    <form action={`https://buttondown.com/api/emails/embed-subscribe/${BUTTONDOWN}`} method="post" target="_blank" data-where={where}>
+      <label for={id} class="sr">Your email address</label>
+      <input type="email" name="email" id={id} placeholder="you@example.com" required autocomplete="email" />
+      <input type="hidden" name="embed" value="1" />
+      <button type="submit">Send me the next one</button>
+    </form>
+    <small>Buttondown keeps the list. You'll get an email to confirm first.</small>
+  </aside>
+)}
+{BUTTONDOWN && <script is:inline>
+  document.querySelectorAll('.subscribe form').forEach(function (f) {
+    f.addEventListener('submit', function () {
+      if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: 'subscribe/' + f.dataset.where, title: 'Email signup', event: true });
+    });
+  });
+</script>}

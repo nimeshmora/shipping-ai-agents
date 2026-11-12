@@ -14,6 +14,18 @@ export type Notebook = {
   // The text on the button that links to that folder. Name the example app, like "Botley's code".
   // If it's not set, the button says "Get the code".
   examplesButton?: string;
+  // The "Go deeper" box at the end of the notebook's last chapter, pointing to paid courses with labs.
+  // Leave it out and no box is shown. The box always says the links are affiliate links.
+  goDeeper?: {
+    intro: string; // One or two sentences: what the reader could do next, and why a course helps
+    courses: {
+      name: string; // The course name, for example "Kubernetes for the Absolute Beginners"
+      url: string; // Your affiliate link to that course
+      for: string; // Who it's for, starting with "if" or "for", such as "If some chapters felt fast..."
+      label: string; // A short note above the name, such as "Start here" or "Next step"
+      tags: string[]; // Two or three short facts shown as pills, such as "Labs in your browser"
+    }[];
+  };
 };
 
 export const notebooks: Notebook[] = [
@@ -52,6 +64,25 @@ export const notebooks: Notebook[] = [
     cover: 'kb-cover',
     examples: '04-kubernetes-from-the-beginning',
     examplesButton: "Botley's code",
+    goDeeper: {
+      intro: "You've run Botley on a cluster and broken it many times. The best way to make it stick is more practice on clusters you didn't build yourself.",
+      courses: [
+        {
+          name: 'Kubernetes for the Absolute Beginners',
+          url: 'https://tidd.ly/4iTrLI8',
+          for: 'If some chapters felt fast. It goes over pods, Deployments and Services again, with a lab after each lesson.',
+          label: 'Start here',
+          tags: ['Labs in your browser', 'Beginner'],
+        },
+        {
+          name: 'Certified Kubernetes Administrator (CKA)',
+          url: 'https://tidd.ly/4AspniK',
+          for: 'For when you want the certificate. It covers looking after the cluster itself, such as upgrades, backups and fixing broken nodes.',
+          label: 'Next step: the certificate',
+          tags: ['Labs in your browser', 'Mock exams'],
+        },
+      ],
+    },
     edition: 'First edition, November 2026',
   },
 ];

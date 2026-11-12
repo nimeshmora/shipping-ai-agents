@@ -2,7 +2,9 @@
 import { render, getCollection } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Strip from '../../../components/Strip.astro';
-import { notebookOf, slugOf } from '../../../lib/chapters';
+import GoDeeper from '../../../components/GoDeeper.astro';
+import { allChapters, notebookOf, slugOf } from '../../../lib/chapters';
+import { notebook } from '../../../lib/notebooks';
 import { REPO } from '../../../lib/site';
 
 // One page per chapter of every notebook: /notebooks/<notebook>/<chapter>/
@@ -14,6 +16,9 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
 const nb = notebookOf(entry.id);
+const chapters = await allChapters(nb);
+const isLast = chapters[chapters.length - 1].id === entry.id;
+const deeper = isLast ? notebook(nb).goDeeper : undefined;
 const checked = d.lastChecked ? d.lastChecked.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 const label = encodeURIComponent(`Chapter ${d.number}: ${d.title}`);
 ---
@@ -22,6 +27,7 @@ const label = encodeURIComponent(`Chapter ${d.number}: ${d.title}`);
     <div class="ch-head"><div class="ch-num">{d.number}</div><div><div class="ch-kicker">{d.kicker}</div><h1>{d.title}</h1><div class="ch-sub">{d.subtitle}</div></div></div>
     {d.quote && <Strip who={d.quote.who} text={d.quote.text} />}
     <Content />
+    {deeper && <GoDeeper nb={nb} intro={deeper.intro} courses={deeper.courses} />}
     {checked && <p class="checked">Facts in this chapter last checked on {checked}.</p>}
     <p class="contribute">
       <a href={`${REPO}/edit/main/src/content/notebooks/${entry.id}.mdx`}>Edit this page</a>

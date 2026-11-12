@@ -1,0 +1,31 @@
+---
+// The "Go deeper" box at the end of a notebook. Set it with `goDeeper` in src/lib/notebooks.ts.
+// The links are affiliate links, so the box always says so, right next to them.
+// rel="sponsored" tells search engines they're paid links. GoatCounter counts each click as "go-deeper/<notebook>/<course number>".
+type Course = { name: string; url: string; for: string; label: string; tags: string[] };
+type Props = { nb: string; intro: string; courses: Course[] };
+const { nb, intro, courses } = Astro.props;
+---
+<aside class="go-deeper">
+  <h2>Go deeper</h2>
+  <p>{intro}</p>
+  <div class="lab-peek" aria-label="What a lab looks like">
+    <div class="lab-top"><i></i><i></i><i></i><span>A lab: a real cluster in your browser tab</span></div>
+    <pre><span class="p">$</span> kubectl get pods
+NAME                      READY   STATUS             RESTARTS
+botley-7d4b9c6f5d-x2kqp   0/1     CrashLoopBackOff   4
+<span class="task">Task: find out why this pod keeps crashing, and fix it.</span></pre>
+  </div>
+  <div class="gd-cards">
+    {courses.map((c, i) => (
+      <a class="gd-card" href={c.url} rel="sponsored noopener" data-goatcounter-click={`go-deeper/${nb}/${i + 1}`} data-goatcounter-title={`Go deeper: ${c.name}`}>
+        <span class="gd-label">{c.label}</span>
+        <b class="gd-name">{c.name}</b>
+        <span class="gd-for">{c.for}</span>
+        <span class="gd-tags">{c.tags.map((t) => <span>{t}</span>)}</span>
+        <span class="gd-btn">See the course on KodeKloud &rarr;</span>
+      </a>
+    ))}
+  </div>
+  <small>{courses.length > 1 ? 'These are affiliate links' : 'This is an affiliate link'}. If you sign up through one, I get a small share, at no extra cost to you. It helps keep these notebooks free.</small>
+</aside>

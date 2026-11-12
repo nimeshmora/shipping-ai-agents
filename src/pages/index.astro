@@ -7,9 +7,10 @@ import YourTurn from '../components/YourTurn.astro';
 import NoSillyQuestions from '../components/NoSillyQuestions.astro';
 import QA from '../components/QA.astro';
 import { url } from '../lib/url';
-import { REPO, GOATCOUNTER, EXAMPLES } from '../lib/site';
+import { REPO, GOATCOUNTER, EXAMPLES, BUTTONDOWN } from '../lib/site';
 import { notebooks } from '../lib/notebooks';
 import Talks from '../components/Talks.astro';
+import Subscribe from '../components/Subscribe.astro';
 import { allChapters } from '../lib/chapters';
 const counts = Object.fromEntries(await Promise.all(notebooks.map(async (n) => [n.slug, (await allChapters(n.slug)).length])));
 ---
@@ -120,6 +121,8 @@ const counts = Object.fromEntries(await Promise.all(notebooks.map(async (n) => [
         </div>
       </article>
     </section>
+
+    {(BUTTONDOWN || import.meta.env.DEV) && <div class="paper sub-wrap"><Subscribe where="front-page" /></div>}
 
     <section class="paper" id="join-in">
       <YourTurn>

@@ -286,3 +286,23 @@ html:not([data-theme="light"]) .gd-tags span{background:var(--sy);border-color:v
 html:not([data-theme="light"]) .gd-tags span:first-child{background:#0c2117;border-color:var(--green);color:var(--green)}
 html:not([data-theme="light"]) .gd-btn{background:var(--amber);border-color:var(--amber);color:#111}
 html:not([data-theme="light"]) .gd-card:hover .gd-btn{background:#fff;border-color:#fff;color:#111}
+
+/* "Get the next notebook by email" box (src/components/Subscribe.astro) */
+.subscribe{margin:26px 0 6px;padding:18px 18px 14px;background:var(--sy);border:2px dashed var(--ink);border-radius:10px}
+.sub-wrap .subscribe{margin:0;border:0;padding:0;background:none}
+.subscribe h2{margin:0 0 6px;font-family:var(--f-marker);font-weight:400;font-size:1.3rem;background:none;padding:0}
+.subscribe p{margin:0 0 12px}
+.subscribe form{display:flex;flex-wrap:wrap;gap:10px}
+.subscribe input[type=email]{flex:1 1 220px;min-width:0;font:inherit;font-size:.85rem;padding:10px 12px;border:2px solid var(--ink);border-radius:10px;background:var(--paper);color:var(--ink)}
+.subscribe button{flex:0 0 auto;font-family:var(--f-sans);font-weight:800;font-size:.8rem;padding:10px 16px;border:2px solid var(--ink);border-radius:10px;background:var(--hl);color:var(--ink);cursor:pointer}
+.subscribe button:hover{background:var(--ink);color:var(--paper)}
+.subscribe small{display:block;margin-top:10px;font-family:var(--f-hand);color:var(--muted);font-size:.8rem}
+.subscribe .sub-preview{margin:10px 0 0;padding:6px 10px;border:2px dashed var(--red);border-radius:8px;color:var(--red);font-family:var(--f-sans);font-size:.72rem;font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+html:not([data-theme="light"]) .subscribe{background:var(--sy);border-color:var(--amber);border-radius:14px}
+html:not([data-theme="light"]) .sub-wrap .subscribe{background:none}
+html:not([data-theme="light"]) .subscribe h2{color:var(--amber)}
+html:not([data-theme="light"]) .subscribe input[type=email]{border-color:#3a4351;background:var(--desk)}
+html:not([data-theme="light"]) .subscribe input[type=email]:focus{border-color:var(--blue);outline:none}
+html:not([data-theme="light"]) .subscribe button{background:var(--amber);border-color:var(--amber);color:#111}
+html:not([data-theme="light"]) .subscribe button:hover{background:#fff;border-color:#fff;color:#111}

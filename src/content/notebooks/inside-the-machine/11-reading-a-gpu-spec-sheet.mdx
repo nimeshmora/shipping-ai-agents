@@ -9,7 +9,7 @@ quote: {"who": "maya", "text": "Now the spec sheet finally makes sense. Let me p
 lastChecked: "2026-10-26"
 ---
 
-import { Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
+import { GoDeeper, Sketch, Sticky, Columns, Careful, Think, YourTurn, Takeaways, Geek, NoSillyQuestions, QA, FaceOff, Blank, Note, Hand } from '../../../components/index.ts';
 
 A GPU spec sheet is full of numbers. For running a model, five of them matter most, and you now know what each one means.
 
@@ -97,3 +97,24 @@ The answers are at the back.
 - Use the spec sheet to shortlist, then measure with your own requests.
 
 </Takeaways>
+
+<GoDeeper
+  nb="inside-the-machine"
+  intro="You can now read a spec sheet and shortlist a GPU. If you'd love to see these numbers at work, the next step is to load a real model onto a real GPU, serve it with vLLM, and watch the memory fill up as users arrive."
+  lab={{
+    title: 'A lab: a GPU server in your browser tab',
+    command: 'nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv',
+    output: `name, memory.used [MiB], memory.total [MiB]
+NVIDIA H100 80GB HBM3, 74210 MiB, 81559 MiB`,
+    task: 'Task: the second vLLM server will not start. Find out why.',
+  }}
+  courses={[
+    {
+      name: 'AI Infrastructure: LLM-D, vLLM and GPUs',
+      url: 'https://tidd.ly/4t3LeKM',
+      for: 'If this notebook made you curious. It covers loading a model onto a GPU, serving it with vLLM, batching many users, splitting a big model across GPUs, and running llm-d on Kubernetes.',
+      label: 'Try it for real',
+      tags: ['Hands-on labs', 'Beginner', 'vLLM and llm-d'],
+    },
+  ]}
+/>

@@ -1,0 +1,53 @@
+<!-- LinkedIn image for a weekly lesson post, in the notebook-page style. Change the text and paste in the chapter sketch from src/sketches/, then render at 1080x1350:
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --virtual-time-budget=6000 --window-size=1080,1350 --screenshot=$PWD/social/linkedin-ch11-gpu-spec-sheet.png file://$PWD/social/linkedin-ch11-gpu-spec-sheet.html -->
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Permanent+Marker&family=JetBrains+Mono:wght@500&family=Source+Serif+4:wght@400;700&family=Inter:wght@700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;width:1080px;height:1350px}
+body{background:#fbf9f1;color:#1b1b1b;font-family:'Source Serif 4',serif;position:relative;overflow:hidden;
+ background-image:linear-gradient(#dfe7f1 1.5px,transparent 1.5px);background-size:100% 44px;background-position:0 30px}
+body:before{content:"";position:absolute;top:0;bottom:0;left:92px;width:3px;background:#e7a3a3}
+.wrap{position:relative;padding:58px 64px 0 130px}
+.kick{font-family:Kalam;font-weight:700;color:#23406e;font-size:30px;margin:0;transform:rotate(-1deg)}
+h1{font-family:'Permanent Marker';font-weight:400;font-size:80px;line-height:1.05;margin:8px 0 22px}
+h1 span{background:linear-gradient(transparent 55%,#ffe46b 55%,#ffe46b 92%,transparent 92%);padding:0 6px}
+.bubble{display:flex;align-items:center;gap:16px;margin:0 0 26px}
+.who{font-family:Kalam;font-weight:700;font-size:30px}
+.say{border:3px solid #1b1b1b;border-radius:26px;background:#fff;padding:12px 22px;font-family:Kalam;font-size:29px;line-height:1.25;position:relative}
+.say:before{content:"";position:absolute;left:-15px;top:22px;width:22px;height:22px;background:#fff;border-left:3px solid #1b1b1b;border-bottom:3px solid #1b1b1b;transform:rotate(45deg)}
+.photo{position:relative;background:#fff;border:2px solid #cfd3d8;padding:22px 18px 10px;transform:rotate(-1.2deg);box-shadow:3px 4px 0 rgba(0,0,0,.08)}
+.photo svg{display:block;width:100%;height:auto}
+.tape{position:absolute;top:-16px;width:120px;height:34px;background:rgba(255,228,107,.75)}
+.tape.l{left:30px;transform:rotate(-6deg)} .tape.r{right:30px;transform:rotate(5deg)}
+svg .h{font-family:Kalam;fill:#23406e} svg .hb{font-family:Kalam;font-weight:700;fill:#1b1b1b}
+svg .hk{font-family:Kalam;fill:#1b1b1b} svg .s{font-family:Inter;fill:#1b1b1b} svg .m{font-family:'Permanent Marker';fill:#1b1b1b}
+.fix{position:relative;margin:54px 0 0 6px;height:170px}
+.calc{font-family:'JetBrains Mono';font-size:32px;line-height:1.6}.calc div{white-space:nowrap}
+.calc .r{font-family:Kalam;font-weight:700;color:#c62828;font-size:29px;margin-left:14px;display:inline-block;transform:rotate(-2deg)}
+.calc u{text-decoration:none;border-bottom:4px solid #c62828;padding-bottom:2px}
+.fix .old{font-family:'JetBrains Mono';font-size:38px;position:absolute;left:0;top:50px}
+.fix .old s{text-decoration:none;position:relative}
+.fix .old s:after{content:"";position:absolute;left:-6px;right:-6px;top:52%;height:4px;background:#c62828;transform:rotate(-2deg);border-radius:2px}
+.fix .new{position:absolute;left:150px;top:-6px;font-family:Kalam;font-weight:700;font-size:40px;color:#c62828;transform:rotate(-2deg)}
+.fix .caret{position:absolute;left:186px;top:44px;font-family:Kalam;font-weight:700;color:#c62828;font-size:40px}
+.sticky{position:absolute;right:56px;bottom:120px;width:330px;background:#fff1a6;padding:20px 22px;transform:rotate(2.5deg);box-shadow:2px 4px 8px rgba(0,0,0,.18);font-family:Kalam;font-size:26px;line-height:1.25}
+.sticky b{font-family:'Permanent Marker';font-weight:400;font-size:30px;display:block;margin-bottom:4px;color:#c62828}
+.sticky code{font-family:'JetBrains Mono';font-size:21px;background:rgba(255,255,255,.6);padding:0 3px}
+.note{position:absolute;left:130px;bottom:150px;width:470px;font-family:Kalam;font-size:28px;line-height:1.3;color:#23406e;transform:rotate(-1deg)}
+.foot{position:absolute;left:130px;right:64px;bottom:44px;display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid #1b1b1b;padding-top:14px}
+.foot b{font-family:'Permanent Marker';font-weight:400;font-size:34px}
+.foot span{font-family:Kalam;font-size:27px;color:#5d6166}
+</style></head><body><div class="wrap">
+<p class="kick">Inside the Machine, chapter 11</p>
+<h1>How to read a <span>GPU spec sheet</span></h1>
+<div class="bubble"><span class="who">Maya:</span><div class="say">Which numbers on a spec sheet matter for running an agent's model?</div></div>
+<div class="photo"><i class="tape l"></i><i class="tape r"></i><svg viewBox='0 0 680 266'><rect x='40' y='20' width='300' height='230' rx='6' fill='#fff' stroke='#1b1b1b' stroke-width='2.4' stroke-linejoin='round' stroke-linecap='round'/><text class='hb' x='60' y='46' font-size='15'>GPU X: data sheet</text><rect x='54' y='62' width='272' height='28' rx='3' fill='#ffd9e2' stroke='#1b1b1b' stroke-width='1.4'/><text class='s' x='64' y='81' font-size='11.5'>GPU memory</text><text class='s' x='316' y='81' text-anchor='end' font-size='11.5' font-weight='700'>80 GB</text><path d='M330 76 h40' stroke='#23406e' stroke-width='1.8'/><text class='h' x='380' y='81' font-size='13.5'>Will my model fit?</text><rect x='54' y='98' width='272' height='28' rx='3' fill='#fff1a6' stroke='#1b1b1b' stroke-width='1.4'/><text class='s' x='64' y='117' font-size='11.5'>Memory bandwidth</text><text class='s' x='316' y='117' text-anchor='end' font-size='11.5' font-weight='700'>3.35 TB/s</text><path d='M330 112 h40' stroke='#23406e' stroke-width='1.8'/><text class='h' x='380' y='117' font-size='13.5'>How fast for one user?</text><rect x='54' y='134' width='272' height='28' rx='3' fill='#dcf5d6' stroke='#1b1b1b' stroke-width='1.4'/><text class='s' x='64' y='153' font-size='11.5'>BF16 / FP8 (dense)</text><text class='s' x='316' y='153' text-anchor='end' font-size='11.5' font-weight='700'>989 / 1,979 TF</text><path d='M330 148 h40' stroke='#23406e' stroke-width='1.8'/><text class='h' x='380' y='153' font-size='13.5'>How much batching?</text><rect x='54' y='170' width='272' height='28' rx='3' fill='#d9ecff' stroke='#1b1b1b' stroke-width='1.4'/><text class='s' x='64' y='189' font-size='11.5'>NVLink</text><text class='s' x='316' y='189' text-anchor='end' font-size='11.5' font-weight='700'>900 GB/s</text><path d='M330 184 h40' stroke='#23406e' stroke-width='1.8'/><text class='h' x='380' y='189' font-size='13.5'>Can I split models?</text><rect x='54' y='206' width='272' height='28' rx='3' fill='#f5f6f3' stroke='#1b1b1b' stroke-width='1.4'/><text class='s' x='64' y='225' font-size='11.5'>Max power</text><text class='s' x='316' y='225' text-anchor='end' font-size='11.5' font-weight='700'>700 W</text><path d='M330 220 h40' stroke='#23406e' stroke-width='1.8'/><text class='h' x='380' y='225' font-size='13.5'>Can my rack take it?</text></svg></div>
+<div class="fix calc">
+ <div>L4:&nbsp;&nbsp;&nbsp;300 &divide; 8 &asymp; <u>37</u> tokens/s<span class="r">&larr; 8B model, one user</span></div>
+ <div>L40S: 864 &divide; 8 &asymp; <u>108</u> tokens/s<span class="r">&larr; same model</span></div>
+</div>
+</div>
+<div class="note">Memory decides what fits. Bandwidth decides how fast it feels.</div>
+<div class="sticky"><b>Watch it!</b>NVIDIA datasheets often quote tensor core numbers &ldquo;with sparsity&rdquo;. Those are twice the dense numbers, so check the footnote.</div>
+<div class="foot"><b>Ship It with Nimesha</b><span>free notebook, link in the comments</span></div>
+</body></html>

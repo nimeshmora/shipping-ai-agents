@@ -88,7 +88,12 @@ const counts = Object.fromEntries(await Promise.all(notebooks.map(async (n) => [
     panel.addEventListener('click', function (e) { if (e.target === panel) close(); });
     document.querySelectorAll('[data-open-stage]').forEach(function (b) { b.addEventListener('click', open); });
     panel.querySelectorAll('[data-close-stage]').forEach(function (b) { b.addEventListener('click', close); });
-    if (location.hash === '#share-the-stage') open();
+    if (location.hash === '#share-the-stage') { open(); return; }
+    // On the first front-page load of a visit, slide the panel in after a short pause.
+    // sessionStorage remembers it for this tab, so it doesn't come back each time you return to the front page.
+    var seen = false;
+    try { seen = sessionStorage.getItem('stage-seen') === '1'; sessionStorage.setItem('stage-seen', '1'); } catch (e) {}
+    if (!seen) setTimeout(function () { if (!panel.open) panel.showModal(); }, 1500);
   })();
   </script>
   <div slot="after">

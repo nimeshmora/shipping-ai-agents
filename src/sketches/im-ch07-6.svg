@@ -1,0 +1,22 @@
+<svg viewBox="0 0 680 238" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description">
+  <title id="title">The slower of two clocks sets the time for a pass</title>
+  <desc id="description">One clock moves the weights in about 4.8 milliseconds, regardless of batch size. The other does about 0.016 milliseconds of weight math for each token in the pass. Both run together. The pass takes at least as long as whichever clock finishes last.</desc>
+  <defs>
+    <marker id="clock-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#23406e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <text class="hb" x="340" y="28" text-anchor="middle" font-size="17">Two clocks run at the same time</text>
+  <rect x="28" y="47" width="278" height="100" rx="10" fill="#ffd9e2" stroke="#1b1b1b" stroke-width="2.3" stroke-linejoin="round"/>
+  <text class="hb" x="167" y="76" text-anchor="middle" font-size="15">Move the weights</text>
+  <text class="m" x="167" y="109" text-anchor="middle" font-size="26">4.8 ms</text>
+  <text class="h" x="167" y="132" text-anchor="middle" font-size="13">one delivery for the whole batch</text>
+  <rect x="374" y="47" width="278" height="100" rx="10" fill="#dcf5d6" stroke="#1b1b1b" stroke-width="2.3" stroke-linejoin="round"/>
+  <text class="hb" x="513" y="76" text-anchor="middle" font-size="15">Do the math</text>
+  <text class="m" x="513" y="109" text-anchor="middle" font-size="26">0.016 ms × N</text>
+  <text class="h" x="513" y="132" text-anchor="middle" font-size="13">N = tokens sharing the pass</text>
+  <path d="M167 152 L252 175" fill="none" stroke="#23406e" stroke-width="2" stroke-linecap="round" marker-end="url(#clock-arrow)"/>
+  <path d="M513 152 L428 175" fill="none" stroke="#23406e" stroke-width="2" stroke-linecap="round" marker-end="url(#clock-arrow)"/>
+  <rect x="119" y="183" width="442" height="42" rx="9" fill="#fff1a6" stroke="#1b1b1b" stroke-width="2.3" stroke-linejoin="round"/>
+  <text class="hb" x="340" y="210" text-anchor="middle" font-size="17">Pass time ≈ the slower clock</text>
+</svg>

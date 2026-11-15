@@ -1,0 +1,44 @@
+<svg viewBox="0 0 680 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description">
+  <title id="title">Prefill handles a prompt together; decode writes one token at a time</title>
+  <desc id="description">In prefill, sample prompt pieces travel together through pass one to produce the first answer token, Paris. In decode, Paris goes through pass two to produce is, then is goes through pass three to produce the. Each decode pass produces one new token for this user.</desc>
+  <defs>
+    <marker id="token-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#23406e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <text class="hb" x="28" y="28" font-size="17">Prefill: read the prompt together</text>
+  <rect x="28" y="48" width="68" height="39" rx="7" fill="#fff1a6" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="62" y="73" text-anchor="middle" font-size="13">Capital</text>
+  <rect x="102" y="48" width="47" height="39" rx="7" fill="#fff1a6" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="125" y="73" text-anchor="middle" font-size="13">of</text>
+  <rect x="155" y="48" width="67" height="39" rx="7" fill="#fff1a6" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="188" y="73" text-anchor="middle" font-size="13">France</text>
+  <rect x="228" y="48" width="39" height="39" rx="7" fill="#fff1a6" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="247" y="73" text-anchor="middle" font-size="13">?</text>
+  <text class="hk" x="284" y="73" font-size="18">...</text>
+  <path d="M315 67 H350" fill="none" stroke="#23406e" stroke-width="2" marker-end="url(#token-arrow)"/>
+  <rect x="363" y="48" width="98" height="39" rx="7" fill="#dcf5d6" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hb" x="412" y="73" text-anchor="middle" font-size="14">Pass 1</text>
+  <path d="M471 67 H505" fill="none" stroke="#23406e" stroke-width="2" marker-end="url(#token-arrow)"/>
+  <rect x="518" y="48" width="103" height="39" rx="7" fill="#ffd9e2" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="569" y="73" text-anchor="middle" font-size="14">Paris</text>
+  <text class="h" x="28" y="112" font-size="13">Many prompt tokens share one pass. A long prompt gives the GPU lots of math to do.</text>
+  <path d="M28 135 H649" stroke="#1b1b1b" stroke-width="1.4" stroke-dasharray="6 6"/>
+  <text class="hb" x="28" y="163" font-size="17">Decode: write one new token at a time</text>
+  <rect x="28" y="183" width="91" height="39" rx="7" fill="#ffd9e2" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="73" y="208" text-anchor="middle" font-size="14">Paris</text>
+  <path d="M126 202 H155" fill="none" stroke="#23406e" stroke-width="2" marker-end="url(#token-arrow)"/>
+  <rect x="168" y="183" width="98" height="39" rx="7" fill="#dcf5d6" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hb" x="217" y="208" text-anchor="middle" font-size="14">Pass 2</text>
+  <path d="M273 202 H302" fill="none" stroke="#23406e" stroke-width="2" marker-end="url(#token-arrow)"/>
+  <rect x="315" y="183" width="59" height="39" rx="7" fill="#ffd9e2" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="344" y="208" text-anchor="middle" font-size="14">is</text>
+  <path d="M381 202 H410" fill="none" stroke="#23406e" stroke-width="2" marker-end="url(#token-arrow)"/>
+  <rect x="423" y="183" width="98" height="39" rx="7" fill="#dcf5d6" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hb" x="472" y="208" text-anchor="middle" font-size="14">Pass 3</text>
+  <path d="M528 202 H557" fill="none" stroke="#23406e" stroke-width="2" marker-end="url(#token-arrow)"/>
+  <rect x="570" y="183" width="65" height="39" rx="7" fill="#ffd9e2" stroke="#1b1b1b" stroke-width="1.8"/>
+  <text class="hk" x="602" y="208" text-anchor="middle" font-size="14">the</text>
+  <text class="hk" x="645" y="208" font-size="18">...</text>
+  <text class="h" x="28" y="250" font-size="13">Each pass makes only one new answer token for this user.</text>
+</svg>

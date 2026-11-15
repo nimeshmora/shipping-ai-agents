@@ -34,6 +34,8 @@ notebook: inside-the-machine
 | HBM | High bandwidth memory: memory stacked right next to the GPU chip, very fast. |
 | GDDR | Graphics memory on separate chips around the GPU. Cheaper, slower than HBM. |
 | Memory bandwidth | How many bytes per second can flow from memory to the cores. |
+| Memory-bound | Moving data takes longer than doing the math, so the GPU waits for data. |
+| Compute-bound | Doing the math takes longer than moving data, so the math sets the pace. |
 | Batching | Using each delivery of weights to write tokens for many users at once. |
 | Tensor parallelism | Splitting one model across several GPUs, each holding a slice of every layer. |
 | NVLink | NVIDIA's fast direct link between GPUs. |
@@ -90,6 +92,7 @@ notebook: inside-the-machine
 1. About **69** tokens per second (4,800 GB/s ÷ 70 GB). Real numbers will be lower.
 2. No, not much. For one user, memory bandwidth sets the pace, not math speed.
 3. The GPU brings in the weights once and uses them to write the next token for many users at the same time.
+4. **Compute-bound.** The 8 milliseconds of math takes longer than the 4.8 milliseconds to move weights.
 
 ### Chapter 8, Your turn
 

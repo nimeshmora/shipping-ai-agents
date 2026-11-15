@@ -1,20 +1,29 @@
 ---
 // The "Go deeper" box at the end of a notebook. Set it with `goDeeper` in src/lib/notebooks.ts.
+// It can also go inside a chapter: <GoDeeper nb="..." intro="..." courses={[...]} lab={{...}} />.
+// `lab` changes the little terminal picture; leave it out to show the kubectl one.
 // The links are affiliate links, so the box always says so, right next to them.
 // rel="sponsored" tells search engines they're paid links. GoatCounter counts each click as "go-deeper/<notebook>/<course number>".
 type Course = { name: string; url: string; for: string; label: string; tags: string[] };
-type Props = { nb: string; intro: string; courses: Course[] };
-const { nb, intro, courses } = Astro.props;
+type Lab = { title: string; command: string; output: string; task: string };
+type Props = { nb: string; intro: string; courses: Course[]; lab?: Lab };
+const defaultLab: Lab = {
+  title: 'A lab: a real cluster in your browser tab',
+  command: 'kubectl get pods',
+  output: `NAME                      READY   STATUS             RESTARTS
+botley-7d4b9c6f5d-x2kqp   0/1     CrashLoopBackOff   4`,
+  task: 'Task: find out why this pod keeps crashing, and fix it.',
+};
+const { nb, intro, courses, lab = defaultLab } = Astro.props;
 ---
 <aside class="go-deeper">
   <h2>Go deeper</h2>
   <p>{intro}</p>
   <div class="lab-peek" aria-label="What a lab looks like">
-    <div class="lab-top"><i></i><i></i><i></i><span>A lab: a real cluster in your browser tab</span></div>
-    <pre><span class="p">$</span> kubectl get pods
-NAME                      READY   STATUS             RESTARTS
-botley-7d4b9c6f5d-x2kqp   0/1     CrashLoopBackOff   4
-<span class="task">Task: find out why this pod keeps crashing, and fix it.</span></pre>
+    <div class="lab-top"><i></i><i></i><i></i><span>{lab.title}</span></div>
+    <pre><span class="p">$</span> {lab.command}
+{lab.output}
+<span class="task">{lab.task}</span></pre>
   </div>
   <div class="gd-cards">
     {courses.map((c, i) => (

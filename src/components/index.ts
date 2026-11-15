@@ -15,3 +15,4 @@ export { default as Steps } from './Steps.astro';
 export { default as Blank } from './Blank.astro';
 export { default as Note } from './Note.astro';
 export { default as Hand } from './Hand.astro';
+export { default as GoDeeper } from './GoDeeper.astro';

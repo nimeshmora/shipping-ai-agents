@@ -1,0 +1,86 @@
+---
+// The row of topics under the front-page hero. Each topic has a small drawn icon and links
+// to the notebook that covers it. The icons are simple shapes in each topic's colours,
+// not the official logos.
+import { url } from '../lib/url';
+
+const topics = [
+  { label: 'AWS', nb: 'shipping-ai-agents', icon: 'aws' },
+  { label: 'Microsoft Azure', nb: 'shipping-ai-agents', icon: 'azure' },
+  { label: 'Google Cloud', nb: 'shipping-ai-agents', icon: 'gcp' },
+  { label: 'Kubernetes', nb: 'kubernetes-from-the-beginning', icon: 'k8s' },
+  { label: 'GPUs', nb: 'inside-the-machine', icon: 'gpu' },
+  { label: 'Your own models', nb: 'running-your-own-models', icon: 'model' },
+];
+const spokes = [0, 51.4, 102.8, 154.3, 205.7, 257.1, 308.6];
+const pins = [9, 14, 19, 24];
+---
+<div class="wrap topics">
+  <span class="topics-label">The notebooks cover</span>
+  <ul class="topics-list">
+    {topics.map((t) => (
+      <li>
+        <a href={url(`notebooks/${t.nb}/`)}>
+          <svg class={`ti ti-${t.icon}`} viewBox="0 0 32 32" aria-hidden="true">
+            {t.icon === 'aws' && (
+              <>
+                <rect width="32" height="32" rx="7" fill="#232f3e" />
+                <text x="16" y="17" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="10" fill="#fff">aws</text>
+                <path d="M8 21c5 3 11 3 16 0" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" />
+                <path d="M22 19.5l2.3 1.4-1.2 2.3" fill="none" stroke="#ff9900" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </>
+            )}
+            {t.icon === 'azure' && (
+              <>
+                <rect width="32" height="32" rx="7" fill="#0078d4" />
+                <path d="M14.5 7h4.2L12 25H6.8z" fill="#fff" />
+                <path d="M19.4 11.5L25.6 25H13.6l6.2-2.2-3.4-4z" fill="#bfe0ff" />
+              </>
+            )}
+            {t.icon === 'gcp' && (
+              <>
+                <rect width="32" height="32" rx="7" fill="#fff" stroke="#dadce0" />
+                <path d="M10 22a4.5 4.5 0 0 1-.5-9 6.5 6.5 0 0 1 12.4-1.3A5 5 0 0 1 22 22z" fill="none" stroke-width="2.6" stroke-linejoin="round" stroke="#4285f4" />
+                <path d="M9.5 13a6.5 6.5 0 0 1 6-5" fill="none" stroke="#ea4335" stroke-width="2.6" stroke-linecap="round" />
+                <path d="M15.5 8a6.5 6.5 0 0 1 6.4 3.7" fill="none" stroke="#fbbc04" stroke-width="2.6" stroke-linecap="round" />
+                <path d="M10 22h6" fill="none" stroke="#34a853" stroke-width="2.6" stroke-linecap="round" />
+              </>
+            )}
+            {t.icon === 'k8s' && (
+              <>
+                <rect width="32" height="32" rx="7" fill="#326ce5" />
+                <g transform="translate(16 16)">
+                  <circle r="7.5" fill="none" stroke="#fff" stroke-width="2" />
+                  <circle r="2.2" fill="#fff" />
+                  <g stroke="#fff" stroke-width="1.8" stroke-linecap="round">
+                    {spokes.map((a) => <path d="M0 -2.2V-11" transform={`rotate(${a})`} />)}
+                  </g>
+                </g>
+              </>
+            )}
+            {t.icon === 'gpu' && (
+              <>
+                <rect width="32" height="32" rx="7" fill="#76b900" />
+                <rect x="9" y="9" width="14" height="14" rx="2" fill="#0b0d10" />
+                <rect x="12.5" y="12.5" width="7" height="7" rx="1" fill="none" stroke="#76b900" stroke-width="1.4" />
+                <g stroke="#0b0d10" stroke-width="1.6" stroke-linecap="round">
+                  {pins.map((p) => <><path d={`M${p} 5.5V9`} /><path d={`M${p} 23V26.5`} /><path d={`M5.5 ${p}H9`} /><path d={`M23 ${p}H26.5`} /></>)}
+                </g>
+              </>
+            )}
+            {t.icon === 'model' && (
+              <>
+                <rect width="32" height="32" rx="7" fill="#7a45e6" />
+                <rect x="8" y="8" width="16" height="5" rx="1.5" fill="#fff" />
+                <rect x="8" y="14.5" width="16" height="5" rx="1.5" fill="#fff" opacity=".85" />
+                <rect x="8" y="21" width="16" height="5" rx="1.5" fill="#fff" opacity=".7" />
+                <circle cx="11" cy="10.5" r="1" fill="#7a45e6" /><circle cx="11" cy="17" r="1" fill="#7a45e6" /><circle cx="11" cy="23.5" r="1" fill="#7a45e6" />
+              </>
+            )}
+          </svg>
+          <span>{t.label}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>

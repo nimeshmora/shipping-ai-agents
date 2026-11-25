@@ -1,0 +1,45 @@
+---
+// GitHub stars and forks in the top bar. The numbers are read from the GitHub API when the
+// site is built, and again in the reader's browser (kept for an hour), so they stay current
+// between deploys. If GitHub can't be reached, the pill shows just "GitHub".
+import { REPO } from '../lib/site';
+import { repoStats, REPO_SLUG as slug } from '../lib/github';
+const st = await repoStats();
+const stars = st?.stars ?? null, forks = st?.forks ?? null;
+const has = stars !== null;
+---
+<span class="gh" data-slug={slug}>
+  <a class="gh-star" href={`${REPO}/stargazers`} aria-label={has ? `${stars} stars on GitHub` : 'Star on GitHub'}>
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+    <svg class="gh-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25z"/></svg>
+    <b class="gh-n" data-k="stars">{has ? stars : ''}</b>
+  </a>
+  <a class="gh-fork" href={`${REPO}/fork`} aria-label={has ? `${forks} forks on GitHub` : 'Fork on GitHub'}>
+    <svg class="gh-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0zM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0z"/></svg>
+    <b class="gh-n" data-k="forks">{has ? forks : ''}</b>
+  </a>
+</span>
+<script is:inline>
+(function () {
+  var el = document.querySelector('.gh'); if (!el) return;
+  var slug = el.getAttribute('data-slug'), KEY = 'gh-stats', d = null;
+  function show(v) {
+    if (!v) return;
+    el.querySelector('[data-k="stars"]').textContent = v.s;
+    el.querySelector('[data-k="forks"]').textContent = v.f;
+    el.querySelector('.gh-star').setAttribute('aria-label', v.s + ' stars on GitHub');
+    el.querySelector('.gh-fork').setAttribute('aria-label', v.f + ' forks on GitHub');
+  }
+  try { d = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (d && Date.now() - d.t < 3600 * 1000) { show(d); return; }
+  fetch('https://api.github.com/repos/' + slug)
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      if (!j) return;
+      var v = { s: j.stargazers_count, f: j.forks_count, t: Date.now() };
+      show(v);
+      try { sessionStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {}
+    })
+    .catch(function () {});
+})();
+</script>

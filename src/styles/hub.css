@@ -598,3 +598,38 @@
 @media (min-width:1000px){:root body.hub-page:has(.er-hero) .er-band .hero.er-hero.er-hero{grid-template-columns:minmax(0,1fr) minmax(0,600px);gap:56px}}
 @keyframes er-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){:root body.hub-page .gb-fan{animation:none}:root body.hub-page .vram-bar span{transition:none}}
+
+/* GitHub stars and forks in the top bar (src/components/GhStats.astro) */
+:root body{
+  & .gh{display:inline-flex;align-items:stretch;margin-left:10px;border:1px solid var(--rule);border-radius:8px;overflow:hidden;font-family:'Inter',system-ui,sans-serif;font-size:.78rem;line-height:1}
+  & .gh a{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;color:var(--ink);text-decoration:none;background:none}
+  & .gh a:hover{background:var(--soft);color:var(--ink)}
+  & .gh a+a{border-left:1px solid var(--rule)}
+  & .gh svg{width:15px;height:15px;fill:currentColor;flex:none}
+  & .gh svg.gh-i{width:13px;height:13px;fill:var(--muted)}
+  & .gh .gh-star svg.gh-i{fill:#e3b341}
+  & .gh b{font-weight:700;font-variant-numeric:tabular-nums}
+  & .gh b:empty{display:none}
+}
+@media (max-width:760px){
+  :root body .gh{margin-left:auto}
+  :root body #theme{margin-left:6px}
+}
+@media (max-width:420px){:root body .gh .gh-fork{display:none}}
+
+/* Topic row under the hero (src/components/TopicStrip.astro) */
+:root body.hub-page{
+  & .topics{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px 22px;padding-top:18px;padding-bottom:18px}
+  & .topics-label{font-size:.85rem;font-weight:500;color:var(--x-muted)}
+  & .topics-list{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0;padding:0}
+  & .topics-list li{margin:0}
+  & .topics-list a{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border:1px solid var(--x-line);border-radius:12px;background:var(--x-bg);color:var(--x-text);text-decoration:none;font-size:.88rem;font-weight:600;transition:border-color .15s ease,transform .15s ease}
+  & .topics-list a:hover{border-color:var(--x-line2);transform:translateY(-1px);background:var(--x-bg);color:var(--x-text)}
+  & .topics-list .ti{width:30px;height:30px;flex:none;filter:none}
+}
+@media (max-width:600px){
+  :root body.hub-page .topics-label{width:100%;text-align:center}
+  :root body.hub-page .topics-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+  :root body.hub-page .topics-list a{font-size:.82rem}
+}
+@media (prefers-reduced-motion:reduce){:root body.hub-page .topics-list a{transition:none}}

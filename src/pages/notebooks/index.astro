@@ -1,0 +1,31 @@
+---
+// The Illustrated Notebooks page: every notebook in one place. The list comes from src/lib/notebooks.ts.
+// The front page shows only the first few (FRONT_PAGE_NOTEBOOKS in src/lib/site.ts) and links here.
+import Base from '../../layouts/Base.astro';
+import NotebookCard from '../../components/NotebookCard.astro';
+import { notebooks } from '../../lib/notebooks';
+import { allChapters } from '../../lib/chapters';
+import { REPO } from '../../lib/site';
+const counts = Object.fromEntries(await Promise.all(notebooks.map(async (n) => [n.slug, (await allChapters(n.slug)).length])));
+const total = Object.values(counts).reduce((a, b) => a + (b as number), 0);
+---
+<Base title="Illustrated Notebooks" page="hub" where="Illustrated Notebooks" description="Every Ship It with Nimesha notebook in one place: free, illustrated notebooks on running AI agents and their models in production.">
+  <div slot="top" class="band hero-band">
+    <div class="wrap">
+      <section class="hero nb-hero">
+        <p class="eyebrow">Free to read</p>
+        <h1 class="hero-title">Illustrated Notebooks</h1>
+        <p class="hero-sub">Each notebook takes one part of running AI in production and explains it with drawings, examples and short exercises.</p>
+        <p class="nb-count"><b>{notebooks.length}</b> notebooks <span aria-hidden="true">&middot;</span> <b>{total}</b> chapters</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="shelf shelf-all" aria-label="All notebooks">
+    {notebooks.map((n) => <NotebookCard n={n} chapters={counts[n.slug]} />)}
+  </section>
+  <div class="shelf-more shelf-next">
+    <p><b>Notebook #{notebooks.length + 1}</b> is not started yet. Which topic should come next? Suggestions are welcome.</p>
+    <div class="actions"><a class="btn" href={`${REPO}/issues/new?template=chapter-idea.yml`}>Suggest a topic</a></div>
+  </div>
+</Base>

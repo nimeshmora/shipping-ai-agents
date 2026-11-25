@@ -1,23 +1,23 @@
 ---
 // One notebook on the shelf. Used on the front page and on the Illustrated Notebooks page (src/pages/notebooks/index.astro).
+// Kept short on purpose: cover, number and chapter count, title, one line, two buttons.
+// The PDF and the example code are on each notebook's cover page.
 import Sketch from './Sketch.astro';
 import { url } from '../lib/url';
-import { EXAMPLES } from '../lib/site';
 import type { Notebook } from '../lib/notebooks';
 const { n, chapters } = Astro.props as { n: Notebook; chapters: number };
+// The tagline, or else the first sentence of the blurb.
+const line = n.tagline ?? (n.blurb.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? n.blurb);
 ---
 <article class="nb">
   <a class="nb-cover" href={url(`notebooks/${n.slug}/`)} aria-hidden="true" tabindex="-1"><Sketch name={n.cover} /></a>
   <div class="nb-body">
-    <p class="nb-no">Notebook #{n.number}</p>
+    <p class="nb-no">Notebook #{n.number} <span aria-hidden="true">&middot;</span> {chapters} chapters</p>
     <h3><a href={url(`notebooks/${n.slug}/`)}>{n.title}</a></h3>
-    <p>{n.blurb}</p>
-    <p class="nb-meta">{chapters} chapters{n.pdf && <> and a PDF</>}. {n.edition}.</p>
+    <p class="nb-line">{line}</p>
     <div class="actions">
       <a class="btn primary" href={url(`notebooks/${n.slug}/how/`)}>Start reading</a>
-      <a class="btn" href={url(`notebooks/${n.slug}/`)}>See the chapters</a>
-      {n.pdf && <a class="btn" href={url(n.pdf)}>PDF</a>}
-      {n.examples && <a class="btn" href={`${EXAMPLES}/${n.examples}`}>{n.examplesButton ?? 'Get the code'}</a>}
+      <a class="btn" href={url(`notebooks/${n.slug}/`)}>Chapters</a>
     </div>
   </div>
 </article>

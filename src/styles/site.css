@@ -325,3 +325,15 @@ html:not([data-theme="light"]) .subscribe button:hover{background:#fff;border-co
 :root body .sale-bar .sb-close:hover{background:rgba(255,255,255,.18)}
 @media (max-width:900px){:root body .sale-bar .sb-items{display:none}}
 @media (max-width:480px){:root body .sale-bar{padding:0 38px 0 12px;font-size:.8rem}:root body .sale-bar a.sb-link{gap:6px 10px}}
+
+/* Notebook pages use the full window width, like the rest of the site: the contents list on
+   the left, the page filling the rest, and the same side margin (--nb-gutter) as other pages. */
+:root{--nb-gutter:clamp(16px,3.5vw,56px)}
+body:not(.hub-page) .layout{max-width:1760px;grid-template-columns:280px minmax(0,1fr);gap:clamp(24px,2.5vw,44px);padding-left:var(--nb-gutter);padding-right:var(--nb-gutter)}
+body:not(.hub-page) .paper{max-width:none}
+body:not(.hub-page) .foot{max-width:none}
+body:not(.hub-page) .bar,:root body:not(.hub-page) .bar{padding-left:max(var(--nb-gutter),calc((100% - 1760px) / 2 + var(--nb-gutter)));padding-right:max(var(--nb-gutter),calc((100% - 1760px) / 2 + var(--nb-gutter)))}
+@media (min-width:1300px){body:not(.hub-page) .paper{padding:52px clamp(52px,4vw,80px) 44px}}
+@media (max-width:900px){body:not(.hub-page) .layout{grid-template-columns:minmax(0,1fr);padding:16px 12px 60px}}
+/* Drawings stay at a comfortable size on wide screens instead of growing to the full page width. */
+body:not(.hub-page) .paper .fig svg{max-width:1100px;margin-left:auto;margin-right:auto}

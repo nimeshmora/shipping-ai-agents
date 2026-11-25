@@ -2,26 +2,28 @@
 // The KodeBox pop-up on the front page. It shows until KODEBOX_POPUP_UNTIL (src/lib/site.ts).
 // A reader sees it once, then not again for 3 days. While it is showing, the "Share the stage" panel
 // does not slide in by itself (see the script in src/pages/index.astro).
-// GoatCounter counts clicks as "kodebox/popup".
+// Styles are in src/styles/hub.css. GoatCounter counts clicks as "kodebox/popup".
 import { KODEBOX, KODEBOX_POPUP_UNTIL } from '../lib/site';
 import { url } from '../lib/url';
 const on = !!KODEBOX_POPUP_UNTIL;
 ---
 {on && (
   <dialog class="kb-pop" id="kodebox-pop" aria-labelledby="kb-pop-title">
-    <button class="stage-close" type="button" data-close-kb aria-label="Close">&times;</button>
-    <div class="kb-pop-in">
-      <img class="kb-logo" src={url('kodebox-mark.png')} width="120" height="127" alt="KodeBox logo" />
-      <p class="kb-tag">New from KodeKloud</p>
-      <h2 id="kb-pop-title" class="kb-name">KodeBox</h2>
-      <p>A server of your own that keeps running after you close your laptop. You can add a GPU when you need one.</p>
-      <p class="hand kb-note">I trained and fine-tuned a small model on one, and served it from a Kubernetes cluster with a GPU. My Mac has no NVIDIA GPU, so this is where my GPU work runs now.</p>
-      <div class="actions">
-        <a class="btn kb-btn" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="popup">Start a KodeBox</a>
-        <a class="btn" href={url('engine-room/')}>Open the GPU corner</a>
+    <button class="kb-close" type="button" data-close-kb aria-label="Close">&times;</button>
+    <div class="kb-pop-head">
+      <img src={url('kodebox-mark.png')} width="64" height="68" alt="KodeBox logo" />
+      <div>
+        <p class="eyebrow">New from KodeKloud</p>
+        <h2 id="kb-pop-title">KodeBox</h2>
       </div>
-      <p class="small kb-small">You pick a template, such as Ubuntu, Docker or Kubernetes, and click. The server is then ready for you.</p>
     </div>
+    <p>A server of your own that keeps running after you close your laptop. You can add a GPU when you need one.</p>
+    <p class="kb-quote">I trained and fine-tuned a small model on one, and served it from a Kubernetes cluster with a GPU. My Mac has no NVIDIA GPU, so this is where my GPU work runs now.</p>
+    <div class="actions">
+      <a class="btn primary" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="popup">Start a KodeBox</a>
+      <a class="btn" href={url('engine-room/')}>Open the GPU corner</a>
+    </div>
+    <p class="small">You pick a template, such as Ubuntu, Docker or Kubernetes, and click. The server is then ready for you.</p>
   </dialog>
 )}
 {on && <script is:inline define:vars={{ until: KODEBOX_POPUP_UNTIL }}>

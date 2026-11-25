@@ -1,6 +1,8 @@
 ---
 import '../styles/notebook.css';
 import '../styles/site.css';
+// The front page and the top bar have their own cleaner look. Notebook pages keep the Head First style.
+import '../styles/hub.css';
 import { url } from '../lib/url';
 import { allChapters, readingOrder, chapterHref } from '../lib/chapters';
 import { notebook as findNotebook } from '../lib/notebooks';
@@ -37,7 +39,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
   <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Itim&family=JetBrains+Mono&family=Nunito:ital,wght@0,400;0,700;0,800;1,400&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Inter:wght@400;500;600;700;800&family=Itim&family=JetBrains+Mono&family=Nunito:ital,wght@0,400;0,700;0,800;1,400&display=swap" />
   <script is:inline>
     try { var s = JSON.parse(localStorage.getItem('sai-notebook') || '{}'); if (s.theme) document.documentElement.setAttribute('data-theme', s.theme); } catch (e) {}
   </script>
@@ -45,7 +47,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
     <script is:inline async data-goatcounter={`https://${GOATCOUNTER}.goatcounter.com/count`} src="https://gc.zgo.at/count.js"></script>
   )}
 </head>
-<body data-page={hub ? 'hub' : key(page)}>
+<body data-page={hub ? 'hub' : key(page)} class={hub ? 'hub-page' : undefined}>
   <header class="bar">
     {!hub && <button id="menu" aria-controls="toc" aria-expanded="false">Contents</button>}
     <a class="brand" href={url()}><span class="logo" aria-hidden="true" set:html={logo} /><span>Ship It <i>with Nimesha</i></span></a>

@@ -1,0 +1,33 @@
+---
+// A thin bar above the top bar for the KodeKloud Black Friday sale. It shows on every page
+// until SALE_UNTIL (src/lib/site.ts) and stays closed for 3 days after someone closes it.
+import { KODEBOX, SALE_UNTIL } from '../lib/site';
+const show = !!SALE_UNTIL && new Date() <= new Date(SALE_UNTIL + 'T23:59:59Z');
+const items = ['KodeBox', 'Labs', 'Playgrounds', 'KodeKloud Engineer', 'Video courses'];
+---
+{show && (
+  <div class="sale-bar" id="sale-bar" role="region" aria-label="KodeKloud Black Friday sale">
+    <a class="sb-link" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="sale-bar">
+      <span class="sb-tag">Black Friday</span>
+      <span class="sb-main"><b>55% off</b> at KodeKloud</span>
+      <span class="sb-items">{items.map((i) => <span>{i}</span>)}</span>
+      <span class="sb-cta">Get the deal <span aria-hidden="true">&rarr;</span></span>
+    </a>
+    <button class="sb-close" type="button" aria-label="Close the sale bar">&times;</button>
+  </div>
+)}
+{show && (
+  <script is:inline define:vars={{ until: SALE_UNTIL }}>
+  (function () {
+    var bar = document.getElementById('sale-bar');
+    if (!bar) return;
+    var KEY = 'sale-bar-closed', last = 0;
+    try { last = +localStorage.getItem(KEY) || 0; } catch (e) {}
+    if (Date.now() > new Date(until + 'T23:59:59Z').getTime() || Date.now() - last < 3 * 24 * 3600 * 1000) { bar.remove(); return; }
+    bar.querySelector('.sb-close').addEventListener('click', function () {
+      bar.remove();
+      try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+    });
+  })();
+  </script>
+)}

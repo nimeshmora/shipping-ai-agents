@@ -510,3 +510,13 @@
   & .nb-links a:focus-visible{outline:2px solid var(--x-link);outline-offset:3px;border-radius:3px}
 }
 @media (prefers-reduced-motion:reduce){:root body.hub-page .nb-links a.nb-go span{transition:none}}
+
+/* KodeBox button in the GPU card: KodeBox logo colours */
+:root body.hub-page{
+  & .btn.kb-btn{display:inline-flex;align-items:center;gap:10px;padding-left:8px;color:#fff;font-weight:700;border:0;background:linear-gradient(100deg,#2f9ef4 0%,#5b6cf2 55%,#8a4ff0 100%);box-shadow:0 6px 20px rgba(91,108,242,.35);transition:box-shadow .15s ease,transform .15s ease}
+  & .btn.kb-btn:hover{color:#fff;background:linear-gradient(100deg,#2f9ef4 0%,#5b6cf2 55%,#8a4ff0 100%);box-shadow:0 8px 26px rgba(91,108,242,.5);transform:translateY(-1px)}
+  & .btn.kb-btn:focus-visible{outline:2px solid #8a4ff0;outline-offset:3px}
+  & .kb-chip{display:grid;place-items:center;width:26px;height:26px;border-radius:7px;background:#fff}
+  & .kb-chip img{width:18px;height:18px;display:block}
+}
+@media (prefers-reduced-motion:reduce){:root body.hub-page .btn.kb-btn{transition:none}:root body.hub-page .btn.kb-btn:hover{transform:none}}

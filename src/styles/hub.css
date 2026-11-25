@@ -221,7 +221,8 @@
   & .er-section{margin-top:56px;scroll-margin-top:80px}
   & .er-section h2{scroll-margin-top:80px}
   & .er-lead{color:var(--x-muted);max-width:68ch}
-  & .er-steps{list-style:none;counter-reset:s;margin:20px 0 0;padding:0;display:grid;gap:12px}
+  & .er-steps{list-style:none;counter-reset:s;margin:20px 0 0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+  & .er-steps li{min-width:0}
   & .er-steps li{counter-increment:s;position:relative;margin:0;padding:18px 20px 16px 64px;background:var(--x-card);border:1px solid var(--x-line);border-radius:12px}
   & .er-steps li:before{content:counter(s);position:absolute;left:20px;top:18px;width:28px;height:28px;border-radius:50%;background:var(--x-soft);border:1px solid var(--x-line2);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--x-text)}
   & .er-steps h3{font-size:1rem;font-weight:600;margin:3px 0 10px}
@@ -315,7 +316,6 @@
   & .hero-band .wrap{position:relative}
   & .hero-band .hero{padding:0;max-width:none}
   & .hero-band .hero:not(.has-scene){max-width:820px}
-  & .hero.has-scene{grid-template-columns:minmax(0,1fr) minmax(0,460px);column-gap:56px}
   & .hero-band .author{border-top-color:var(--x-line2)}
   & .strip-band{border-bottom:1px solid var(--x-line);background:var(--x-card)}
   & .strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 12px;padding-top:16px;padding-bottom:16px}
@@ -330,6 +330,9 @@
 }
 :root body.hub-page{--x-band-a:#10161e;--x-band-b:#0b0d10;--x-band-dot:#1f2833}
 :root[data-theme="light"] body.hub-page{--x-band-a:#e9effa;--x-band-b:#f6f7f9;--x-band-dot:#d3dbe7}
+@media (min-width:821px){
+  :root body.hub-page .hero.has-scene{grid-template-columns:minmax(0,1fr) minmax(0,460px);column-gap:56px}
+}
 @media (min-width:1100px){
   :root body.hub-page .layout.hub.has-rail{grid-template-columns:minmax(0,1fr) 320px;column-gap:48px}
   :root body.hub-page .rail{display:block;position:sticky;top:calc(72px + env(safe-area-inset-top,0px));align-self:start;max-height:calc(100vh - 92px);overflow-y:auto}

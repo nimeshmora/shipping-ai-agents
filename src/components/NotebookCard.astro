@@ -15,9 +15,9 @@ const line = n.tagline ?? (n.blurb.match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? n.blu
     <p class="nb-no">Notebook #{n.number} <span aria-hidden="true">&middot;</span> {chapters} chapters</p>
     <h3><a href={url(`notebooks/${n.slug}/`)}>{n.title}</a></h3>
     <p class="nb-line">{line}</p>
-    <div class="actions">
-      <a class="btn primary" href={url(`notebooks/${n.slug}/how/`)}>Start reading</a>
-      <a class="btn" href={url(`notebooks/${n.slug}/`)}>Chapters</a>
-    </div>
+    <p class="nb-links">
+      <a class="nb-go" href={url(`notebooks/${n.slug}/how/`)}>Start reading <span aria-hidden="true">&rarr;</span></a>
+      <a href={url(`notebooks/${n.slug}/`)}>Chapters</a>
+    </p>
   </div>
 </article>

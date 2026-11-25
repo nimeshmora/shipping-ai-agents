@@ -71,7 +71,6 @@ const faq = [
     </ol>
   </section>
 
-  <Talks slot="aside" compact />
   <KodeBoxPopup />
   <dialog class="stage-panel" id="share-the-stage" aria-labelledby="stage-title">
     <button class="stage-close" type="button" data-close-stage aria-label="Close">&times;</button>
@@ -113,7 +112,6 @@ const faq = [
   })();
   </script>
   <div slot="after">
-    <div class="talks-inline"><Talks /></div>
     <section class="shelf" aria-labelledby="shelf">
       <h2 id="shelf">The notebooks</h2>
       {notebooks.map((n) => (
@@ -143,23 +141,27 @@ const faq = [
       </article>
     </section>
 
-    <section class="gpu-corner" aria-labelledby="gpu-corner">
-      <div class="gpu-corner-text">
-        <p class="eyebrow">The GPU corner</p>
-        <h2 id="gpu-corner">Want to try GPU work at home?</h2>
-        <p>Most laptops can't train a model, and buying a GPU to learn on costs a lot. The Engine Room has the commands to run on your first GPU server, a check for whether a model will fit in GPU memory, and the chapters to read first.</p>
-        <div class="actions">
-          <a class="btn primary" href={url('engine-room/')}>Go to the Engine Room</a>
-          <a class="btn" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="front-page">Start a KodeBox</a>
+    <div class="pair">
+      <section class="gpu-corner" aria-labelledby="gpu-corner">
+        <div class="gpu-corner-text">
+          <p class="eyebrow">The GPU corner</p>
+          <h2 id="gpu-corner">Want to try GPU work at home?</h2>
+          <p>Most laptops can't train a model, and buying a GPU to learn on costs a lot. The Engine Room has the commands to run on your first GPU server, a check for whether a model will fit in GPU memory, and the chapters to read first.</p>
+          <div class="actions">
+            <a class="btn primary" href={url('engine-room/')}>Go to the Engine Room</a>
+            <a class="btn" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="front-page">Start a KodeBox</a>
+          </div>
         </div>
-      </div>
-      <div class="gpu-corner-kb">
-        <img src={url('kodebox-mark.png')} width="72" height="76" alt="KodeBox logo" />
-        <p><b>KodeBox</b>I use KodeBox from KodeKloud for this. It is a server that stays up until you stop it, with a GPU when you ask for one.</p>
-      </div>
-    </section>
+        <div class="gpu-corner-kb">
+          <img src={url('kodebox-mark.png')} width="72" height="76" alt="KodeBox logo" />
+          <p><b>KodeBox</b>I use KodeBox from KodeKloud for this. It is a server that stays up until you stop it, with a GPU when you ask for one.</p>
+        </div>
+      </section>
 
-    {(BUTTONDOWN || import.meta.env.DEV) && <div class="sub-wrap"><Subscribe where="front-page" /></div>}
+      {(BUTTONDOWN || import.meta.env.DEV) && <div class="sub-wrap"><Subscribe where="front-page" /></div>}
+    </div>
+
+    <div class="talks-inline"><Talks /></div>
 
     <section class="join" id="join-in" aria-labelledby="join-title">
       <div>

@@ -34,7 +34,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{fullTitle}</title>
-  <meta name="description" content={description ?? 'Ship It with Nimesha: Head First style notebooks about taking AI agents from prototype to production on AWS, Microsoft Azure and Google Cloud.'} />
+  <meta name="description" content={description ?? 'Ship It with Nimesha: Head First style notebooks about running AI agents and their models in production, from the cloud to Kubernetes and the GPU.'} />
   <meta name="author" content="Nimesha Jinarajadasa" />
   <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -51,7 +51,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
   <header class="bar">
     {!hub && <button id="menu" aria-controls="toc" aria-expanded="false">Contents</button>}
     <a class="brand" href={url()}><span class="logo" aria-hidden="true" set:html={logo} /><span>Ship It <i>with Nimesha</i></span></a>
-    <span class="where">{hub ? (Astro.props.where ?? 'Notebooks on deploying AI agents') : page === 'cover' ? `Notebook #${nb!.number}: ${nb!.title}` : <>{nb!.title} <span class="dot">&middot;</span> {title}</>}</span>
+    <span class="where">{hub ? (Astro.props.where ?? 'Notebooks on running AI in production') : page === 'cover' ? `Notebook #${nb!.number}: ${nb!.title}` : <>{nb!.title} <span class="dot">&middot;</span> {title}</>}</span>
     <button id="theme" aria-label="Switch to dark mode">
       <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
       <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>

@@ -65,10 +65,6 @@
   & .visits[hidden]{display:none}
 
   /* topics */
-  & .topics-wrap{margin-top:48px}
-  & .topics{list-style:none;counter-reset:t;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0;padding:0}
-  & .topics li{counter-increment:t;margin:0;padding:16px 16px 18px;background:var(--x-card);border:1px solid var(--x-line);border-radius:12px;font-size:.92rem;font-weight:500;line-height:1.4}
-  & .topics li:before{content:"0" counter(t);display:block;font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--x-muted);margin-bottom:8px}
 
   /* notebook shelf */
   & .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;margin-top:64px;background:none;border:0;box-shadow:none;padding:0;max-width:none}
@@ -144,12 +140,10 @@
 }
 
 @media (max-width:860px){
-  :root body.hub-page .topics{grid-template-columns:repeat(2,minmax(0,1fr))}
   :root body.hub-page .join{grid-template-columns:minmax(0,1fr);gap:24px}
 }
 @media (max-width:480px){
   :root body.hub-page .layout.hub{padding:24px 16px 56px}
-  :root body.hub-page .topics{grid-template-columns:minmax(0,1fr)}
   :root body.hub-page .stage{padding:36px 20px 24px}
 }
 @media (prefers-reduced-motion:reduce){:root body.hub-page .nb,:root body.hub-page .btn{transition:none}}
@@ -157,16 +151,8 @@
 /* ---- KodeBox and the Engine Room (GPU corner) ----
    Same clean look as the front page. The KodeBox logo (public/kodebox-mark.png) is used as it is. */
 :root body.hub-page{
-  /* front-page section */
-  & .gpu-corner{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;align-items:center;margin-top:64px;padding:28px;background:var(--x-card);border:1px solid var(--x-line);border-radius:14px}
-  & .gpu-corner .eyebrow,& .er-kb .eyebrow,& .kb-pop .eyebrow{margin:0 0 8px}
-  & .gpu-corner h2{margin:0 0 10px}
-  & .gpu-corner-text>p:not(.eyebrow){color:var(--x-muted);font-size:.95rem}
-  & .gpu-corner .actions{margin-top:18px}
-  & .gpu-corner-kb{display:flex;gap:14px;align-items:center;padding:18px;background:var(--x-soft);border:1px solid var(--x-line);border-radius:12px}
-  & .gpu-corner-kb img{flex:none;width:72px;height:auto}
-  & .gpu-corner-kb p{margin:0;font-size:.88rem;color:var(--x-muted);line-height:1.5}
-  & .gpu-corner-kb b{display:block;color:var(--x-text);font-weight:700;font-size:1rem;margin-bottom:2px}
+
+  & .er-kb .eyebrow,& .kb-pop .eyebrow{margin:0 0 8px}
 
   /* pop-up */
   & .kb-pop{width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:28px;background:var(--x-card);color:var(--x-text);border:1px solid var(--x-line2);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
@@ -225,7 +211,6 @@
 }
 @keyframes kb-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (max-width:760px){
-  :root body.hub-page .gpu-corner{grid-template-columns:minmax(0,1fr);padding:22px}
   :root body.hub-page .fit{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:560px){
@@ -296,7 +281,6 @@
   & .strip span{font-size:.85rem;font-weight:500;color:var(--x-text);padding:4px 12px;border:1px solid var(--x-line2);border-radius:999px}
   & .strip .strip-label{border:0;padding:0 4px 0 0;color:var(--x-muted)}
   & .layout.hub,& .layout.hub.has-rail{max-width:var(--wrap);margin:0 auto;padding:48px var(--gutter) 64px}
-  & .topics-wrap{margin-top:0}
   & .site-foot{border-top:1px solid var(--x-line);background:var(--x-card);padding:28px 0}
   & .site-foot p{margin:0 0 6px;font-size:.85rem;color:var(--x-muted)}
   & .site-foot b{color:var(--x-text);font-weight:600}
@@ -321,7 +305,6 @@
    Sections fill the main column. On wide screens the talks card sits in a sticky side column. */
 :root body.hub-page{
   & h2,& .paper h2{font-size:1.6rem;margin-bottom:20px}
-  & .topics li{font-size:1.02rem;padding:18px 18px 20px}
   & .shelf{margin-top:72px;gap:20px}
   & .nb h3{font-size:1.3rem}
   & .nb-body>p:not(.nb-no):not(.nb-meta){font-size:.95rem;line-height:1.6}
@@ -333,11 +316,6 @@
   & .nb.next .nb-body>p:not(.nb-no):not(.nb-meta){margin:0;flex:1 1 260px}
   & .nb.next h3{margin:0}
   & .nb.next .actions{margin:0}
-  & .pair{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:20px;align-items:stretch;margin-top:72px}
-  & .pair>.gpu-corner,& .pair>.sub-wrap{margin:0}
-  & .pair .gpu-corner{grid-template-columns:minmax(0,1fr);gap:20px}
-  & .pair .sub-wrap,& .pair .sub-wrap .subscribe{height:100%}
-  & .pair .subscribe form{flex-wrap:wrap}
   & .er-steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   & .er-reads{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
   & .er-ideas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:40px}
@@ -347,7 +325,6 @@
   :root body.hub-page .shelf{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 @media (max-width:1000px){
-  :root body.hub-page .pair{grid-template-columns:minmax(0,1fr)}
   :root body.hub-page .er-steps{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:640px){
@@ -411,18 +388,50 @@
   :root body.hub-page .layout.hub.has-rail{grid-template-columns:minmax(0,1fr) 340px;column-gap:40px}
   :root body.hub-page .rail{display:block;position:sticky;top:calc(76px + env(safe-area-inset-top,0px));align-self:start;max-height:calc(100vh - 96px);overflow-y:auto;scrollbar-width:thin;padding:0 2px 2px 0;border-radius:16px}
   :root body.hub-page .talks-inline{display:none}
-  :root body.hub-page .has-rail .topics{grid-template-columns:repeat(2,minmax(0,1fr))}
   :root body.hub-page .has-rail .shelf{grid-template-columns:minmax(0,1fr);gap:16px}
   :root body.hub-page .has-rail .nb{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px;align-items:start;padding:16px}
   :root body.hub-page .has-rail .nb-cover svg{height:160px}
   :root body.hub-page .has-rail .nb .actions{margin-top:14px;flex-wrap:wrap}
   :root body.hub-page .has-rail .nb .btn,:root body.hub-page .has-rail .nb .btn.primary{flex:none}
   :root body.hub-page .has-rail .nb.next{display:flex}
-  :root body.hub-page .has-rail .pair{grid-template-columns:minmax(0,1fr)}
-  :root body.hub-page .has-rail .pair .gpu-corner{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
 }
 @media (max-width:760px){
   :root body.hub-page .talks-card.wide .tc-body,:root body.hub-page .talks-card.wide .tc-list{grid-template-columns:minmax(0,1fr)}
   :root body.hub-page .talks-inline{margin-bottom:40px}
 }
 @media (prefers-reduced-motion:reduce){:root body.hub-page .tc-dot{animation:none}}
+
+/* ---- "Nimesha's GPU Corner" card (src/components/GpuCorner.astro) ----
+   At the top of the content. A green accent sets it apart; the drawing keeps the notebook look. */
+:root body.hub-page{
+  --gc:#76b900;--gc-glow:rgba(118,185,0,.10);
+  & .gpu-card{position:relative;margin:0 0 8px;padding:24px;background:var(--x-card);border:1px solid var(--x-line2);border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px var(--gc-glow),0 18px 50px rgba(0,0,0,.22)}
+  & .gpu-card::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--gc)}
+  & .gc-head{margin:0 0 18px}
+  & .gc-eyebrow{display:inline-flex;align-items:center;gap:8px;margin:0 0 8px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gc)}
+  & .gc-eyebrow svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;filter:none}
+  & .gpu-card h2{font-size:1.6rem;margin:0}
+  & .gc-main{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+  & .gc-text{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+  & .gc-text p{margin:0 !important}
+  & .gc-sketch{display:block;background:#fff;border:1px solid var(--x-line);border-radius:12px;padding:18px 24px;transition:transform .15s ease,box-shadow .15s ease}
+  & .gc-sketch:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  & .gc-sketch .fig{margin:0}
+  & .gc-sketch svg{display:block;width:100%;height:auto;filter:none}
+  & .gc-text p{font-size:.98rem;line-height:1.65;color:var(--x-muted);margin:0 0 12px}
+  & .gc-text p:first-child{color:var(--x-text);font-size:1.05rem}
+  & .gc-facts{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  & .gc-facts li{margin:0;padding:14px 16px;background:var(--x-soft);border:1px solid var(--x-line);border-radius:12px}
+  & .gc-facts b{display:block;font-size:1.45rem;font-weight:800;letter-spacing:-.02em;color:var(--x-text);line-height:1.1}
+  & .gc-facts span{display:block;margin-top:4px;font-size:.8rem;color:var(--x-muted);line-height:1.4}
+  & .gpu-card .actions{margin-top:20px}
+}
+:root[data-theme="light"] body.hub-page{--gc:#3f8f00;--gc-glow:rgba(63,143,0,.08)}
+@media (max-width:700px){
+  :root body.hub-page .gc-text{grid-template-columns:minmax(0,1fr);gap:12px}
+  :root body.hub-page .gc-sketch{padding:10px}
+  :root body.hub-page .gc-facts{grid-template-columns:minmax(0,1fr)}
+  :root body.hub-page .gpu-card{padding:20px}
+  :root body.hub-page .gpu-card h2{font-size:1.35rem}
+}
+@media (prefers-reduced-motion:reduce){:root body.hub-page .gc-sketch{transition:none}}

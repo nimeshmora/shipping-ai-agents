@@ -1,0 +1,38 @@
+---
+// "Nimesha's GPU Corner" card on the front page. The drawing is from Inside the Machine, chapter 6.
+// The numbers match the spec table in Inside the Machine, chapter 11. Styles are in src/styles/hub.css.
+import Sketch from './Sketch.astro';
+import { url } from '../lib/url';
+import { KODEBOX } from '../lib/site';
+---
+<section class="gpu-card" aria-labelledby="gpu-card-title">
+  <header class="gc-head">
+    <p class="gc-eyebrow">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="ic"><rect x="5" y="5" width="14" height="14" rx="2" /><rect x="9" y="9" width="6" height="6" rx="1" /><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" /></svg>
+      Nimesha's GPU Corner
+    </p>
+    <h2 id="gpu-card-title">What is a GPU, and why does AI need one?</h2>
+  </header>
+
+  <div class="gc-main">
+    <a class="gc-sketch" href={url('notebooks/inside-the-machine/06-the-gpu/')} aria-label="Read chapter 6 of Inside the Machine: The GPU">
+      <Sketch name="im-ch06-1" />
+    </a>
+    <div class="gc-text">
+      <p>A CPU has a few very fast cores. A GPU has thousands of small ones, and they all do the same sum at the same time.</p>
+      <p>Running a model is mostly multiply-and-add sums, billions of them for every word it writes. A GPU does them side by side, so it finishes much sooner. The other number that matters is the GPU's memory, because the whole model has to fit in it.</p>
+    </div>
+  </div>
+
+  <ul class="gc-facts">
+    <li><b>16 GB</b><span>for the weights of an 8B model at 16-bit</span></li>
+    <li><b>80 GB</b><span>of memory on one NVIDIA H100</span></li>
+    <li><b>3,350 GB/s</b><span>how fast an H100 reads that memory</span></li>
+  </ul>
+
+  <div class="actions">
+    <a class="btn primary" href={url('notebooks/inside-the-machine/06-the-gpu/')}>Read the GPU chapter</a>
+    <a class="btn" href={url('engine-room/')}>Open the GPU Corner</a>
+    <a class="btn" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="gpu-card">Try a GPU on KodeBox</a>
+  </div>
+</section>

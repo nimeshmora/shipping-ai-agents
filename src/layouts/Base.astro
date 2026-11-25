@@ -7,6 +7,7 @@ import { url } from '../lib/url';
 import { allChapters, readingOrder, chapterHref } from '../lib/chapters';
 import { notebook as findNotebook } from '../lib/notebooks';
 import { GOATCOUNTER, REPO } from '../lib/site';
+import SaleBar from '../components/SaleBar.astro';
 // The logo (Botley shipping out on a boat) is the favicon too, so there is one file to change.
 import logo from '../../public/favicon.svg?raw';
 
@@ -55,6 +56,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
   )}
 </head>
 <body data-page={hub ? 'hub' : key(page)} class={hub ? 'hub-page' : undefined}>
+  <SaleBar />
   <header class="bar">
     {!hub && <button id="menu" aria-controls="toc" aria-expanded="false">Contents</button>}
     <a class="brand" href={url()}><span class="logo" aria-hidden="true" set:html={logo} /><span>Ship It <i>with Nimesha</i></span></a>

@@ -12,3 +12,9 @@ export const GOATCOUNTER = 'shipping-ai-agents';
 // Your Buttondown username, for the "Get the next notebook by email" box. Set it to '' to hide the box.
 // The box is on the front page, under the notebooks.
 export const BUTTONDOWN = 'nimesha';
+
+// KodeBox (kodekloud.com/kodebox): servers you can keep running, with a GPU if you want one.
+// The link is used on the front page, in the pop-up and on the Engine Room page (src/pages/engine-room.astro).
+export const KODEBOX = 'https://tidd.ly/3VbFm5x';
+// The KodeBox pop-up on the front page stops showing after this date. Set it to '' to turn the pop-up off.
+export const KODEBOX_POPUP_UNTIL = '2026-12-23';

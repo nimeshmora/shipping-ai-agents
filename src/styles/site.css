@@ -236,6 +236,7 @@ html:not([data-theme="light"]) .fbox.nsq,html:not([data-theme="light"]) .fbox.ta
 html:not([data-theme="light"]) .take li:before{background:var(--blue);border-radius:2px}
 html:not([data-theme="light"]) .fbox.turn{border-color:var(--amber)}html:not([data-theme="light"]) .fbox.turn .fh{background:var(--sy);color:var(--amber);border-color:var(--amber)}
 html:not([data-theme="light"]) .fbox.think{border-color:var(--blue)}html:not([data-theme="light"]) .fbox.think .fh{color:var(--blue);border-color:var(--blue)}
+html:not([data-theme="light"]) .fbox.drive{border-color:var(--green)}html:not([data-theme="light"]) .fbox.drive .fh{background:var(--sg);color:var(--green);border-color:var(--green)}
 html:not([data-theme="light"]) .fbox.careful .fh{border-color:var(--red)}
 html:not([data-theme="light"]) table.t th,html:not([data-theme="light"]) .paper table:not(.fo) th{background:#222934;color:var(--ink)}
 html:not([data-theme="light"]) .faceoff th{color:var(--amber)}
@@ -298,9 +299,6 @@ html:not([data-theme="light"]) .gd-card:hover .gd-btn{background:#fff;border-col
 .subscribe button:hover{background:var(--ink);color:var(--paper)}
 .subscribe small{display:block;margin-top:10px;font-family:var(--f-hand);color:var(--muted);font-size:.8rem}
 .subscribe .sub-preview{margin:10px 0 0;padding:6px 10px;border:2px dashed var(--red);border-radius:8px;color:var(--red);font-family:var(--f-sans);font-size:.72rem;font-weight:700}
-.subscribe .sub-done{margin:0;padding:12px 14px;border:2px solid var(--green);border-radius:10px;background:var(--sg)}
-.subscribe .sub-done[hidden],.subscribe form[hidden]{display:none}
-.subscribe button:disabled{opacity:.7;cursor:wait}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 html:not([data-theme="light"]) .subscribe{background:var(--sy);border-color:var(--amber);border-radius:14px}
 html:not([data-theme="light"]) .sub-wrap .subscribe{background:none}
@@ -309,3 +307,77 @@ html:not([data-theme="light"]) .subscribe input[type=email]{border-color:#3a4351
 html:not([data-theme="light"]) .subscribe input[type=email]:focus{border-color:var(--blue);outline:none}
 html:not([data-theme="light"]) .subscribe button{background:var(--amber);border-color:var(--amber);color:#111}
 html:not([data-theme="light"]) .subscribe button:hover{background:#fff;border-color:#fff;color:#111}
+
+/* KodeBox. The colours come from the KodeBox logo (public/kodebox-mark.png), which is used as it is. */
+:root{--kb-a:#4fd8f0;--kb-b:#3b82f6;--kb-c:#8b5cf6;--kb-grad:linear-gradient(120deg,var(--kb-a),var(--kb-b) 55%,var(--kb-c))}
+.kb-logo{display:block;height:auto;filter:drop-shadow(0 6px 10px rgba(59,130,246,.25))}
+.kb-tag{display:inline-block;font-family:var(--f-sans);font-weight:800;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--kb-grad);padding:4px 10px;border-radius:4px;transform:rotate(-2deg);margin:0 0 6px}
+.kb-name{font-family:var(--f-marker);font-weight:400;font-size:1.9rem;line-height:1;margin:2px 0 10px;background:var(--kb-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.paper h2.kb-name,.stage h2.kb-name{display:block;background:var(--kb-grad);-webkit-background-clip:text;background-clip:text;padding:0}
+.btn.kb-btn{background:var(--kb-grad);color:#fff;border-color:var(--ink)}
+.btn.kb-btn:hover{filter:brightness(1.08)}
+
+/* The KodeBox pop-up on the front page */
+.kb-pop{width:min(440px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:0;border:2.5px solid var(--ink);border-radius:14px;background:var(--paper);color:var(--ink);box-shadow:6px 6px 0 var(--ink);overflow:auto}
+.kb-pop::before{content:"";display:block;height:8px;background:var(--kb-grad)}
+.kb-pop::backdrop{background:rgba(0,0,0,.45)}
+.kb-pop[open]{animation:kb-in .3s ease-out}
+@keyframes kb-in{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.kb-pop-in{padding:20px 24px 22px;text-align:center}
+.kb-pop .kb-logo{width:120px;margin:4px auto 8px;animation:kb-float 3.2s ease-in-out infinite}
+@keyframes kb-float{50%{transform:translateY(-6px)}}
+.kb-pop p{font-size:.92rem;margin:0 0 10px}
+.kb-pop .kb-note{font-size:.95rem;text-align:left;background:var(--soft);border-left:3px solid var(--kb-b);padding:8px 12px;border-radius:0 6px 6px 0}
+.kb-pop .actions{flex-direction:column;align-items:stretch;margin-top:14px}
+.kb-pop .actions .btn{text-align:center}
+.kb-pop .kb-small{margin:10px 0 0;font-size:.72rem;color:var(--muted)}
+.kb-pop .stage-close{top:18px}
+@media (prefers-reduced-motion:reduce){.kb-pop[open],.kb-pop .kb-logo{animation:none}}
+
+/* The Engine Room teaser on the front page */
+.engine-teaser{display:grid;grid-template-columns:200px 1fr;gap:22px;align-items:start}
+.er-sign{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:#e8f6ff;background:#10151d;border:2.5px solid var(--ink);border-radius:10px;padding:16px 12px 14px;transform:rotate(-2deg);box-shadow:4px 4px 0 var(--ink);transition:transform .15s ease}
+.er-sign:hover{transform:rotate(0) translate(-1px,-1px)}
+.er-kick{font-family:var(--f-hand);font-size:.85rem;color:var(--kb-a)}
+.er-title{font-family:var(--f-marker);font-size:1.6rem;line-height:1;background:var(--kb-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.er-gpu{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;width:100%;margin-top:8px;padding:8px;border:1.5px solid #2b3a4d;border-radius:6px}
+.er-gpu i{height:18px;border-radius:2px;background:#1c2a3a;animation:er-blink 1.8s ease-in-out infinite}
+.er-gpu i:nth-child(2){animation-delay:.3s}.er-gpu i:nth-child(3){animation-delay:.6s}.er-gpu i:nth-child(4){animation-delay:.9s}.er-gpu i:nth-child(5){animation-delay:1.2s}.er-gpu i:nth-child(6){animation-delay:1.5s}
+@keyframes er-blink{40%{background:var(--kb-a)}60%{background:var(--kb-c)}}
+.engine-teaser h2{margin-top:0}
+.er-kodebox{display:flex;gap:12px;align-items:center;background:var(--soft);border:1.5px dashed var(--rule);border-radius:8px;padding:10px 12px;margin:4px 0 12px}
+.er-kodebox img{flex:none;width:44px;height:auto}
+.er-kodebox p{margin:0;font-size:.86rem}
+@media (max-width:640px){.engine-teaser{grid-template-columns:1fr}.er-sign{max-width:240px}}
+@media (prefers-reduced-motion:reduce){.er-gpu i{animation:none}.er-sign,.er-sign:hover{transition:none;transform:none}}
+
+/* The Engine Room page */
+.er-badge{background:#10151d;color:var(--kb-a);font-family:var(--f-mono);font-size:.78rem;border-color:var(--ink)}
+.er-kb{display:grid;grid-template-columns:110px 1fr;gap:20px;align-items:start;margin:22px 0 8px;padding:18px 20px;border:2.5px solid var(--ink);border-radius:12px;box-shadow:4px 4px 0 var(--ink);background:var(--paper);position:relative;overflow:hidden}
+.er-kb::before{content:"";position:absolute;inset:0 0 auto;height:6px;background:var(--kb-grad)}
+.er-kb .kb-logo{width:96px;margin-top:6px}
+.er-kb p{font-size:.92rem}
+@media (max-width:560px){.er-kb{grid-template-columns:1fr}.er-kb .kb-logo{width:80px}}
+.fit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 16px;margin:10px 0 6px;padding:16px;border:2px solid var(--ink);border-radius:10px;background:var(--soft)}
+.fit label{display:flex;flex-direction:column;gap:6px;font-family:var(--f-sans);font-weight:700;font-size:.72rem}
+.fit input,.fit select{font:inherit;font-family:var(--f-mono);font-weight:400;font-size:.95rem;padding:8px 10px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
+.fit-out{grid-column:1 / -1;display:block;transform:rotate(-.6deg);background:var(--sg);font-size:1.05rem}
+.fit-out.no{background:var(--sp)}
+@media (max-width:640px){.fit{grid-template-columns:1fr}}
+.er-reads{list-style:none;padding:0;margin:8px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.er-reads a{display:flex;flex-direction:column;gap:3px;height:100%;padding:12px 14px;border:2px solid var(--ink);border-radius:8px;text-decoration:none;color:var(--ink);background:var(--paper);box-shadow:3px 3px 0 var(--ink);transition:transform .15s ease,box-shadow .15s ease}
+.er-reads a:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.er-reads .er-from{font-family:var(--f-sans);font-weight:700;font-size:.6rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.er-reads b{font-family:var(--f-marker);font-weight:400;font-size:1.1rem;line-height:1.15}
+.er-reads .er-why{font-family:var(--f-hand);color:var(--hand);font-size:.9rem}
+.er-ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin:10px 0 14px}
+.er-ideas .sticky.green{background:var(--sg)}
+@media (prefers-reduced-motion:reduce){.er-reads a,.er-reads a:hover{transition:none;transform:none}}
+/* Keep the KodeBox colours in the dark look too */
+html:not([data-theme="light"]) h2.kb-name,html:not([data-theme="light"]) .paper h2.kb-name{background:var(--kb-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+html:not([data-theme="light"]) .btn.kb-btn{background:var(--kb-grad);border-color:transparent;color:#fff}
+html:not([data-theme="light"]) .btn.kb-btn:hover{border-color:#fff}
+html:not([data-theme="light"]) .kb-pop,html:not([data-theme="light"]) .er-kb{border-color:#3a4351;box-shadow:0 10px 40px rgba(59,130,246,.18)}
+html:not([data-theme="light"]) .er-sign{border-color:#3a4351;box-shadow:0 8px 24px rgba(59,130,246,.15)}
+html:not([data-theme="light"]) .fit,html:not([data-theme="light"]) .er-reads a{border-color:#3a4351;box-shadow:none}
+html:not([data-theme="light"]) .er-reads a:hover{border-color:var(--blue)}

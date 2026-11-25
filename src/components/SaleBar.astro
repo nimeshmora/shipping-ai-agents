@@ -10,7 +10,7 @@ const items = ['KodeBox', 'Labs', 'Playgrounds', 'KodeKloud Engineer', 'Video co
     <a class="sb-link" href={SALE_LINK} target="_blank" rel="sponsored noopener" data-kb="sale-bar">
       <span class="sb-tag">Black Friday</span>
       <span class="sb-main"><b>55% off</b> at KodeKloud</span>
-      <span class="sb-items">{items.map((i) => <span>{i}</span>)}</span>
+      <span class="sb-items">{items.join(' · ')}</span>
       <span class="sb-cta">Get the deal <span aria-hidden="true">&rarr;</span></span>
     </a>
     <button class="sb-close" type="button" aria-label="Close the sale bar">&times;</button>

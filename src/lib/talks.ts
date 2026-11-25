@@ -12,7 +12,7 @@ export type Talk = {
 export const talks: Talk[] = [
   { host: 'Buildr Labs', title: 'Cohort 01: Phase 1', detail: 'Next: Cohort 02, Phase 2, from November', date: 'Cohort program', upcoming: true },
   { host: 'IEEE', title: 'Talk', upcoming: true },
-  { host: 'Open University', title: 'Workshop', detail: 'Students from universities across the island, 200+ joining', upcoming: true },
+  { host: 'University of Colombo', title: 'All Island University Workshop', detail: 'Venue: University of Colombo. Students from universities across the island, 200+ joining', upcoming: true },
   { host: 'SITC Campus', title: 'CodeZela Career Accelerator', upcoming: true },
 ];
 

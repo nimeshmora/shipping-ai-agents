@@ -64,6 +64,8 @@ const faq = [
     </div>
   </div>
 
+  <div class="talks-inline"><Talks /></div>
+
   <section class="topics-wrap" aria-labelledby="topics">
     <h2 id="topics">Topics covered</h2>
     <ol class="topics">
@@ -71,6 +73,7 @@ const faq = [
     </ol>
   </section>
 
+  <Talks slot="aside" side />
   <KodeBoxPopup />
   <dialog class="stage-panel" id="share-the-stage" aria-labelledby="stage-title">
     <button class="stage-close" type="button" data-close-stage aria-label="Close">&times;</button>
@@ -161,7 +164,7 @@ const faq = [
       {(BUTTONDOWN || import.meta.env.DEV) && <div class="sub-wrap"><Subscribe where="front-page" /></div>}
     </div>
 
-    <div class="talks-inline"><Talks /></div>
+
 
     <section class="join" id="join-in" aria-labelledby="join-title">
       <div>

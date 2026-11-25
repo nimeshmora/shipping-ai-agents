@@ -1,0 +1,92 @@
+---
+// The front-page picture: Nimesha (a cut-out photo, public/nimesha-hero.webp) pulling an agent
+// along a track from "laptop" to "production", with a GPU card and a Kubernetes wheel above.
+// Everything except the photo is drawn here. Colours come from the front-page tokens in hub.css,
+// so it works in the dark and the light look.
+import { url } from '../lib/url';
+---
+<figure class="hero-scene">
+  <svg viewBox="0 0 440 452" role="img" aria-labelledby="hs-title">
+    <title id="hs-title">Nimesha holding a rope that pulls an AI agent along a track from a laptop to production, with a GPU and Kubernetes above</title>
+    <defs>
+      <linearGradient id="hs-gpu" x1="0" x2="1">
+        <stop offset="0" stop-color="#2a3441" /><stop offset="1" stop-color="#1b222b" />
+      </linearGradient>
+      <!-- the rope behind the back fades out as it drops behind Nimesha -->
+      <linearGradient id="hs-rope-fade" gradientUnits="userSpaceOnUse" x1="0" y1="200" x2="0" y2="318">
+        <stop offset="0" stop-color="var(--hs-rope)" /><stop offset="1" stop-color="var(--hs-rope)" stop-opacity="0" />
+      </linearGradient>
+      <linearGradient id="hs-twist-fade" gradientUnits="userSpaceOnUse" x1="0" y1="200" x2="0" y2="318">
+        <stop offset="0" stop-color="var(--hs-rope-dark)" /><stop offset="1" stop-color="var(--hs-rope-dark)" stop-opacity="0" />
+      </linearGradient>
+      <!-- the part of the photo with Nimesha's fingers, drawn again on top so the rope goes behind them -->
+      <clipPath id="hs-fingers"><path d="M138 344h46v40h-46z" /></clipPath>
+    </defs>
+
+    <!-- backdrop -->
+    <circle class="hs-disc" cx="140" cy="215" r="125" />
+    <circle class="hs-ring" cx="140" cy="215" r="137" />
+
+    <!-- floating: Kubernetes-style wheel -->
+    <g class="hs-float hs-k8s" transform="translate(352 84)">
+      <circle r="31" class="hs-k8s-bg" />
+      <circle r="15" fill="none" stroke="#fff" stroke-width="4" />
+      <circle r="4.5" fill="#fff" />
+      <g stroke="#fff" stroke-width="3.4" stroke-linecap="round">
+        <path d="M0 -4.5V-24" /><path d="M0 -4.5V-24" transform="rotate(51.4)" /><path d="M0 -4.5V-24" transform="rotate(102.8)" />
+        <path d="M0 -4.5V-24" transform="rotate(154.3)" /><path d="M0 -4.5V-24" transform="rotate(205.7)" /><path d="M0 -4.5V-24" transform="rotate(257.1)" />
+        <path d="M0 -4.5V-24" transform="rotate(308.6)" />
+      </g>
+      <text class="hs-label" y="50" text-anchor="middle">Kubernetes</text>
+    </g>
+
+    <!-- floating: GPU card -->
+    <g class="hs-float hs-gpu-card" transform="translate(300 186)">
+      <rect width="112" height="50" rx="7" fill="url(#hs-gpu)" stroke="#3a4656" />
+      <circle cx="30" cy="25" r="16" fill="#11161c" stroke="#4b5868" />
+      <circle cx="74" cy="25" r="16" fill="#11161c" stroke="#4b5868" />
+      <g class="hs-fan" style="transform-origin:30px 25px"><path d="M30 25l0-13M30 25l11 6.5M30 25l-11 6.5" stroke="#76b900" stroke-width="3" stroke-linecap="round" /></g>
+      <g class="hs-fan" style="transform-origin:74px 25px"><path d="M74 25l0-13M74 25l11 6.5M74 25l-11 6.5" stroke="#76b900" stroke-width="3" stroke-linecap="round" /></g>
+      <rect x="96" y="8" width="8" height="34" rx="2" fill="#76b900" opacity=".85" />
+      <path d="M10 50v6M22 50v6M34 50v6M46 50v6M58 50v6M70 50v6M82 50v6" stroke="#c9a227" stroke-width="3" />
+      <text class="hs-label" x="56" y="74" text-anchor="middle">GPU</text>
+    </g>
+
+    <!-- track -->
+    <path class="hs-track" d="M214 420H432" />
+    <path class="hs-ties" d="M224 420v8M248 420v8M272 420v8M296 420v8M320 420v8M344 420v8M368 420v8M392 420v8M416 420v8" />
+    <text class="hs-label hs-end" x="432" y="446" text-anchor="end">laptop</text>
+    <g transform="translate(230 374)">
+      <path class="hs-pole" d="M0 0V46" />
+      <path class="hs-flag" d="M0 2h30l-7 8 7 8H0z" />
+    </g>
+    <text class="hs-label hs-prod" x="222" y="446">production</text>
+
+    <!-- the crate: an agent on wheels -->
+    <g class="hs-crate" transform="translate(344 366)">
+      <rect width="66" height="46" rx="6" class="hs-crate-box" />
+      <path d="M0 15H66M0 31H66" class="hs-crate-line" />
+      <rect x="18" y="9" width="30" height="24" rx="6" class="hs-bot" />
+      <circle cx="27" cy="20" r="3" class="hs-bot-eye" /><circle cx="39" cy="20" r="3" class="hs-bot-eye" />
+      <path d="M33 9V3" class="hs-bot-ant" /><circle cx="33" cy="2.5" r="2.5" class="hs-bot-eye" />
+      <circle cx="14" cy="50" r="6" class="hs-wheel" /><circle cx="52" cy="50" r="6" class="hs-wheel" />
+      <text class="hs-crate-text" x="33" y="44" text-anchor="middle">agent</text>
+    </g>
+
+    <!-- rope, back part: comes up from behind and over the left shoulder (drawn under the photo) -->
+    <g class="hs-rope hs-rope-back">
+      <path d="M40 185C28 190 22 204 21 226C20 260 22 290 24 318" style="stroke:url(#hs-rope-fade)" />
+      <path class="hs-twist" d="M40 185C28 190 22 204 21 226C20 260 22 290 24 318" style="stroke:url(#hs-twist-fade)" />
+    </g>
+
+    <!-- Nimesha -->
+    <image href={url('nimesha-hero.webp')} x="20" y="10" width="240" height="383" />
+
+    <!-- rope, front part: over the shoulder, down the chest, behind the fingers, tight to the crate -->
+    <g class="hs-rope">
+      <path d="M40 185C64 175 90 166 104 178C126 200 148 288 159 346L160 380Q161 393 178 393L344 392" />
+      <path class="hs-twist" d="M40 185C64 175 90 166 104 178C126 200 148 288 159 346L160 380Q161 393 178 393L344 392" />
+    </g>
+    <image href={url('nimesha-hero.webp')} x="20" y="10" width="240" height="383" clip-path="url(#hs-fingers)" aria-hidden="true" />
+  </svg>
+</figure>

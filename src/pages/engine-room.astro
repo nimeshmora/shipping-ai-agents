@@ -39,18 +39,22 @@ const ideas = [
 ];
 ---
 <Base title="The Engine Room" page="hub" where="The GPU corner" description="The GPU corner of Ship It with Nimesha: commands for your first GPU server, a check for whether a model fits in GPU memory, and chapters to read first.">
-  <section class="hero er-hero">
-    <p class="eyebrow">The GPU corner</p>
-    <h1 class="hero-title">The Engine Room</h1>
-    <p class="hero-sub">For people who want to train, fine-tune or serve a model on a GPU after office hours.</p>
-    <p class="hero-blurb">My laptops are a MacBook with an M1 chip and one with an M4 Pro. Neither has an NVIDIA GPU, so tools that need CUDA won't run on them. Buying a GPU to learn on costs more than most students can pay. This page has what I run on a new GPU server, a way to check whether a model will fit before you start, and the chapters from the notebooks that explain what is going on.</p>
-    <nav class="er-jump" aria-label="On this page">
-      <a href="#first-ten">First ten minutes</a>
-      <a href="#fit">Will my model fit?</a>
-      <a href="#reads">Read these first</a>
-      <a href="#ideas">Weekend ideas</a>
-    </nav>
-  </section>
+  <div slot="top" class="band hero-band">
+    <div class="wrap">
+      <section class="hero er-hero">
+        <p class="eyebrow">The GPU corner</p>
+        <h1 class="hero-title">The Engine Room</h1>
+        <p class="hero-sub">For people who want to train, fine-tune or serve a model on a GPU after office hours.</p>
+        <p class="hero-blurb">My laptops are a MacBook with an M1 chip and one with an M4 Pro. Neither has an NVIDIA GPU, so tools that need CUDA won't run on them. Buying a GPU to learn on costs more than most students can pay. This page has what I run on a new GPU server, a way to check whether a model will fit before you start, and the chapters from the notebooks that explain what is going on.</p>
+        <nav class="er-jump" aria-label="On this page">
+          <a href="#first-ten">First ten minutes</a>
+          <a href="#fit">Will my model fit?</a>
+          <a href="#reads">Read these first</a>
+          <a href="#ideas">Weekend ideas</a>
+        </nav>
+      </section>
+    </div>
+  </div>
 
   <section class="er-kb" aria-labelledby="kb-title">
     <img src={url('kodebox-mark.png')} width="88" height="93" alt="KodeBox logo" />

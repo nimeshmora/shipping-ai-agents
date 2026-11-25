@@ -21,38 +21,48 @@ const faq = [
 ];
 ---
 <Base title="Ship It with Nimesha" page="hub">
-  <section class="hero has-scene">
-    <div class="hero-text">
-    <p class="eyebrow">Free notebooks for people who build and run AI agents</p>
-    <h1 class="hero-title">Ship It <span class="with">with</span> Nimesha</h1>
-    <p class="hero-sub">Illustrated notes on deploying AI agents to AWS, Azure and Google Cloud.</p>
-    <p class="hero-blurb">These notebooks explain how to move an AI agent from a prototype to a service that real people use. They cover where an agent and its model can run, how to secure them, how conversations and memory work, and what it all costs on each cloud. Each chapter has drawings, examples and short exercises.</p>
-    <div class="actions">
-      <a class="btn primary" href="#shelf">See the notebooks</a>
-      <a class="btn" id="resume" href={url()} hidden>Continue reading</a>
-      <a class="btn" href="#join-in">Contribute</a>
+  <div slot="top" class="band hero-band">
+    <div class="wrap">
+      <section class="hero has-scene">
+        <div class="hero-text">
+        <p class="eyebrow">Free notebooks for people who build and run AI agents</p>
+        <h1 class="hero-title">Ship It <span class="with">with</span> Nimesha</h1>
+        <p class="hero-sub">Illustrated notes on deploying AI agents to AWS, Azure and Google Cloud.</p>
+        <p class="hero-blurb">These notebooks explain how to move an AI agent from a prototype to a service that real people use. They cover where an agent and its model can run, how to secure them, how conversations and memory work, and what it all costs on each cloud. Each chapter has drawings, examples and short exercises.</p>
+        <div class="actions">
+          <a class="btn primary" href="#shelf">See the notebooks</a>
+          <a class="btn" id="resume" href={url()} hidden>Continue reading</a>
+          <a class="btn" href="#join-in">Contribute</a>
+        </div>
+        </div>
+        <HeroScene />
+        <div class="author">
+          <span class="author-logo" aria-hidden="true" set:html={logo} />
+          <p><b>By Nimesha Jinarajadasa</b><span>Writes about running AI agents in production.</span>{GOATCOUNTER && <span class="visits" id="visits" hidden><b id="visits-n"></b> visits so far</span>}</p>
+        </div>
+      {GOATCOUNTER && (
+        <script is:inline define:vars={{ code: GOATCOUNTER }}>
+        // Shows the total visits from GoatCounter. It stays hidden if the count can't be loaded
+        // (for example while "Allow adding visitor counts on your website" is off in GoatCounter's settings).
+        fetch('https://' + code + '.goatcounter.com/counter/TOTAL.json')
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (!d || !d.count) return;
+            document.getElementById('visits-n').textContent = d.count;
+            document.getElementById('visits').hidden = false;
+          })
+          .catch(function () {});
+        </script>
+      )}
+      </section>
     </div>
+  </div>
+  <div slot="top" class="band strip-band">
+    <div class="wrap strip">
+      <span class="strip-label">The notebooks cover</span>
+      <span>AWS</span><span>Microsoft Azure</span><span>Google Cloud</span><span>Kubernetes</span><span>GPUs</span><span>Running your own models</span>
     </div>
-    <HeroScene />
-    <div class="author">
-      <span class="author-logo" aria-hidden="true" set:html={logo} />
-      <p><b>By Nimesha Jinarajadasa</b><span>Writes about running AI agents in production.</span>{GOATCOUNTER && <span class="visits" id="visits" hidden><b id="visits-n"></b> visits so far</span>}</p>
-    </div>
-  {GOATCOUNTER && (
-    <script is:inline define:vars={{ code: GOATCOUNTER }}>
-    // Shows the total visits from GoatCounter. It stays hidden if the count can't be loaded
-    // (for example while "Allow adding visitor counts on your website" is off in GoatCounter's settings).
-    fetch('https://' + code + '.goatcounter.com/counter/TOTAL.json')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d || !d.count) return;
-        document.getElementById('visits-n').textContent = d.count;
-        document.getElementById('visits').hidden = false;
-      })
-      .catch(function () {});
-    </script>
-  )}
-  </section>
+  </div>
 
   <section class="topics-wrap" aria-labelledby="topics">
     <h2 id="topics">Topics covered</h2>

@@ -25,10 +25,9 @@ const faq = [
     <div class="wrap">
       <section class="hero has-scene">
         <div class="hero-text">
-        <p class="eyebrow">Free notebooks for people who build and run AI agents</p>
         <h1 class="hero-title">Ship It <span class="with">with</span> Nimesha</h1>
         <p class="hero-sub">Illustrated notes on running AI agents and the models behind them in production.</p>
-        <p class="hero-blurb">These notebooks follow an AI agent from a prototype on your laptop to a service that real people use. Along the way you deploy it to AWS, Azure or Google Cloud, run your own model on a GPU, look inside the hardware it runs on, and run it on Kubernetes. Each chapter has drawings, examples and short exercises.</p>
+        <p class="hero-blurb">These notebooks follow an AI agent from a prototype on your laptop to a service that real people use. Each chapter has drawings, examples and short exercises.</p>
         <div class="actions">
           <a class="btn primary" href="#shelf">See the notebooks</a>
           <a class="btn" id="resume" href={url()} hidden>Continue reading</a>
@@ -38,7 +37,7 @@ const faq = [
         <HeroScene />
         <div class="author">
           <span class="author-logo" aria-hidden="true" set:html={logo} />
-          <p><b>By Nimesha Jinarajadasa</b><span>Writes about running AI agents in production.</span>{GOATCOUNTER && <span class="visits" id="visits" hidden><b id="visits-n"></b> visits so far</span>}</p>
+          <p><b>By Nimesha Jinarajadasa</b>{GOATCOUNTER && <span class="visits" id="visits" hidden><b id="visits-n"></b> visits so far</span>}</p>
         </div>
       {GOATCOUNTER && (
         <script is:inline define:vars={{ code: GOATCOUNTER }}>

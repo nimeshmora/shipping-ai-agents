@@ -1,8 +1,6 @@
 ---
 import '../styles/notebook.css';
 import '../styles/site.css';
-// The front page and the top bar have their own cleaner look. Notebook pages keep the Head First style.
-import '../styles/hub.css';
 import { url } from '../lib/url';
 import { allChapters, readingOrder, chapterHref } from '../lib/chapters';
 import { notebook as findNotebook } from '../lib/notebooks';
@@ -26,7 +24,7 @@ const prev = i > 0 ? order[i - 1] : null;
 const next = i >= 0 && i < order.length - 1 ? order[i + 1] : null;
 const parts: string[] = [];
 chapters.forEach((c) => { if (!parts.includes(c.data.part)) parts.push(c.data.part); });
-const fullTitle = hub ? 'Ship It with Nimesha' : page === 'cover' ? `${nb!.title} | Ship It with Nimesha` : `${title} | ${nb!.title}`;
+const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} | Ship It with Nimesha` : 'Ship It with Nimesha') : page === 'cover' ? `${nb!.title} | Ship It with Nimesha` : `${title} | ${nb!.title}`;
 ---
 <!doctype html>
 <html lang="en">
@@ -39,7 +37,7 @@ const fullTitle = hub ? 'Ship It with Nimesha' : page === 'cover' ? `${nb!.title
   <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Inter:wght@400;500;600;700;800&family=Itim&family=JetBrains+Mono&family=Nunito:ital,wght@0,400;0,700;0,800;1,400&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Itim&family=JetBrains+Mono&family=Nunito:ital,wght@0,400;0,700;0,800;1,400&display=swap" />
   <script is:inline>
     try { var s = JSON.parse(localStorage.getItem('sai-notebook') || '{}'); if (s.theme) document.documentElement.setAttribute('data-theme', s.theme); } catch (e) {}
   </script>
@@ -47,11 +45,11 @@ const fullTitle = hub ? 'Ship It with Nimesha' : page === 'cover' ? `${nb!.title
     <script is:inline async data-goatcounter={`https://${GOATCOUNTER}.goatcounter.com/count`} src="https://gc.zgo.at/count.js"></script>
   )}
 </head>
-<body data-page={hub ? 'hub' : key(page)} class={hub ? 'hub-page' : undefined}>
+<body data-page={hub ? 'hub' : key(page)}>
   <header class="bar">
     {!hub && <button id="menu" aria-controls="toc" aria-expanded="false">Contents</button>}
     <a class="brand" href={url()}><span class="logo" aria-hidden="true" set:html={logo} /><span>Ship It <i>with Nimesha</i></span></a>
-    <span class="where">{hub ? 'Notebooks on deploying AI agents' : page === 'cover' ? `Notebook #${nb!.number}: ${nb!.title}` : <>{nb!.title} <span class="dot">&middot;</span> {title}</>}</span>
+    <span class="where">{hub ? (Astro.props.where ?? 'Notebooks on deploying AI agents') : page === 'cover' ? `Notebook #${nb!.number}: ${nb!.title}` : <>{nb!.title} <span class="dot">&middot;</span> {title}</>}</span>
     <button id="theme" aria-label="Switch to dark mode">
       <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
       <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
@@ -108,6 +106,11 @@ const fullTitle = hub ? 'Ship It with Nimesha' : page === 'cover' ? `${nb!.title
     if (end && 'IntersectionObserver' in window) {
       new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting && st.read.indexOf(page) < 0) { st.read.push(page); save(); paint(); finished(); } }); }).observe(end);
     }
+    // Counts clicks on KodeBox links (data-kb="where") in GoatCounter as "kodebox/<where>".
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[data-kb]');
+      if (a && window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: 'kodebox/' + a.getAttribute('data-kb'), title: 'KodeBox link', event: true });
+    });
     var resume = document.getElementById('resume');
     if (resume && st.last && st.last !== location.pathname) { resume.hidden = false; resume.href = st.last; }
     var themeBtn = document.getElementById('theme');

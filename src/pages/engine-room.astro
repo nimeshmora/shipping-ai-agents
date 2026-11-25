@@ -1,0 +1,137 @@
+---
+// The Engine Room: the site's GPU corner. Linked from the front page and the KodeBox pop-up.
+// The KodeBox link is set in src/lib/site.ts.
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/url';
+import { KODEBOX } from '../lib/site';
+
+// Chapters to read before you rent a GPU. Each one is a page in an existing notebook.
+const reads = [
+  { nb: 'running-your-own-models', ch: '04-meet-the-gpu', label: 'Running Your Own Models, chapter 4', title: 'Meet the GPU', why: 'Start here if you have never used a GPU.' },
+  { nb: 'inside-the-machine', ch: '06-the-gpu', label: 'Inside the Machine, chapter 6', title: 'The GPU', why: 'Why a GPU is faster than a CPU for model work.' },
+  { nb: 'inside-the-machine', ch: '07-the-real-bottleneck', label: 'Inside the Machine, chapter 7', title: 'The real bottleneck', why: 'Why GPU memory matters more than speed for most models.' },
+  { nb: 'inside-the-machine', ch: '11-reading-a-gpu-spec-sheet', label: 'Inside the Machine, chapter 11', title: 'How to read a GPU spec sheet', why: 'Read this before you pick a GPU size.' },
+  { nb: 'running-your-own-models', ch: '07-models-on-kubernetes', label: 'Running Your Own Models, chapter 7', title: 'Models on Kubernetes', why: 'For when you want pods to use the GPU.' },
+  { nb: 'inside-the-machine', ch: '08-when-one-gpu-isnt-enough', label: 'Inside the Machine, chapter 8', title: 'When one GPU isn’t enough', why: 'What changes when a model needs two GPUs or more.' },
+];
+---
+<Base title="The Engine Room" page="hub" where="The GPU corner" description="The GPU corner of Ship It with Nimesha: commands for your first GPU server, a check for whether a model fits in GPU memory, and chapters to read first.">
+  <div class="hero-top">
+    <div>
+      <p class="kick">The GPU corner</p>
+      <h1 class="hero-title">The Engine<br />Room</h1>
+      <p class="hero-sub">For people who want to train, fine-tune or serve a model on a GPU after office hours.</p>
+    </div>
+    <div class="badge er-badge">nvidia-smi<br />first</div>
+  </div>
+
+  <p>My laptops are a MacBook with an M1 chip and one with an M4 Pro. Neither has an NVIDIA GPU, so tools that need CUDA won't run on them. Buying a GPU to learn on costs more than most students can pay. This page is for that problem. It has what I run on a new GPU server, a way to check whether a model will fit before you start, and the chapters from the notebooks that explain what is going on.</p>
+
+  <section class="er-kb" aria-labelledby="kb-title">
+    <img class="kb-logo" src={url('kodebox-mark.png')} width="96" height="102" alt="KodeBox logo" />
+    <div>
+      <p class="kb-tag">Where I run my GPU work</p>
+      <h2 id="kb-title" class="kb-name">KodeBox</h2>
+      <p>KodeBox is a server from KodeKloud that runs until you stop it and is kept until you delete it. You can start one with a GPU or without. A training run keeps going after you close your laptop.</p>
+      <p>I made one with a GPU, trained a small model on it, and now I fine-tune the model on the same server. I also built a Kubernetes cluster with a GPU, installed the NVIDIA GPU Operator, and let several pods share the one GPU.</p>
+      <p>For Linux, Docker or a small Kubernetes cluster, start one without a GPU and add a GPU later when you need it. It is meant for learning and side projects, not for running a company's production work.</p>
+      <div class="actions">
+        <a class="btn kb-btn" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="engine-room">Start a KodeBox</a>
+      </div>
+    </div>
+  </section>
+
+  <h2><span>Your first ten minutes on a GPU server</span></h2>
+  <p>Run these in order on a new server. Each one checks one thing. If a step fails, fix it before you go on, because everything after it depends on it.</p>
+
+  <h3>1. Is there a GPU, and does the driver see it?</h3>
+  <pre><code>nvidia-smi</code></pre>
+  <p>Look at the top line for the driver version and the CUDA version. Below it you should see the GPU's name and its memory, for example <code>0MiB / 23034MiB</code>. If you get <code>command not found</code>, the NVIDIA driver is not installed.</p>
+
+  <h3>2. Get the numbers in a form you can copy</h3>
+  <pre><code>nvidia-smi --query-gpu=name,memory.total,memory.used,utilization.gpu --format=csv</code></pre>
+  <p>Write down <code>memory.total</code>. You will need it for the memory check further down this page.</p>
+
+  <h3>3. Can Python use the GPU?</h3>
+  <pre><code>pip install torch
+python3 -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"</code></pre>
+  <p>You want <code>True</code> and the GPU's name. <code>False</code> usually means PyTorch was installed without CUDA support, or the driver is too old for this PyTorch.</p>
+
+  <h3>4. Run a model and check that it is on the GPU</h3>
+  <pre><code>curl -fsSL https://ollama.com/install.sh | sh
+ollama run llama3.2:3b "Say hello in five words"
+ollama ps</code></pre>
+  <p>In the <code>ollama ps</code> output, the PROCESSOR column should say <code>100% GPU</code>. If it says CPU, or a split like <code>40%/60% CPU/GPU</code>, the model did not fit in GPU memory.</p>
+
+  <h3>5. Watch the GPU while it works</h3>
+  <pre><code>watch -n 1 nvidia-smi</code></pre>
+  <p>Leave this open in a second terminal while you train. Memory use should go up when the model loads, and GPU use should stay high while it trains. If GPU use keeps dropping to 0%, the GPU is waiting for data, and the slow part is your data loading, not the GPU.</p>
+
+  <h3>6. On Kubernetes, can the cluster see the GPU?</h3>
+  <pre><code>kubectl get nodes -o custom-columns=NAME:.metadata.name,GPUS:.status.allocatable.nvidia\.com/gpu</code></pre>
+  <p>A node with a GPU shows a number in the GPUS column. <code>&lt;none&gt;</code> means the NVIDIA device plugin (it comes with the GPU Operator) is not running on that node yet.</p>
+
+  <h2><span>Will my model fit?</span></h2>
+  <p>Before you rent a GPU, check the model fits in its memory. Each parameter takes 2 bytes at 16-bit, 1 byte at 8-bit and half a byte at 4-bit. So an 8B model at 16-bit needs about 16 GB just for its weights. You also need room for the conversation (the KV cache) and the runtime, so add about 20%.</p>
+
+  <form class="fit" id="fit" onsubmit="return false">
+    <label>Model size, in billions of parameters
+      <input type="number" id="fit-b" min="0.1" max="1000" step="0.1" value="8" inputmode="decimal" />
+    </label>
+    <label>Precision
+      <select id="fit-p">
+        <option value="2">16-bit (FP16 or BF16)</option>
+        <option value="1">8-bit</option>
+        <option value="0.5">4-bit</option>
+      </select>
+    </label>
+    <label>GPU memory, in GB (from step 2)
+      <input type="number" id="fit-g" min="1" max="1000" step="1" value="24" inputmode="numeric" />
+    </label>
+    <output class="fit-out sticky" id="fit-out" for="fit-b fit-p fit-g">An 8B model at 16-bit needs about 19 GB. It fits in 24 GB.</output>
+  </form>
+  <p class="small">This is a rough check for running a model. Long conversations and many users at once need more room. Training needs much more: full fine-tuning takes about 16 bytes per parameter, which is why most people fine-tune on one GPU with LoRA or QLoRA instead.</p>
+
+  <h2><span>Read these first</span></h2>
+  <ul class="er-reads">
+    {reads.map((r) => (
+      <li><a href={url(`notebooks/${r.nb}/${r.ch}/`)}><span class="er-from">{r.label}</span><b>{r.title}</b><span class="er-why">{r.why}</span></a></li>
+    ))}
+  </ul>
+
+  <h2><span>Ideas for your first weekend</span></h2>
+  <div class="two er-ideas">
+    <div class="sticky">Run a small model with Ollama, then run a bigger one until it no longer says 100% GPU. Now you know your GPU's limit.</div>
+    <div class="sticky r blue">Fine-tune a 1B or 3B model with LoRA on a few hundred examples from your own notes.</div>
+    <div class="sticky green">Build a one-node Kubernetes cluster, install the GPU Operator, and start a pod that runs <code>nvidia-smi</code>.</div>
+    <div class="sticky r pink">Serve a model with vLLM and point Botley from Notebook #1 at it instead of a cloud API.</div>
+  </div>
+  <p class="small">Built something? <a href="https://www.linkedin.com/in/nimeshmhj/">Tell me on LinkedIn</a>. I'd like to see it.</p>
+
+  <script is:inline>
+  // The "Will my model fit?" check. Weights = parameters x bytes per parameter, plus about 20% for the KV cache and runtime.
+  (function () {
+    var b = document.getElementById('fit-b'), p = document.getElementById('fit-p'), g = document.getElementById('fit-g'), out = document.getElementById('fit-out');
+    if (!b) return;
+    var names = { '2': '16-bit', '1': '8-bit', '0.5': '4-bit' };
+    function fmt(n) { return n >= 10 ? Math.round(n) : Math.round(n * 10) / 10; }
+    function run() {
+      var bn = parseFloat(b.value), bytes = parseFloat(p.value), gb = parseFloat(g.value);
+      if (!(bn > 0) || !(gb > 0)) { out.textContent = 'Type a model size and a GPU memory size.'; return; }
+      var need = bn * bytes * 1.2;
+      var line = 'A ' + fmt(bn) + 'B model at ' + names[p.value] + ' needs about ' + fmt(need) + ' GB. ';
+      if (need <= gb * 0.9) line += 'It fits in ' + fmt(gb) + ' GB.';
+      else if (need <= gb) line += 'It just fits in ' + fmt(gb) + ' GB, with little room for long conversations.';
+      else {
+        line += 'It does not fit in ' + fmt(gb) + ' GB.';
+        if (bytes > 0.5) line += ' Try a smaller precision.';
+        else line += ' Try a smaller model or a GPU with more memory.';
+      }
+      out.textContent = line;
+      out.classList.toggle('no', need > gb);
+    }
+    [b, p, g].forEach(function (el) { el.addEventListener('input', run); });
+    run();
+  })();
+  </script>
+</Base>

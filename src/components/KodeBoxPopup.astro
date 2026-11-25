@@ -1,0 +1,44 @@
+---
+// The KodeBox pop-up on the front page. It shows until KODEBOX_POPUP_UNTIL (src/lib/site.ts).
+// A reader sees it once, then not again for 3 days. While it is showing, the "Share the stage" panel
+// does not slide in by itself (see the script in src/pages/index.astro).
+// GoatCounter counts clicks as "kodebox/popup".
+import { KODEBOX, KODEBOX_POPUP_UNTIL } from '../lib/site';
+import { url } from '../lib/url';
+const on = !!KODEBOX_POPUP_UNTIL;
+---
+{on && (
+  <dialog class="kb-pop" id="kodebox-pop" aria-labelledby="kb-pop-title">
+    <button class="stage-close" type="button" data-close-kb aria-label="Close">&times;</button>
+    <div class="kb-pop-in">
+      <img class="kb-logo" src={url('kodebox-mark.png')} width="120" height="127" alt="KodeBox logo" />
+      <p class="kb-tag">New from KodeKloud</p>
+      <h2 id="kb-pop-title" class="kb-name">KodeBox</h2>
+      <p>A server of your own that keeps running after you close your laptop. You can add a GPU when you need one.</p>
+      <p class="hand kb-note">I trained and fine-tuned a small model on one, and served it from a Kubernetes cluster with a GPU. My Mac has no NVIDIA GPU, so this is where my GPU work runs now.</p>
+      <div class="actions">
+        <a class="btn kb-btn" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="popup">Start a KodeBox</a>
+        <a class="btn" href={url('engine-room/')}>Open the GPU corner</a>
+      </div>
+      <p class="small kb-small">You pick a template, such as Ubuntu, Docker or Kubernetes, and click. The server is then ready for you.</p>
+    </div>
+  </dialog>
+)}
+{on && <script is:inline define:vars={{ until: KODEBOX_POPUP_UNTIL }}>
+(function () {
+  var pop = document.getElementById('kodebox-pop');
+  if (!pop || !pop.showModal) return;
+  if (Date.now() > new Date(until + 'T23:59:59').getTime()) return;
+  if (location.hash === '#share-the-stage') return;
+  var KEY = 'kodebox-pop', WAIT = 3 * 24 * 3600 * 1000, last = 0;
+  try { last = +localStorage.getItem(KEY) || 0; } catch (e) {}
+  if (Date.now() - last < WAIT) return;
+  // Tells the "Share the stage" script not to slide its panel in on this visit.
+  window.kbPopup = true;
+  function close() { pop.close(); }
+  pop.addEventListener('close', function () { try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {} });
+  pop.addEventListener('click', function (e) { if (e.target === pop) close(); });
+  pop.querySelectorAll('[data-close-kb]').forEach(function (b) { b.addEventListener('click', close); });
+  setTimeout(function () { if (!pop.open && !document.querySelector('dialog[open]')) pop.showModal(); }, 1500);
+})();
+</script>}

@@ -21,6 +21,7 @@ export const KODEBOX_POPUP_UNTIL = '2026-12-23';
 // The KodeKloud Black Friday bar at the top of every page. It stops showing after this date.
 // Set it to '' to turn the bar off.
 export const SALE_UNTIL = '2026-12-01';
+export const SALE_LINK = 'https://tidd.ly/4jBymsa';
 
 // How many notebooks the front page shows. The rest are on the Illustrated Notebooks page (/notebooks/),
 // which the front page links to with "View all notebooks".

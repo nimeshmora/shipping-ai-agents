@@ -6,6 +6,9 @@ export type Notebook = {
   number: number;
   title: string;
   blurb: string;
+  // One short line for the notebook cards on the front page and the Notebooks page.
+  // If it's not set, the cards show the first sentence of the blurb.
+  tagline?: string;
   pdf?: string;
   cover: string;
   edition: string;
@@ -33,6 +36,7 @@ export const notebooks: Notebook[] = [
     slug: 'shipping-ai-agents',
     number: 1,
     title: 'Shipping AI Agents',
+    tagline: 'Take an AI agent from your laptop to AWS, Azure or Google Cloud.',
     blurb: 'Taking an AI agent from a prototype to production on AWS, Microsoft Azure and Google Cloud. Covers hosting options, security, sessions, memory, cost and a full deployment walkthrough.',
     pdf: 'shipping-ai-agents.pdf',
     cover: 'cover-scene',
@@ -42,6 +46,7 @@ export const notebooks: Notebook[] = [
     slug: 'running-your-own-models',
     number: 2,
     title: 'Running Your Own Models',
+    tagline: 'Serve an open model on your own GPUs, and see when it pays off.',
     blurb: 'Managed model services or your own GPUs? How models use GPU memory, what Bedrock, Agent Platform and Foundry offer, how to serve an open model with vLLM on Kubernetes, and when running your own actually pays off.',
     pdf: 'running-your-own-models.pdf',
     cover: 'rm-cover',
@@ -51,6 +56,7 @@ export const notebooks: Notebook[] = [
     slug: 'inside-the-machine',
     number: 3,
     title: 'Inside the Machine',
+    tagline: 'What happens inside the CPU, the GPU and the data center when an agent runs.',
     blurb: 'How GPUs run your agent. Starts from zero: what a computer is, how CPUs, memory and GPUs work, why memory speed sets the pace, and what happens inside the data centers where agents run.',
     pdf: 'inside-the-machine.pdf',
     cover: 'im-cover',
@@ -60,6 +66,7 @@ export const notebooks: Notebook[] = [
     slug: 'kubernetes-from-the-beginning',
     number: 4,
     title: 'Kubernetes from the Beginning',
+    tagline: 'Run Botley on a Kubernetes cluster on your own laptop.',
     blurb: 'You run Botley on a Kubernetes cluster on your own laptop, one piece at a time: pods, Deployments, Services, Secrets, updates, resources, the Gateway API, debugging and autoscaling. No cloud account needed.',
     cover: 'kb-cover',
     examples: '04-kubernetes-from-the-beginning',

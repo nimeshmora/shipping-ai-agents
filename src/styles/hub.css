@@ -263,7 +263,7 @@
 
 /* ---- Front-page picture (src/components/HeroScene.astro) ---- */
 :root body.hub-page{
-  --hs-disc:#1a2129;--hs-ring:#262f3a;--hs-rope:#c9a46b;--hs-rope-dark:#8d6c3c;
+  --hs-disc:#222a35;--hs-ring:#2f3946;--hs-rope:#c9a46b;--hs-rope-dark:#8d6c3c;
   & .hero.has-scene{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);grid-template-areas:"text scene" "author author";column-gap:28px;align-items:center;max-width:none}
   & .hero-text{grid-area:text}
   & .hero.has-scene .author{grid-area:author}

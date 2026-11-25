@@ -8,6 +8,7 @@ import { allChapters, readingOrder, chapterHref } from '../lib/chapters';
 import { notebook as findNotebook } from '../lib/notebooks';
 import { GOATCOUNTER, REPO } from '../lib/site';
 import SaleBar from '../components/SaleBar.astro';
+import GhStats from '../components/GhStats.astro';
 // The logo (Botley shipping out on a boat) is the favicon too, so there is one file to change.
 import logo from '../../public/favicon.svg?raw';
 
@@ -64,6 +65,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
     <nav class="site-nav" aria-label="Site">
       {navLinks.map((l) => <a href={l.href} aria-current={l.on ? 'page' : undefined}>{l.label}</a>)}
     </nav>
+    <GhStats />
     <button id="theme" aria-label="Switch to dark mode">
       <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
       <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>

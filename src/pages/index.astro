@@ -1,6 +1,7 @@
 ---
 // The site front page: Ship It with Nimesha. Notebooks are listed in src/lib/notebooks.ts.
 // It has a cleaner look than the notebooks (see src/styles/hub.css). The notebooks keep the Head First style.
+import TopicStrip from '../components/TopicStrip.astro';
 import Base from '../layouts/Base.astro';
 import { url } from '../lib/url';
 import { REPO, GOATCOUNTER, BUTTONDOWN, FRONT_PAGE_NOTEBOOKS } from '../lib/site';
@@ -57,10 +58,7 @@ const faq = [
     </div>
   </div>
   <div slot="top" class="band strip-band">
-    <div class="wrap strip">
-      <span class="strip-label">The notebooks cover</span>
-      <span>AWS</span><span>Microsoft Azure</span><span>Google Cloud</span><span>Kubernetes</span><span>GPUs</span><span>Running your own models</span>
-    </div>
+    <TopicStrip />
   </div>
 
   <div class="talks-inline"><Talks /></div>

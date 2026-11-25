@@ -27,6 +27,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # Lets the build read the repo's star and fork counts without hitting the API limit.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

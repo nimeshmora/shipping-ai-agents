@@ -577,6 +577,7 @@
   & .er-term{border:1px solid var(--er-term-line);border-radius:8px;background:var(--er-term);overflow:hidden}
   & .er-term::before{content:"bash";display:block;padding:5px 12px;font-family:var(--er-mono);font-size:.68rem;letter-spacing:.08em;color:#6f7d66;border-bottom:1px solid var(--er-term-line);background:#0b0f0a}
   & .er-term pre{border:0;border-radius:0;background:transparent;color:#d9e6cf;font-family:var(--er-mono)}
+  & .er-term pre code{color:#d9e6cf;background:none}
   & .er-term .ln{display:block}
   & .er-term .ln::before{content:"$ ";color:#76b900;user-select:none}
 

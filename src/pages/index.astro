@@ -2,9 +2,9 @@
 // The site front page: Ship It with Nimesha. Notebooks are listed in src/lib/notebooks.ts.
 // It has a cleaner look than the notebooks (see src/styles/hub.css). The notebooks keep the Head First style.
 import Base from '../layouts/Base.astro';
-import Sketch from '../components/Sketch.astro';
 import { url } from '../lib/url';
-import { REPO, GOATCOUNTER, EXAMPLES, BUTTONDOWN } from '../lib/site';
+import { REPO, GOATCOUNTER, BUTTONDOWN, FRONT_PAGE_NOTEBOOKS } from '../lib/site';
+import NotebookCard from '../components/NotebookCard.astro';
 import KodeBoxPopup from '../components/KodeBoxPopup.astro';
 import { notebooks } from '../lib/notebooks';
 import Talks from '../components/Talks.astro';
@@ -111,32 +111,18 @@ const faq = [
   </script>
   <div slot="after">
     <section class="shelf" aria-labelledby="shelf">
-      <h2 id="shelf">The notebooks</h2>
-      {notebooks.map((n) => (
-        <article class="nb">
-          <a class="nb-cover" href={url(`notebooks/${n.slug}/`)} aria-hidden="true" tabindex="-1"><Sketch name={n.cover} /></a>
-          <div class="nb-body">
-            <p class="nb-no">Notebook #{n.number}</p>
-            <h3><a href={url(`notebooks/${n.slug}/`)}>{n.title}</a></h3>
-            <p>{n.blurb}</p>
-            <p class="nb-meta">{counts[n.slug]} chapters{n.pdf && <> and a PDF</>}. {n.edition}.</p>
-            <div class="actions">
-              <a class="btn primary" href={url(`notebooks/${n.slug}/how/`)}>Start reading</a>
-              <a class="btn" href={url(`notebooks/${n.slug}/`)}>See the chapters</a>
-              {n.pdf && <a class="btn" href={url(n.pdf)}>PDF</a>}
-              {n.examples && <a class="btn" href={`${EXAMPLES}/${n.examples}`}>{n.examplesButton ?? 'Get the code'}</a>}
-            </div>
-          </div>
-        </article>
-      ))}
-      <article class="nb next">
-        <div class="nb-body">
-          <p class="nb-no">Notebook #{notebooks.length + 1}</p>
-          <h3>Not started yet</h3>
-          <p>Which topic should come next? Suggestions are welcome.</p>
-          <div class="actions"><a class="btn" href={`${REPO}/issues/new?template=chapter-idea.yml`}>Suggest a topic</a></div>
+      <div class="shelf-head">
+        <h2 id="shelf">Illustrated Notebooks</h2>
+        <a class="shelf-all-link" href={url('notebooks/')}>View all notebooks <span aria-hidden="true">&rarr;</span></a>
+      </div>
+      {notebooks.slice(0, FRONT_PAGE_NOTEBOOKS).map((n) => <NotebookCard n={n} chapters={counts[n.slug]} />)}
+      <div class="shelf-more">
+        <p>{notebooks.length > FRONT_PAGE_NOTEBOOKS ? `${notebooks.length - FRONT_PAGE_NOTEBOOKS} more on the notebooks page, and new ones as they are written.` : 'New notebooks are added as they are written. Have a topic in mind?'}</p>
+        <div class="actions">
+          <a class="btn primary" href={url('notebooks/')}>View all notebooks</a>
+          <a class="btn" href={`${REPO}/issues/new?template=chapter-idea.yml`}>Suggest a topic</a>
         </div>
-      </article>
+      </div>
     </section>
 
     {(BUTTONDOWN || import.meta.env.DEV) && <div class="sub-wrap"><Subscribe where="front-page" /></div>}

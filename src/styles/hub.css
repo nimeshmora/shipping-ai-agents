@@ -263,9 +263,9 @@
 
 /* ---- Full-width layout (front page and Engine Room) ----
    Bands (top bar, hero, strip, footer) go across the whole window. Their content sits in one
-   centred column (.wrap, 1200px), and the main column and the talks column line up with it. */
+   centred column (.wrap, up to 1760px with a small side margin), and the main column and the talks column line up with it. */
 :root body.hub-page{
-  --wrap:1200px;--gutter:24px;
+  --wrap:1760px;--gutter:clamp(16px,3.5vw,56px);
   & .bar{padding-left:max(var(--gutter),calc((100% - var(--wrap)) / 2 + var(--gutter)));padding-right:max(var(--gutter),calc((100% - var(--wrap)) / 2 + var(--gutter)))}
   & .wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter)}
   & .band{width:100%}
@@ -435,3 +435,57 @@
   :root body.hub-page .gpu-card h2{font-size:1.35rem}
 }
 @media (prefers-reduced-motion:reduce){:root body.hub-page .gc-sketch{transition:none}}
+
+/* ---- Full width, menu and the Illustrated Notebooks page ----
+   Content uses the whole window, with only a small margin at the sides (--gutter). */
+:root body{
+  & .site-nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+  & .site-nav a{font-family:'Inter',system-ui,sans-serif;font-size:.86rem;font-weight:500;color:var(--muted);text-decoration:none;padding:7px 12px;border-radius:8px;white-space:nowrap}
+  & .site-nav a:hover{color:var(--ink);background:var(--soft)}
+  & .site-nav a[aria-current="page"]{color:var(--ink);background:var(--soft);font-weight:600}
+  & #theme{margin-left:6px}
+}
+:root body.hub-page .where{display:none}
+@media (max-width:760px){
+  :root body .bar{flex-wrap:wrap;row-gap:6px}
+  :root body #theme{margin-left:auto}
+  :root body .site-nav{order:3;width:100%;margin:0 -6px;overflow-x:auto;scrollbar-width:none}
+  :root body .site-nav::-webkit-scrollbar{display:none}
+  :root body .site-nav a{padding:6px 10px;font-size:.84rem}
+}
+:root body.hub-page{
+  & .hero.has-scene{max-width:none}
+  & .shelf-head{grid-column:1 / -1;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 4px}
+  & .shelf-head h2{margin:0}
+  & .shelf-all-link{font-weight:600;font-size:.92rem;text-decoration:none}
+  & .shelf-all-link:hover{text-decoration:underline;text-underline-offset:3px}
+  & .shelf-more{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding:20px 24px;border:1px dashed var(--x-line2);border-radius:14px}
+  & .shelf-more p{margin:0;color:var(--x-muted);font-size:.95rem}
+  & .shelf-more p b{color:var(--x-text)}
+  & .shelf-next{margin-top:22px}
+  & .shelf-more .actions{margin:0}
+  & .nb-hero .hero-sub{max-width:52ch}
+  & .nb-count{margin:18px 0 0;font-size:.95rem;color:var(--x-muted)}
+  & .nb-count b{color:var(--x-text);font-weight:700}
+  & .shelf-all{margin-top:0;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px}
+}
+@media (min-width:821px){
+  :root body.hub-page .hero.has-scene{grid-template-columns:minmax(0,1fr) minmax(0,540px);column-gap:64px}
+}
+@media (min-width:1100px){
+  :root body.hub-page .layout.hub.has-rail{grid-template-columns:minmax(0,1fr) 360px;column-gap:44px}
+  :root body.hub-page .has-rail .shelf{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  :root body.hub-page .has-rail .nb{display:flex;flex-direction:column;gap:16px;padding:14px 14px 18px}
+  :root body.hub-page .has-rail .nb-cover svg{height:160px}
+  :root body.hub-page .has-rail .nb .actions{margin:auto 0 0}
+  :root body.hub-page .has-rail .nb .btn.primary{flex:1 1 100%}
+  :root body.hub-page .has-rail .nb .btn{flex:1 1 auto;text-align:center}
+}
+@media (min-width:1500px){
+  :root body.hub-page .gc-main{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:center;gap:28px}
+  :root body.hub-page .gc-text{grid-template-columns:minmax(0,1fr);gap:14px}
+}
+@media (max-width:640px){
+  :root body.hub-page .shelf-more{padding:18px}
+  :root body.hub-page .shelf-all{grid-template-columns:minmax(0,1fr)}
+}

@@ -18,3 +18,7 @@ export const BUTTONDOWN = 'nimesha';
 export const KODEBOX = 'https://tidd.ly/3VbFm5x';
 // The KodeBox pop-up on the front page stops showing after this date. Set it to '' to turn the pop-up off.
 export const KODEBOX_POPUP_UNTIL = '2026-12-23';
+
+// How many notebooks the front page shows. The rest are on the Illustrated Notebooks page (/notebooks/),
+// which the front page links to with "View all notebooks".
+export const FRONT_PAGE_NOTEBOOKS = 4;

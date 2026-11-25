@@ -26,6 +26,13 @@ const prev = i > 0 ? order[i - 1] : null;
 const next = i >= 0 && i < order.length - 1 ? order[i + 1] : null;
 const parts: string[] = [];
 chapters.forEach((c) => { if (!parts.includes(c.data.part)) parts.push(c.data.part); });
+// The menu in the top bar. "on" marks the page you are on.
+const path = Astro.url.pathname.replace(/\/+$/, '');
+const navLinks = [
+  { label: 'Notebooks', href: url('notebooks/'), on: path.endsWith('/notebooks') },
+  { label: 'GPU Corner', href: url('engine-room/'), on: path.endsWith('/engine-room') },
+  { label: 'Contribute', href: url() + '#join-in', on: false },
+];
 const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} | Ship It with Nimesha` : 'Ship It with Nimesha') : page === 'cover' ? `${nb!.title} | Ship It with Nimesha` : `${title} | ${nb!.title}`;
 ---
 <!doctype html>
@@ -52,6 +59,9 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
     {!hub && <button id="menu" aria-controls="toc" aria-expanded="false">Contents</button>}
     <a class="brand" href={url()}><span class="logo" aria-hidden="true" set:html={logo} /><span>Ship It <i>with Nimesha</i></span></a>
     <span class="where">{hub ? (Astro.props.where ?? 'Notebooks on running AI in production') : page === 'cover' ? `Notebook #${nb!.number}: ${nb!.title}` : <>{nb!.title} <span class="dot">&middot;</span> {title}</>}</span>
+    <nav class="site-nav" aria-label="Site">
+      {navLinks.map((l) => <a href={l.href} aria-current={l.on ? 'page' : undefined}>{l.label}</a>)}
+    </nav>
     <button id="theme" aria-label="Switch to dark mode">
       <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
       <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
@@ -97,7 +107,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
   {hub && (
     <footer class="site-foot">
       <div class="wrap">
-        <p><b>Ship It with Nimesha</b>. Free notebooks on taking AI agents to production.</p>
+        <p><b>Ship It with Nimesha</b>. Free, illustrated notebooks on running AI agents and their models in production.</p>
         <p>Found a mistake or have an example to share? <a href={`${REPO}/blob/main/CONTRIBUTING.md`}>Help improve the notebooks</a>. Text and drawings are shared under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>.</p>
       </div>
     </footer>

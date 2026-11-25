@@ -1,0 +1,45 @@
+name: Add a project to the Guest Rack
+description: Something you built or ran on a GPU, for the Guest Rack on the GPU Corner page.
+title: "[Guest Rack] "
+labels: ["guest-rack"]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Project name
+      placeholder: "Fine-tuned a 3B model on my team's runbooks"
+    validations:
+      required: true
+  - type: input
+    id: by
+    attributes:
+      label: Your name, as it should appear on the page
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: Which GPU did it run on?
+      placeholder: "1 x NVIDIA L4, 24 GB"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What does it do, in one or two sentences?
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link to the code, a write-up or a post
+      placeholder: "https://github.com/..."
+    validations:
+      required: true
+  - type: checkboxes
+    id: ok
+    attributes:
+      label: Before you send
+      options:
+        - label: The link has no keys, account IDs or other secrets in it.
+          required: true

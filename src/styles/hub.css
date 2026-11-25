@@ -260,3 +260,43 @@
   :root body.hub-page .er-steps li:before{left:14px}
 }
 @media (prefers-reduced-motion:reduce){:root body.hub-page .kb-pop[open]{animation:none}:root body.hub-page .er-reads a{transition:none}}
+
+/* ---- Front-page picture (src/components/HeroScene.astro) ---- */
+:root body.hub-page{
+  --hs-disc:#1a2129;--hs-ring:#262f3a;--hs-rope:#c9a46b;--hs-rope-dark:#8d6c3c;
+  & .hero.has-scene{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);grid-template-areas:"text scene" "author author";column-gap:28px;align-items:center;max-width:none}
+  & .hero-text{grid-area:text}
+  & .hero.has-scene .author{grid-area:author}
+  & .hero-scene{grid-area:scene;margin:0;width:100%}
+  & .hero-scene svg{display:block;width:100%;height:auto;overflow:visible;filter:none}
+  & .hs-disc{fill:var(--hs-disc)}
+  & .hs-ring{fill:none;stroke:var(--hs-ring);stroke-width:1.5;stroke-dasharray:3 7}
+  & .hs-label{font-family:var(--x-font);font-size:12px;font-weight:600;fill:var(--x-muted)}
+  & .hs-prod{fill:var(--x-text)}
+  & .hs-k8s-bg{fill:#326ce5}
+  & .hs-track{stroke:var(--x-line2);stroke-width:4;stroke-linecap:round}
+  & .hs-ties{stroke:var(--x-line2);stroke-width:2}
+  & .hs-pole{stroke:var(--x-muted);stroke-width:3;stroke-linecap:round}
+  & .hs-flag{fill:var(--x-accent)}
+  & .hs-crate-box{fill:var(--x-card);stroke:var(--x-line2);stroke-width:1.5}
+  & .hs-crate-line{stroke:var(--x-line);stroke-width:1.5}
+  & .hs-bot{fill:var(--x-accent)}
+  & .hs-bot-eye{fill:#111}
+  & .hs-bot-ant{stroke:var(--x-accent);stroke-width:2.5}
+  & .hs-wheel{fill:var(--x-line2);stroke:var(--x-muted);stroke-width:1.5}
+  & .hs-crate-text{font-family:var(--x-font);font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;fill:var(--x-muted)}
+  & .hs-rope path{fill:none;stroke:var(--hs-rope);stroke-width:7;stroke-linecap:round}
+  & .hs-rope-back path{stroke-linecap:butt}
+  & .hs-rope .hs-twist{stroke:var(--hs-rope-dark);stroke-width:7;stroke-dasharray:2 6;stroke-linecap:butt;opacity:.7}
+  & .hs-float{animation:hs-bob 5s ease-in-out infinite}
+  & .hs-gpu-card{animation-delay:-2.5s}
+  & .hs-fan{animation:hs-spin 2.4s linear infinite}
+}
+:root[data-theme="light"] body.hub-page{--hs-disc:#e8edf3;--hs-ring:#cdd5df}
+@keyframes hs-bob{50%{translate:0 -5px}}
+@keyframes hs-spin{to{transform:rotate(360deg)}}
+@media (max-width:820px){
+  :root body.hub-page .hero.has-scene{grid-template-columns:minmax(0,1fr);grid-template-areas:"text" "scene" "author"}
+  :root body.hub-page .hero-scene{max-width:400px;margin:28px auto 0}
+}
+@media (prefers-reduced-motion:reduce){:root body.hub-page .hs-float,:root body.hub-page .hs-fan{animation:none}}

@@ -38,7 +38,8 @@ const navLinks = [
 const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} | Ship It with Nimesha` : 'Ship It with Nimesha') : page === 'cover' ? `${nb!.title} | Ship It with Nimesha` : `${title} | ${nb!.title}`;
 ---
 <!doctype html>
-<html lang="en">
+<!-- Dark is the default look. A reader who presses "Go light" gets light from then on (saved in this browser). -->
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />

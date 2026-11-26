@@ -4,7 +4,6 @@
 // The KodeBox link is set in src/lib/site.ts.
 import Base from '../layouts/Base.astro';
 import '../styles/engine-room.css';
-import GpuBoard from '../components/GpuBoard.astro';
 import { url } from '../lib/url';
 import { KODEBOX, REPO } from '../lib/site';
 import { benchLogs } from '../lib/benchlogs';
@@ -28,20 +27,39 @@ const latest = benchLogs[0];
 const older = benchLogs.slice(1);
 ---
 <Base title="The Engine Room: Nimesha's GPU Corner" page="hub" where="Nimesha's GPU Corner" description="The GPU corner of Ship It with Nimesha: Bench Logs from real GPU runs, a check for whether a model fits in GPU memory, and the chapters to read first.">
-  <div slot="top" class="band hero-band">
+  <div slot="top" class="band hero-band er-top">
     <div class="wrap">
-      <section class="hero er-hero">
+      <section class="hero er-hero er-hero-v4">
         <div class="er-hero-text">
-          <p class="eyebrow">Nimesha's GPU Corner</p>
+          <p class="er-kicker"><span class="er-dot" aria-hidden="true"></span>Nimesha's GPU Corner</p>
           <h1 class="hero-title">The Engine Room</h1>
-          <p class="hero-sub">For people who train, fine-tune or serve models on a GPU after office hours.</p>
-          <nav class="er-jump" aria-label="On this page">
-            <a href="#logs">Bench Logs</a>
-            <a href="#fit">Will it fit?</a>
-            <a href="#start">Start here</a>
-          </nav>
+          <p class="hero-sub">Real runs on a real GPU, written up with every number. Plus a quick check for whether your model will fit.</p>
+          <div class="er-cta">
+            <a class="btn primary" href={url(`engine-room/logs/${latest.slug}/`)}>Read Bench Log #{latest.number}</a>
+            <a class="btn" href="#fit">Will it fit?</a>
+          </div>
+          <dl class="er-facts">
+            <div><dt>Bench Logs</dt><dd>{benchLogs.length}</dd></div>
+            <div><dt>Latest run</dt><dd>{latest.date}</dd></div>
+            <div><dt>GPU so far</dt><dd>NVIDIA T4</dd></div>
+          </dl>
         </div>
-        <GpuBoard />
+        <figure class="er-console">
+          <div class="er-console-bar" aria-hidden="true"><i></i><i></i><i></i><span>kk_user@will-it-fit</span></div>
+          <pre><code><span class="c-cmd">$ nvidia-smi --query-gpu=name,memory.total,memory.used,driver_version --format=csv</span>
+<span class="c-dim">name, memory.total [MiB], memory.used [MiB], driver_version</span>
+Tesla T4, 15360 MiB, 0 MiB, 580.178.04
+<span class="c-cmd">$ python3 bench2.py 65536</span>
+== llama3.1:8b-instruct-q4_K_M  num_ctx=65536
+Flash Attention enabled
+K (f16): 4096.00 MiB
+KV buffer size =  <span class="c-hi">8192.00 MiB</span>
+V (f16): 4096.00 MiB
+offloaded <span class="c-hi">33/33</span> layers to GPU
+GPU memory used: 12901 MiB
+run 1: prompt 23 tokens at 600 tok/s, wrote 128 tokens at <span class="c-hi">42.0 tok/s</span></code></pre>
+          <figcaption>Output from the <a href={url('engine-room/logs/long-context/')}>Bench Log #2</a> run, 26 Nov 2026 (the 64K step, without the <code>ollama ps</code> line).</figcaption>
+        </figure>
       </section>
     </div>
   </div>

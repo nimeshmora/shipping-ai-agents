@@ -237,3 +237,16 @@
   :root body.hub-page:has(.er-hero-v4) .er-top{padding:48px 0 44px}
   :root body.hub-page:has(.er-hero-v4) .er-console pre{font-size:.7rem;padding:14px}
 }
+
+/* ---- Section headings: no numbers, no rule line; sections separated by space and a soft divider ---- */
+:root body.hub-page:has(.er-hero-v4){
+  & .er-section{margin-top:0;padding:72px 0 8px}
+  & .er-section+.er-section{border-top:1px solid var(--x-line)}
+  & .er-section:first-of-type{padding-top:56px}
+  & .er-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px 20px;margin:0 0 10px}
+  & .er-head::after{display:none}
+  & .er-head h2{font-size:clamp(1.7rem,3vw,2.3rem);letter-spacing:-.03em}
+  & .er-status{font-size:.85rem;font-weight:500;color:var(--x-muted);padding:4px 12px;border:1px solid var(--x-line2);border-radius:999px;background:var(--x-card)}
+  & .er-lead{max-width:62ch;font-size:1.02rem;margin:0 0 28px}
+  & .er-kb-strip{margin-top:56px}
+}

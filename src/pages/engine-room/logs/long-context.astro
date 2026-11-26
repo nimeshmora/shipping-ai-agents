@@ -39,7 +39,7 @@ for i, p in enumerate(prompts, 1):
     ev = r['eval_count'] / (r['eval_duration'] / 1e9)
     print(f'run {i}: prompt {r["prompt_eval_count"]} tokens at {pe:.0f} tok/s, wrote {r["eval_count"]} tokens at {ev:.1f} tok/s')`;
 ---
-<Base title={`Bench Log #${log.number}: ${log.title}`} page="hub" where="Nimesha's GPU Corner" description="I ran Llama 3.1 8B (4-bit) on a 16 GB NVIDIA T4 with context lengths from 4K to 128K, with a 16-bit and an 8-bit KV cache, and measured memory and speed.">
+<Base title={`Bench Log #${log.number}: ${log.title}`} image="bench-logs/02/share.png" page="hub" where="Nimesha's GPU Corner" description="I ran Llama 3.1 8B (4-bit) on a 16 GB NVIDIA T4 with context lengths from 4K to 128K, with a 16-bit and an 8-bit KV cache, and measured memory and speed.">
   <div slot="top" class="band hero-band">
     <div class="wrap">
       <section class="hero er-hero bl-hero">

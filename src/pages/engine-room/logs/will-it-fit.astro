@@ -1,0 +1,211 @@
+---
+// Bench Log #1. Every number on this page comes from the run on 26 Nov 2026.
+// The raw notes, GIFs and screenshots are in social/gpu-will-it-fit/ (not published).
+import Base from '../../../layouts/Base.astro';
+import { url } from '../../../lib/url';
+import { KODEBOX, REPO } from '../../../lib/site';
+import { benchLogs } from '../../../lib/benchlogs';
+
+const log = benchLogs.find((l) => l.slug === 'will-it-fit')!;
+const f = (name: string) => url(`bench-logs/01/${name}`);
+const script = `#!/bin/bash
+# bench.sh <quant> [num_gpu]    e.g.  ./bench.sh q4_K_M    or    ./bench.sh q4_K_M 0   (0 = CPU only)
+M=llama3.1:8b-instruct-$1
+O='"num_ctx":4096,"temperature":0,"seed":42,"num_predict":256'
+[ -n "$2" ] && O="$O,\\"num_gpu\\":$2"
+P='Explain what a GPU does when it runs a language model.'
+for m in $(ollama ps | awk 'NR>1{print $1}'); do ollama stop $m; done
+req() { curl -s localhost:11434/api/generate -d "{\\"model\\":\\"$M\\",\\"prompt\\":\\"$1\\",\\"stream\\":false,\\"options\\":{$O}}"; }
+req hi > /dev/null
+echo "== $M \${2:+num_gpu=$2}"
+for i in 1 2 3; do
+  req "$P" | jq -r '"run '$i': \\(.eval_count) tokens, \\(.eval_count/(.eval_duration/1e9)*10|round/10) tokens/s"'
+done
+ollama ps
+nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
+---
+<Base title={`Bench Log #${log.number}: ${log.title}`} page="hub" where="Nimesha's GPU Corner" description="I ran Llama 3.1 8B in 4-bit, 8-bit and 16-bit on a 16 GB NVIDIA T4 and measured memory and speed. The 16-bit version did not fit.">
+  <div slot="top" class="band hero-band er-band">
+    <div class="wrap">
+      <section class="hero er-hero bl-hero">
+        <div class="er-hero-text">
+          <p class="eyebrow"><a href={url('engine-room/#logs')}>GPU Corner</a> / Bench Log #{log.number}</p>
+          <h1 class="hero-title">{log.title}</h1>
+          <p class="hero-sub">I ran one model in three sizes on one 16 GB GPU and measured what happened.</p>
+          <ul class="bl-kit">
+            <li>{log.date}</li>
+            <li>NVIDIA Tesla T4</li>
+            <li>Llama 3.1 8B</li>
+            <li>Ollama 0.40.6</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="bl">
+    <article class="bl-main">
+
+      <h2>Why I did this</h2>
+      <p>The GPU Corner page has a "Will it fit?" check. It did a simple sum: number of parameters, times the bytes each one takes, plus 20%. I wanted to know how close that sum gets on a real GPU. So I took one model, ran it in three sizes on a 16 GB card, and wrote down the numbers.</p>
+
+      <h2>The machine</h2>
+      <p>I used a GPU KodeBox from KodeKloud with the "AI on GPU" image. It comes with the NVIDIA driver, Docker and Ollama already installed. It was ready in about a minute.</p>
+      <figure class="bl-shot">
+        <img src={f('01-create-gpu-kodebox.webp')} width="1200" height="527" loading="lazy" alt="Creating a GPU KodeBox called will-it-fit in the KodeKloud dashboard, from New Linux server to Running" />
+        <figcaption>Creating the server.</figcaption>
+      </figure>
+      <table class="bl-table">
+        <tbody>
+          <tr><th>GPU</th><td>NVIDIA Tesla T4, 15360 MiB</td></tr>
+          <tr><th>Driver / CUDA</th><td>580.178.04 / CUDA 13.0</td></tr>
+          <tr><th>CPU</th><td>4 vCPU, Intel Xeon Platinum 8259CL @ 2.50GHz</td></tr>
+          <tr><th>RAM</th><td>15 GiB</td></tr>
+          <tr><th>Ollama</th><td>0.40.6</td></tr>
+        </tbody>
+      </table>
+      <p>A small thing that matters later: the T4 is sold as a 16 GB card, but <code>nvidia-smi</code> shows 15,360 MiB that programs can use. That is 15 GiB, or 16.1 GB. The rest is held back by the card and the driver.</p>
+      <figure class="bl-shot">
+        <img src={f('02-check-the-gpu.webp')} width="1200" height="527" loading="lazy" alt="nvidia-smi showing a Tesla T4 with 0MiB of 15360MiB used, then the CPU, RAM and Ollama version" />
+        <figcaption>First look at the GPU, then the CPU, RAM and Ollama version.</figcaption>
+      </figure>
+
+      <h2>The model</h2>
+      <p>Llama 3.1 8B Instruct from the Ollama library, in three versions:</p>
+      <table class="bl-table">
+        <thead><tr><th>Ollama tag</th><th>Download</th><th>About</th></tr></thead>
+        <tbody>
+          <tr><td><code>llama3.1:8b-instruct-q4_K_M</code></td><td>4.9 GB</td><td>4.9 bits per weight</td></tr>
+          <tr><td><code>llama3.1:8b-instruct-q8_0</code></td><td>8.5 GB</td><td>8.5 bits per weight</td></tr>
+          <tr><td><code>llama3.1:8b-instruct-fp16</code></td><td>16 GB</td><td>16 bits per weight</td></tr>
+        </tbody>
+      </table>
+      <p>The names say 4-bit and 8-bit, but the files are bigger than that. Both formats store small scale numbers next to each block of weights, and q4_K_M keeps some parts of the model at higher precision. So 8 billion weights at "4-bit" come to 4.9 GB, not 4.</p>
+      <p>The downloads were fast, between about 400 and 700 MB a second.</p>
+      <figure class="bl-shot">
+        <img src={f('03-pull-three-versions.webp')} width="1200" height="527" loading="lazy" alt="ollama pull downloading the q4_K_M, q8_0 and fp16 versions, then ollama list showing 4.9 GB, 8.5 GB and 16 GB" />
+        <figcaption>Pulling the three versions.</figcaption>
+      </figure>
+
+      <h2>How I measured</h2>
+      <p>Every run used the same settings:</p>
+      <ul>
+        <li>the same prompt: "Explain what a GPU does when it runs a language model."</li>
+        <li>context of 4,096 tokens, temperature 0, seed 42</li>
+        <li>256 tokens written each time</li>
+        <li>any loaded model stopped first, one warm-up request to load the model, then 3 timed runs</li>
+      </ul>
+      <p>Tokens per second is Ollama's own count of written tokens divided by the time it spent writing them (<code>eval_count / eval_duration</code> from the API). The time to read the prompt is not in it.</p>
+      <p>After the three runs the script prints <code>ollama ps</code> and the GPU memory from <code>nvidia-smi</code>, while the model is still loaded. GPU use shows 0% there because the runs had already finished.</p>
+      <div class="er-term"><pre><code>{script.split('\n').map((l) => <span class="ln-plain">{l}</span>)}</code></pre></div>
+      <p class="small"><a href={f('bench.sh')} download>Download bench.sh</a></p>
+
+      <h2>What happened</h2>
+
+      <h3>4-bit: fits, 41 tokens a second</h3>
+      <figure class="bl-shot">
+        <img src={f('04-run-4bit.webp')} width="1200" height="527" loading="lazy" alt="bench.sh q4_K_M: 41.3, 41 and 40.7 tokens/s, 5.3 GB, 100% GPU, 5161 MiB used" />
+      </figure>
+      <p>All of it went on the GPU. 5,161 MiB used. The three runs gave 41.3, 41.0 and 40.7 tokens a second.</p>
+
+      <h3>8-bit: fits, 30 tokens a second</h3>
+      <figure class="bl-shot">
+        <img src={f('05-run-8bit.webp')} width="1200" height="527" loading="lazy" alt="bench.sh q8_0: 29.7, 29.6 and 29.6 tokens/s, 8.6 GB, 100% GPU, 8363 MiB used" />
+      </figure>
+      <p>Also all on the GPU. 8,363 MiB used. 29.7, 29.6 and 29.6 tokens a second.</p>
+
+      <h3>16-bit: does not fit, 8.6 tokens a second</h3>
+      <figure class="bl-shot">
+        <img src={f('06-run-16bit-does-not-fit.webp')} width="1200" height="527" loading="lazy" alt="bench.sh fp16: 8.6, 8.6 and 8.5 tokens/s, 16 GB, 15%/85% CPU/GPU, 13881 MiB used" />
+      </figure>
+      <p>This is the one I wanted to see. The weights alone are 16 GB and the card has 15 GiB. Ollama did not give an error. It put 85% of the model on the GPU and ran the other 15% on the CPU. You can see it in the PROCESSOR column: <code>15%/85% CPU/GPU</code>. It used 13,881 MiB of GPU memory.</p>
+      <p>It still answered, but at 8.6 tokens a second. That is about 3.5 times slower than 8-bit and almost 5 times slower than 4-bit. Every token has to go through every layer of the model, and the layers on the CPU are much slower, so the GPU spends a lot of its time waiting for them.</p>
+
+      <h3>4-bit on the CPU only: 3 tokens a second</h3>
+      <figure class="bl-shot">
+        <img src={f('07-same-model-cpu-only.webp')} width="1200" height="527" loading="lazy" alt="bench.sh q4_K_M with num_gpu 0: 3, 2.9 and 3 tokens/s, 100% CPU, 0 MiB GPU memory used" />
+      </figure>
+      <p>Same 4-bit model, but with <code>num_gpu</code> set to 0, so nothing goes on the GPU. 3.0, 2.9 and 3.0 tokens a second, and 0 MiB of GPU memory. The T4 was about 14 times faster than the 4 CPU cores.</p>
+
+      <h2>All the numbers</h2>
+      <div class="bl-scroll">
+        <table class="bl-table bl-results">
+          <thead><tr><th>Version</th><th><code>ollama ps</code> size</th><th>GPU memory used</th><th>Where it ran</th><th>Tokens/s (3 runs)</th></tr></thead>
+          <tbody>
+            <tr><td>4-bit (q4_K_M)</td><td>5.3 GB</td><td>5,161 MiB</td><td>100% GPU</td><td>41.3, 41.0, 40.7</td></tr>
+            <tr><td>8-bit (q8_0)</td><td>8.6 GB</td><td>8,363 MiB</td><td>100% GPU</td><td>29.7, 29.6, 29.6</td></tr>
+            <tr class="bad"><td>16-bit (fp16)</td><td>16 GB</td><td>13,881 MiB</td><td>15% CPU / 85% GPU</td><td>8.6, 8.6, 8.5</td></tr>
+            <tr><td>4-bit, CPU only</td><td>5.6 GB</td><td>0 MiB</td><td>100% CPU</td><td>3.0, 2.9, 3.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Why the speeds look like this</h2>
+      <p>When a model writes, every new token needs every weight read from GPU memory once. So a quick upper limit is memory speed divided by model size. NVIDIA lists the T4 at 320 GB/s.</p>
+      <table class="bl-table">
+        <thead><tr><th>Version</th><th>320 GB/s ÷ size</th><th>Measured</th></tr></thead>
+        <tbody>
+          <tr><td>4-bit</td><td>320 ÷ 4.9 ≈ 65 tokens/s</td><td>41</td></tr>
+          <tr><td>8-bit</td><td>320 ÷ 8.5 ≈ 38 tokens/s</td><td>30</td></tr>
+          <tr><td>16-bit, if it had fit</td><td>320 ÷ 16 = 20 tokens/s</td><td>8.6 (15% on the CPU)</td></tr>
+        </tbody>
+      </table>
+      <p>Real runs never reach that limit, but the order is the same. A smaller version of a model is also a faster one, as long as it fits on the GPU.</p>
+
+      <h2>What my calculator got wrong</h2>
+      <p>The old check on the GPU Corner page said:</p>
+      <table class="bl-table">
+        <thead><tr><th>Version</th><th>Old check</th><th>Measured</th></tr></thead>
+        <tbody>
+          <tr><td>4-bit</td><td>4.8 GB</td><td>5.4 GB (5,161 MiB)</td></tr>
+          <tr><td>8-bit</td><td>9.6 GB</td><td>8.8 GB (8,363 MiB)</td></tr>
+          <tr><td>16-bit</td><td>19.2 GB, does not fit</td><td>did not fit</td></tr>
+        </tbody>
+      </table>
+      <p>It got fit or no fit right, but the sizes were off in both directions, for two reasons:</p>
+      <ul>
+        <li>It counted 4-bit as half a byte per weight. q4_K_M is closer to 0.61 bytes (4.9 bits), and q8_0 is about 1.06 bytes (8.5 bits).</li>
+        <li>It added a flat 20%. The extra memory is mostly the KV cache, and that depends on the context length, not on the model file. Llama 3.1 8B has 32 layers and 8 key/value heads of size 128. For each token it keeps a key and a value in 16-bit: 2 × 32 × 8 × 128 × 2 bytes = 128 KiB. At 4,096 tokens that is 512 MiB.</li>
+      </ul>
+      <p>So I changed the check. It now uses the real sizes and adds about 0.5 GB for a 4K context:</p>
+      <table class="bl-table">
+        <thead><tr><th>Version</th><th>New check</th><th>Measured</th></tr></thead>
+        <tbody>
+          <tr><td>4-bit</td><td>4.9 + 0.5 = 5.4 GB</td><td>5.4 GB</td></tr>
+          <tr><td>8-bit</td><td>8.5 + 0.5 = 9.0 GB</td><td>8.8 GB</td></tr>
+          <tr><td>16-bit</td><td>16 + 0.5 = 16.5 GB, more than the 16.1 GB the card can use</td><td>did not fit</td></tr>
+        </tbody>
+      </table>
+      <p>It is still a rough check. Longer contexts need more KV cache, and other models have a different number of layers and heads.</p>
+
+      <h2>What this test does not tell you</h2>
+      <ul>
+        <li>One prompt and one user at a time. Many users at once is a different test.</li>
+        <li>256 tokens written, with a 4,096-token context. Longer chats need more memory.</li>
+        <li>How fast the prompt is read. I only timed the writing.</li>
+        <li>How newer GPUs do. The T4 came out in 2018, and newer cards have much faster memory. Your numbers will be different.</li>
+      </ul>
+
+      <h2>Try it yourself</h2>
+      <p>On any Linux machine with an NVIDIA GPU, Ollama, <code>curl</code> and <code>jq</code>:</p>
+      <div class="er-term"><pre><code><span class="ln">ollama pull llama3.1:8b-instruct-q4_K_M</span><span class="ln">chmod +x bench.sh</span><span class="ln">./bench.sh q4_K_M</span><span class="ln">./bench.sh q4_K_M 0</span></code></pre></div>
+      <p>Ran it on a different GPU? <a href={`${REPO}/issues/new?template=gpu-project.yml`}>Send me your numbers</a> and I'll add them to the Guest Rack.</p>
+
+      <p class="bl-note">I ran this on a <a href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="bench-log-1">KodeBox</a>. The whole run took about 20 minutes and used about 7 credits. I work at KodeKloud.</p>
+    </article>
+
+    <aside class="bl-side" aria-label="Bench Log #1 at a glance">
+      <div class="bl-card">
+        <p class="bl-card-tag">At a glance</p>
+        <ul class="bl-meter">
+          <li><span>4-bit</span><b>41 tok/s</b><i style="--w:100%"></i></li>
+          <li><span>8-bit</span><b>30 tok/s</b><i style="--w:72%"></i></li>
+          <li class="bad"><span>16-bit</span><b>8.6 tok/s</b><i style="--w:21%"></i></li>
+          <li class="cpu"><span>CPU only</span><b>3 tok/s</b><i style="--w:7%"></i></li>
+        </ul>
+        <p class="bl-card-foot">Llama 3.1 8B on an NVIDIA T4 (15 GiB). 16-bit did not fit: 15% ran on the CPU.</p>
+      </div>
+      <a class="bl-back" href={url('engine-room/#logs')}>&larr; All Bench Logs</a>
+    </aside>
+  </div>
+</Base>

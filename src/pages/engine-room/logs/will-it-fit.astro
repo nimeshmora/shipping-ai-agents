@@ -6,6 +6,7 @@ import '../../../styles/engine-room.css';
 import { url } from '../../../lib/url';
 import { KODEBOX, REPO } from '../../../lib/site';
 import { benchLogs } from '../../../lib/benchlogs';
+import BenchLogSeries from '../../../components/BenchLogSeries.astro';
 
 const log = benchLogs.find((l) => l.slug === 'will-it-fit')!;
 const f = (name: string) => url(`bench-logs/01/${name}`);
@@ -193,6 +194,7 @@ nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
       <p>Ran it on a different GPU? <a href={`${REPO}/issues/new?title=${encodeURIComponent('[Bench Log #1] My numbers')}`}>Send me your numbers</a>. I'd like to see them.</p>
 
       <p class="bl-note">I ran this on a <a href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="bench-log-1">KodeBox</a>. By the KodeBox log the server ran from 07:27 to 07:52, about 25 minutes, and used 11 credits. I work at KodeKloud.</p>
+      <BenchLogSeries slug="will-it-fit" part="nav" />
     </article>
 
     <aside class="bl-side" aria-label="Bench Log #1 at a glance">
@@ -206,7 +208,7 @@ nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
         </ul>
         <p class="bl-card-foot">Llama 3.1 8B on an NVIDIA T4 (15 GiB). 16-bit did not fit: 15% ran on the CPU.</p>
       </div>
-      <a class="bl-back" href={url('engine-room/#logs')}>&larr; All Bench Logs</a>
+      <BenchLogSeries slug="will-it-fit" part="list" />
     </aside>
   </div>
 </Base>

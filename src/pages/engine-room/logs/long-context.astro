@@ -6,6 +6,7 @@ import '../../../styles/engine-room.css';
 import { url } from '../../../lib/url';
 import { KODEBOX, REPO } from '../../../lib/site';
 import { benchLogs } from '../../../lib/benchlogs';
+import BenchLogSeries from '../../../components/BenchLogSeries.astro';
 
 const log = benchLogs.find((l) => l.slug === 'long-context')!;
 const f = (name: string) => url(`bench-logs/02/${name}`);
@@ -183,6 +184,7 @@ for i, p in enumerate(prompts, 1):
       <p>Ran it on a different GPU? <a href={`${REPO}/issues/new?title=${encodeURIComponent('[Bench Log #2] My numbers')}`}>Send me your numbers</a>. I'd like to see them.</p>
 
       <p class="bl-note">I ran this on a <a href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="bench-log-2">KodeBox</a>. By the KodeBox log the server ran from 22:01 to 22:45, about 44 minutes including 7 minutes to shut down, and used 18 credits. I work at KodeKloud.</p>
+      <BenchLogSeries slug="long-context" part="nav" />
     </article>
 
     <aside class="bl-side" aria-label="Bench Log #2 at a glance">
@@ -196,7 +198,7 @@ for i, p in enumerate(prompts, 1):
         </ul>
         <p class="bl-card-foot">Llama 3.1 8B (4-bit) on an NVIDIA T4. 128 KiB of KV cache per token of context.</p>
       </div>
-      <a class="bl-back" href={url('engine-room/#logs')}>&larr; All Bench Logs</a>
+      <BenchLogSeries slug="long-context" part="list" />
     </aside>
   </div>
 </Base>

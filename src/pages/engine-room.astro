@@ -6,6 +6,7 @@ import Base from '../layouts/Base.astro';
 import GpuBoard from '../components/GpuBoard.astro';
 import { url } from '../lib/url';
 import { KODEBOX, REPO } from '../lib/site';
+import { benchLogs } from '../lib/benchlogs';
 
 // 01 Boot check: run these in order on a new GPU server.
 const checks = [
@@ -56,8 +57,9 @@ const manuals = [
           <nav class="er-jump" aria-label="On this page">
             <a href="#boot"><span>01</span>Boot check</a>
             <a href="#fit"><span>02</span>Will it fit?</a>
-            <a href="#rack"><span>03</span>Guest Rack</a>
-            <a href="#manuals"><span>04</span>Manuals</a>
+            <a href="#logs"><span>03</span>Bench Logs</a>
+            <a href="#rack"><span>04</span>Guest Rack</a>
+            <a href="#manuals"><span>05</span>Manuals</a>
           </nav>
         </div>
         <GpuBoard />
@@ -103,7 +105,7 @@ const manuals = [
       <span class="er-idx">02</span>
       <h2 id="fit">Will it fit?</h2>
     </header>
-    <p class="er-lead">Each parameter takes 2 bytes at 16-bit, 1 at 8-bit and half a byte at 4-bit. Add about 20% for the KV cache and the runtime.</p>
+    <p class="er-lead">Weights take about 2 bytes each at 16-bit, 1.06 at 8-bit (q8_0) and 0.61 at 4-bit (q4_K_M). Add about 0.5 GB for the KV cache at a 4K context. <a href={url('engine-room/logs/will-it-fit/')}>Checked on a real T4 in Bench Log #1.</a></p>
     <form class="fit" id="fit-form" onsubmit="return false">
       <label>Model size (billions of parameters)
         <input type="number" id="fit-b" min="0.1" max="1000" step="0.1" value="8" inputmode="decimal" />
@@ -111,25 +113,46 @@ const manuals = [
       <label>Precision
         <select id="fit-p">
           <option value="2">16-bit (FP16 or BF16)</option>
-          <option value="1">8-bit</option>
-          <option value="0.5">4-bit</option>
+          <option value="1.0625">8-bit (q8_0)</option>
+          <option value="0.6125">4-bit (q4_K_M)</option>
         </select>
       </label>
       <label>GPU memory (GB)
         <input type="number" id="fit-g" min="1" max="1000" step="1" value="24" inputmode="numeric" />
       </label>
       <div class="vram" aria-hidden="true">
-        <div class="vram-head"><span>VRAM</span><span id="fit-read">19 / 24 GB</span></div>
-        <div class="vram-bar"><span id="fit-bar" style="width:80%"></span></div>
+        <div class="vram-head"><span>VRAM</span><span id="fit-read">17 / 24 GB</span></div>
+        <div class="vram-bar"><span id="fit-bar" style="width:69%"></span></div>
       </div>
-      <output class="fit-out" id="fit-out" for="fit-b fit-p fit-g">An 8B model at 16-bit needs about 19 GB. It fits in 24 GB.</output>
+      <output class="fit-out" id="fit-out" for="fit-b fit-p fit-g">An 8B model at 16-bit needs about 17 GB. It fits in 24 GB.</output>
     </form>
-    <p class="small">A rough check for running a model. Full fine-tuning needs about 16 bytes per parameter, which is why most people fine-tune with LoRA or QLoRA.</p>
+    <p class="small">A rough check for running a model, with one user and a 4K context. Longer contexts need more KV cache, and models with more layers need more per token. Full fine-tuning needs about 16 bytes per parameter, which is why most people fine-tune with LoRA or QLoRA.</p>
+  </section>
+
+  <section class="er-section" aria-labelledby="logs">
+    <header class="er-head">
+      <span class="er-idx">03</span>
+      <h2 id="logs">Bench Logs</h2>
+    </header>
+    <p class="er-lead">Real runs on a real GPU, written up with every number, setting and screen.</p>
+    <ol class="logs">
+      {benchLogs.map((l) => (
+        <li>
+          <a class="log-card" href={url(`engine-room/logs/${l.slug}/`)}>
+            <span class="log-no">LOG #{String(l.number).padStart(2, '0')} <span aria-hidden="true">·</span> {l.date}</span>
+            <b class="log-title">{l.title}</b>
+            <span class="log-finding">{l.finding}</span>
+            <span class="log-kit">{l.kit.map((k) => <span>{k}</span>)}</span>
+            <span class="log-go">Read the log <span aria-hidden="true">&rarr;</span></span>
+          </a>
+        </li>
+      ))}
+    </ol>
   </section>
 
   <section class="er-section" aria-labelledby="rack">
     <header class="er-head">
-      <span class="er-idx">03</span>
+      <span class="er-idx">04</span>
       <h2 id="rack">The Guest Rack</h2>
     </header>
     <p class="er-lead">Projects readers built or ran on a GPU. Each one gets a slot in the rack.</p>
@@ -168,7 +191,7 @@ const manuals = [
 
   <section class="er-section" aria-labelledby="manuals">
     <header class="er-head">
-      <span class="er-idx">04</span>
+      <span class="er-idx">05</span>
       <h2 id="manuals">Manuals</h2>
     </header>
     <p class="er-lead">Chapters from the notebooks to read before you rent a GPU.</p>
@@ -202,23 +225,24 @@ const manuals = [
     sync();
   })();
 
-  // Will it fit? Weights = parameters x bytes per parameter, plus about 20% for the KV cache and runtime.
+  // Will it fit? Weights = parameters x bytes per weight (q4_K_M is about 4.9 bits, q8_0 about 8.5),
+  // plus about 0.5 GB for the KV cache at a 4K context. Checked against a real T4 in Bench Log #1.
   (function () {
     var b = document.getElementById('fit-b'), p = document.getElementById('fit-p'), g = document.getElementById('fit-g'), out = document.getElementById('fit-out'), bar = document.getElementById('fit-bar'), read = document.getElementById('fit-read');
     if (!b) return;
-    var names = { '2': '16-bit', '1': '8-bit', '0.5': '4-bit' };
+    var names = { '2': '16-bit', '1.0625': '8-bit', '0.6125': '4-bit' };
     function fmt(n) { return n >= 10 ? Math.round(n) : Math.round(n * 10) / 10; }
     function run() {
       var bn = parseFloat(b.value), bytes = parseFloat(p.value), gb = parseFloat(g.value);
       if (!(bn > 0) || !(gb > 0)) { out.textContent = 'Type a model size and a GPU memory size.'; out.className = 'fit-out'; bar.style.width = '0'; read.textContent = ''; return; }
-      var need = bn * bytes * 1.2, state = 'ok';
+      var need = bn * bytes + 0.5, state = 'ok';
       var line = 'A ' + fmt(bn) + 'B model at ' + names[p.value] + ' needs about ' + fmt(need) + ' GB. ';
       if (need <= gb * 0.9) line += 'It fits in ' + fmt(gb) + ' GB.';
       else if (need <= gb) { line += 'It just fits in ' + fmt(gb) + ' GB, with little room for long conversations.'; state = 'tight'; }
       else {
         state = 'no';
         line += 'It does not fit in ' + fmt(gb) + ' GB.';
-        line += bytes > 0.5 ? ' Try a smaller precision.' : ' Try a smaller model or a GPU with more memory.';
+        line += bytes > 0.7 ? ' Try a smaller precision.' : ' Try a smaller model or a GPU with more memory.';
       }
       out.textContent = line;
       out.className = 'fit-out ' + state;

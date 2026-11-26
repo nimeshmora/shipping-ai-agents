@@ -67,6 +67,40 @@
   & .series-older a{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:16px;align-items:baseline;padding:12px 4px;color:var(--x-text);text-decoration:none}
   & .series-older a:hover{color:var(--x-link);background:none}
 
+  /* Earlier logs: one card per log, newest first */
+  & .series-earlier{margin-top:28px}
+  & .series-label{margin:0 0 12px;font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--x-muted)}
+  & .series-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:16px}
+  & .series-grid>li{margin:0}
+  & .log-card{display:flex;flex-direction:column;gap:10px;height:100%;padding:20px 22px;border:1px solid var(--x-line);border-radius:14px;background:var(--x-card);color:var(--x-text);text-decoration:none;transition:border-color .15s ease,box-shadow .15s ease}
+  & .log-card:hover{border-color:var(--x-line2);box-shadow:0 10px 30px rgba(0,0,0,.12);color:var(--x-text);background:var(--x-card)}
+  & .log-title{font-size:1.15rem;line-height:1.3}
+  & .log-card .log-finding{font-size:.9rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  & .log-bars{list-style:none;margin:4px 0 0;padding:12px 14px;display:grid;gap:9px;border-radius:10px;background:var(--x-soft)}
+  & .log-bars li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;margin:0;font-size:.8rem}
+  & .log-bars b{font-weight:700;font-variant-numeric:tabular-nums}
+  & .log-bars i{grid-column:1 / -1;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--x-accent) var(--w),var(--x-line) var(--w))}
+  & .log-bars li.warn i{background:linear-gradient(90deg,var(--er-warn) var(--w),var(--x-line) var(--w))}
+  & .log-bars li.cpu i{background:linear-gradient(90deg,var(--x-muted) var(--w),var(--x-line) var(--w))}
+
+  /* On a log page: the series list (side panel) and previous / next (end of the article) */
+  & .bls-list{margin-top:16px;padding:18px 20px;border:1px solid var(--x-line);border-radius:12px;background:var(--x-card)}
+  & .bls-list ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+  & .bls-list li{margin:0}
+  & .bls-list ol a{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:baseline;padding:8px 10px;margin:0 -10px;border-radius:8px;color:var(--x-text);text-decoration:none;font-size:.88rem;line-height:1.35}
+  & .bls-list ol a:hover{background:var(--x-soft);color:var(--x-text)}
+  & .bls-list ol a[aria-current="page"]{background:var(--x-soft);font-weight:700}
+  & .bls-list ol a[aria-current="page"] .bls-no{color:var(--x-accent)}
+  & .bls-no{font-family:var(--er-mono);font-size:.78rem;color:var(--x-muted)}
+  & .bls-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:48px}
+  & .bls-step{display:flex;flex-direction:column;gap:6px;padding:16px 18px;border:1px solid var(--x-line);border-radius:12px;background:var(--x-card);color:var(--x-text);text-decoration:none}
+  & .bls-step:hover{border-color:var(--x-line2);color:var(--x-text);background:var(--x-card)}
+  & .bls-step.next{text-align:right}
+  & .bls-step.soon{border-style:dashed;background:transparent}
+  & .bls-step.empty{border:0;background:none;padding:0}
+  & .bls-dir{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--x-muted)}
+  & .bls-step b{font-size:1rem}
+
   /* ---- 02 Will it fit? (the form itself is styled in hub.css: .fit, .fit-out) ---- */
   & .vram{grid-column:1 / -1}
   & .vram-head{display:flex;justify-content:space-between;margin:0 0 6px;font-size:.8rem;color:var(--x-muted)}
@@ -157,6 +191,8 @@
   :root body.hub-page:has(.er-hero) .bl-side{position:sticky;top:90px;align-self:start}
 }
 @media (max-width:760px){
+  :root body.hub-page:has(.er-hero) .bls-nav{grid-template-columns:minmax(0,1fr)}
+  :root body.hub-page:has(.er-hero) .bls-step.next{text-align:left}
   :root body.hub-page:has(.er-hero) .er-head{flex-wrap:wrap}
   :root body.hub-page:has(.er-hero) .er-head::after{display:none}
 }

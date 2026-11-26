@@ -1,0 +1,52 @@
+---
+// Series navigation on a Bench Log page.
+//   <BenchLogSeries slug="..." part="list" />  the "In this series" list for the side panel
+//   <BenchLogSeries slug="..." part="nav" />   previous / next log cards at the end of the article
+// The logs and their order come from src/lib/benchlogs.ts (newest first).
+import { url } from '../lib/url';
+import { benchLogs } from '../lib/benchlogs';
+
+const { slug, part } = Astro.props as { slug: string; part: 'list' | 'nav' };
+const byNumber = [...benchLogs].sort((a, b) => a.number - b.number);
+const i = byNumber.findIndex((l) => l.slug === slug);
+const prev = i > 0 ? byNumber[i - 1] : null;
+const next = i >= 0 && i < byNumber.length - 1 ? byNumber[i + 1] : null;
+const no = (n: number) => String(n).padStart(2, '0');
+---
+{part === 'list' && (
+  <nav class="bls-list" aria-label="Bench Logs in this series">
+    <p class="bl-card-tag">In this series</p>
+    <ol>
+      {benchLogs.map((l) => (
+        <li>
+          <a href={url(`engine-room/logs/${l.slug}/`)} aria-current={l.slug === slug ? 'page' : undefined}>
+            <span class="bls-no">#{no(l.number)}</span>
+            <span class="bls-title">{l.title}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <a class="bl-back" href={url('engine-room/#logs')}>&larr; All Bench Logs</a>
+  </nav>
+)}
+{part === 'nav' && (
+  <nav class="bls-nav" aria-label="Previous and next Bench Log">
+    {prev ? (
+      <a class="bls-step prev" href={url(`engine-room/logs/${prev.slug}/`)}>
+        <span class="bls-dir">&larr; Previous log #{no(prev.number)}</span>
+        <b>{prev.title}</b>
+      </a>
+    ) : <span class="bls-step empty" aria-hidden="true"></span>}
+    {next ? (
+      <a class="bls-step next" href={url(`engine-room/logs/${next.slug}/`)}>
+        <span class="bls-dir">Next log #{no(next.number)} &rarr;</span>
+        <b>{next.title}</b>
+      </a>
+    ) : (
+      <a class="bls-step next soon" href={url('engine-room/#logs')}>
+        <span class="bls-dir">Log #{no(byNumber[byNumber.length - 1].number + 1)}: not run yet</span>
+        <b>See all Bench Logs</b>
+      </a>
+    )}
+  </nav>
+)}

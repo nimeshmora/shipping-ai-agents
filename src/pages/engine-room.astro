@@ -79,11 +79,26 @@ const older = benchLogs.slice(1);
       </div>
     </div>
     {older.length > 0 && (
-      <ol class="series-older">
-        {older.map((l) => (
-          <li><a href={url(`engine-room/logs/${l.slug}/`)}><span class="log-no">Log #{String(l.number).padStart(2, '0')}</span><b>{l.title}</b><span class="log-no">{l.date}</span></a></li>
-        ))}
-      </ol>
+      <div class="series-earlier">
+        <p class="series-label">Earlier logs</p>
+        <ol class="series-grid">
+          {older.map((l) => (
+            <li>
+              <a class="log-card" href={url(`engine-room/logs/${l.slug}/`)}>
+                <span class="log-no">Log #{String(l.number).padStart(2, '0')} <span aria-hidden="true">·</span> {l.date}</span>
+                <b class="log-title">{l.title}</b>
+                <span class="log-finding">{l.finding}</span>
+                <ul class="log-bars" aria-label={l.statsNote}>
+                  {l.stats.map((st) => (
+                    <li class={st.tone}><span>{st.label}</span><b>{st.value}</b><i style={`--w:${st.pct}%`}></i></li>
+                  ))}
+                </ul>
+                <span class="log-go">Read log #{String(l.number).padStart(2, '0')} <span aria-hidden="true">&rarr;</span></span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
     )}
   </section>
 

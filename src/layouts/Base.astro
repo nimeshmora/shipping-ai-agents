@@ -41,8 +41,8 @@ const navLinks = [
 const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} | Ship It with Nimesha` : 'Ship It with Nimesha') : page === 'cover' ? `${nb!.title} | Ship It with Nimesha` : `${title} | ${nb!.title}`;
 ---
 <!doctype html>
-<!-- Dark is the default look. A reader who presses "Go light" gets light from then on (saved in this browser). -->
-<html lang="en" data-theme="dark">
+<!-- Light is the default look. A reader who presses "Go dark" gets dark from then on (saved in this browser). -->
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -158,7 +158,7 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
     var resume = document.getElementById('resume');
     if (resume && st.last && st.last !== location.pathname) { resume.hidden = false; resume.href = st.last; }
     var themeBtn = document.getElementById('theme');
-    // Dark is the default look. Light only when the reader picks it.
+    // Light is the default look (set on <html>). Dark only when the reader picks it.
     function isDark() { return root.getAttribute('data-theme') !== 'light'; }
     // The button names the mode you would switch to: "Go dark" in light mode, "Go light" in dark mode.
     function label() {

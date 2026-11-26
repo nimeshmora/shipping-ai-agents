@@ -1,6 +1,6 @@
 ---
 // The Engine Room: the site's GPU corner. Linked from the front page and the KodeBox pop-up.
-// It has its own calm, always-dark look in src/styles/engine-room.css.
+// It uses the site's own colours (light or dark), plus a few page styles in src/styles/engine-room.css.
 // The KodeBox link is set in src/lib/site.ts.
 import Base from '../layouts/Base.astro';
 import '../styles/engine-room.css';
@@ -8,34 +8,6 @@ import GpuBoard from '../components/GpuBoard.astro';
 import { url } from '../lib/url';
 import { KODEBOX, REPO } from '../lib/site';
 import { benchLogs } from '../lib/benchlogs';
-
-// 04 Boot check: run these in order on a new GPU server.
-const checks = [
-  { t: 'Driver', code: 'nvidia-smi',
-    ok: 'The GPU’s name and its memory, for example <code>0MiB / 23034MiB</code>.',
-    no: '<code>command not found</code> means the NVIDIA driver is not installed.' },
-  { t: 'Memory size', code: 'nvidia-smi --query-gpu=name,memory.total --format=csv',
-    ok: 'The total memory. Put it in the fit check below.',
-    no: 'An error here usually means the driver is too old.' },
-  { t: 'PyTorch', code: 'python3 -c "import torch; print(torch.cuda.is_available())"',
-    ok: '<code>True</code>.',
-    no: '<code>False</code> means PyTorch was installed without CUDA, or the driver is too old for it.' },
-  { t: 'A model on the GPU', code: 'ollama run llama3.2:3b "hi"\nollama ps',
-    ok: 'The PROCESSOR column says <code>100% GPU</code>.',
-    no: 'CPU, or a split like <code>40%/60% CPU/GPU</code>, means the model did not fit in GPU memory.' },
-  { t: 'Under load', code: 'watch -n 1 nvidia-smi',
-    ok: 'GPU use stays high while a job runs.',
-    no: 'If it keeps dropping to 0%, the GPU is waiting for data. Speed up your data loading.' },
-  { t: 'Kubernetes', code: 'kubectl get nodes -o custom-columns=NAME:.metadata.name,GPUS:.status.allocatable.nvidia\\.com/gpu',
-    ok: 'A number in the GPUS column.',
-    no: '<code>&lt;none&gt;</code> means the NVIDIA device plugin (part of the GPU Operator) is not running on that node.' },
-];
-
-// 05 The Guest Rack: projects readers built or ran on a GPU. Add new ones at the top.
-// Each one comes from a "Guest Rack" issue on GitHub.
-const guests: { title: string; by: string; gpu: string; what: string; link: string }[] = [];
-const RACK_UNITS = 3;
-const empty = Math.max(0, RACK_UNITS - guests.length);
 
 // 03 Start here: chapters from the notebooks, in the order a newcomer should read them.
 const start = [
@@ -55,8 +27,8 @@ const start = [
 const latest = benchLogs[0];
 const older = benchLogs.slice(1);
 ---
-<Base title="The Engine Room: Nimesha's GPU Corner" page="hub" where="Nimesha's GPU Corner" description="The GPU corner of Ship It with Nimesha: a boot check for a new GPU server, a check for whether a model fits in GPU memory, readers' GPU projects and the chapters to read first.">
-  <div slot="top" class="band hero-band er-band">
+<Base title="The Engine Room: Nimesha's GPU Corner" page="hub" where="Nimesha's GPU Corner" description="The GPU corner of Ship It with Nimesha: Bench Logs from real GPU runs, a check for whether a model fits in GPU memory, and the chapters to read first.">
+  <div slot="top" class="band hero-band">
     <div class="wrap">
       <section class="hero er-hero">
         <div class="er-hero-text">
@@ -67,8 +39,6 @@ const older = benchLogs.slice(1);
             <a href="#logs">Bench Logs</a>
             <a href="#fit">Will it fit?</a>
             <a href="#start">Start here</a>
-            <a href="#boot">Boot check</a>
-            <a href="#rack">Guest Rack</a>
           </nav>
         </div>
         <GpuBoard />
@@ -168,68 +138,6 @@ const older = benchLogs.slice(1);
     </ol>
   </section>
 
-  <section class="er-section" aria-labelledby="boot">
-    <header class="er-head">
-      <span class="er-idx">04</span>
-      <h2 id="boot">Boot check</h2>
-      <p class="er-status" id="boot-status" aria-live="polite"><b id="boot-n">0</b> / {checks.length} passed</p>
-    </header>
-    <p class="er-lead">Six checks for a new GPU server, in order. Tick each one when it passes.</p>
-    <ol class="boot" id="boot-list">
-      {checks.map((c, i) => (
-        <li class="boot-row">
-          <label class="boot-led">
-            <input type="checkbox" data-i={i} aria-label={`${c.t} passed`} />
-            <span aria-hidden="true"></span>
-          </label>
-          <div class="boot-name"><span class="boot-no">{String(i + 1).padStart(2, '0')}</span>{c.t}</div>
-          <div class="er-term"><pre><code>{c.code.split('\n').map((l) => <span class="ln">{l}</span>)}</code></pre></div>
-          <p class="boot-ok"><span>Expect</span><span set:html={c.ok} /></p>
-          <details class="boot-no-pass"><summary>If not</summary><p set:html={c.no} /></details>
-        </li>
-      ))}
-    </ol>
-  </section>
-
-  <section class="er-section" aria-labelledby="rack">
-    <header class="er-head">
-      <span class="er-idx">05</span>
-      <h2 id="rack">The Guest Rack</h2>
-    </header>
-    <p class="er-lead">Projects readers built or ran on a GPU. Each one gets a slot.</p>
-    <div class="rack">
-      <div class="rack-top" aria-hidden="true"><span>RACK 01</span><span>GUEST PROJECTS</span><span>{guests.length} / {RACK_UNITS} U</span></div>
-      <ul class="rack-units">
-        {guests.map((g, i) => (
-          <li class="ru on">
-            <span class="ru-u" aria-hidden="true">U{i + 1}</span>
-            <span class="ru-led" aria-hidden="true"></span>
-            <div class="ru-body">
-              <a class="ru-title" href={g.link}>{g.title}</a>
-              <span class="ru-meta">{g.by} <span aria-hidden="true">·</span> {g.gpu}</span>
-              <span class="ru-what">{g.what}</span>
-            </div>
-          </li>
-        ))}
-        {Array.from({ length: empty }, (_, i) => (
-          <li class="ru off">
-            <span class="ru-u" aria-hidden="true">U{guests.length + i + 1}</span>
-            <span class="ru-led" aria-hidden="true"></span>
-            <div class="ru-body">
-              <span class="ru-title">Empty slot</span>
-              <span class="ru-meta">Your GPU project could go here</span>
-            </div>
-            <span class="ru-vents" aria-hidden="true"></span>
-          </li>
-        ))}
-      </ul>
-    </div>
-    <div class="rack-cta">
-      <p>Built something on a GPU? A fine-tune, a served model, a cluster that shares one GPU.</p>
-      <a class="btn primary" href={`${REPO}/issues/new?template=gpu-project.yml`}>Claim a slot</a>
-    </div>
-  </section>
-
   <aside class="er-kb-strip" aria-label="Where I run my GPU work">
     <img src={url('kodebox-mark.png')} width="40" height="42" alt="KodeBox logo" />
     <p><b>Where I run these:</b> a KodeBox from KodeKloud, a server with an NVIDIA GPU that keeps running after I close my laptop. I work at KodeKloud.</p>
@@ -237,28 +145,6 @@ const older = benchLogs.slice(1);
   </aside>
 
   <script is:inline>
-  // Boot check: ticked steps are kept in this browser.
-  (function () {
-    var list = document.getElementById('boot-list'); if (!list) return;
-    var boxes = list.querySelectorAll('input[type=checkbox]'), n = document.getElementById('boot-n'), KEY = 'er-boot', done = [];
-    try { done = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) {}
-    function sync() {
-      var c = 0;
-      boxes.forEach(function (b) { b.closest('.boot-row').classList.toggle('pass', b.checked); if (b.checked) c++; });
-      n.textContent = c;
-      document.getElementById('boot-status').classList.toggle('all', c === boxes.length);
-    }
-    boxes.forEach(function (b) {
-      b.checked = done.indexOf(+b.dataset.i) >= 0;
-      b.addEventListener('change', function () {
-        var d = []; boxes.forEach(function (x) { if (x.checked) d.push(+x.dataset.i); });
-        try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {}
-        sync();
-      });
-    });
-    sync();
-  })();
-
   // Will it fit? Weights = parameters x bytes per weight (q4_K_M is about 4.9 bits, q8_0 about 8.5),
   // plus about 0.5 GB for the KV cache at a 4K context. Checked against a real T4 in Bench Log #1.
   (function () {

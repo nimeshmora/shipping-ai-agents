@@ -1,0 +1,202 @@
+---
+// Bench Log #2. Every number on this page comes from the run on 26 Nov 2026.
+// The raw GIFs and screenshots are in social/bench-log-02/ (not published).
+import Base from '../../../layouts/Base.astro';
+import '../../../styles/engine-room.css';
+import { url } from '../../../lib/url';
+import { KODEBOX, REPO } from '../../../lib/site';
+import { benchLogs } from '../../../lib/benchlogs';
+
+const log = benchLogs.find((l) => l.slug === 'long-context')!;
+const f = (name: string) => url(`bench-logs/02/${name}`);
+const script = `#!/usr/bin/env python3
+# bench2.py <num_ctx> [fill]    Loads llama3.1 8B (4-bit) with a context size and measures it.
+# fill = send a prompt that fills about 80% of the context.
+import json, subprocess, sys, time, urllib.request
+M = 'llama3.1:8b-instruct-q4_K_M'
+ctx = int(sys.argv[1]); fill = 'fill' in sys.argv[2:]
+sh = lambda c: subprocess.run(c, shell=True, capture_output=True, text=True).stdout
+for line in sh('ollama ps').splitlines()[1:]:
+    sh('ollama stop ' + line.split()[0])
+time.sleep(2)
+def gen(prompt, n):
+    body = {'model': M, 'prompt': prompt, 'stream': False,
+            'options': {'num_ctx': ctx, 'temperature': 0, 'seed': 42, 'num_predict': n}}
+    req = urllib.request.Request('http://localhost:11434/api/generate', json.dumps(body).encode(), {'Content-Type': 'application/json'})
+    return json.load(urllib.request.urlopen(req, timeout=7200))
+gen('hi', 1)   # loads the model with this context size
+# ... prints the KV cache lines from the Ollama log, ollama ps and nvidia-smi ...
+if fill:
+    line = 'Line {}: the GPU reads every weight once for each new token.\\n'
+    text = ''.join(line.format(i) for i in range(int(ctx * 0.8 / 16)))
+    prompts = [text + '\\nCopy out the first 20 lines above, exactly as they are.']
+else:
+    prompts = ['Explain what a GPU does when it runs a language model.'] * 3
+for i, p in enumerate(prompts, 1):
+    r = gen(p, 128)
+    pe = r['prompt_eval_count'] / (r['prompt_eval_duration'] / 1e9)
+    ev = r['eval_count'] / (r['eval_duration'] / 1e9)
+    print(f'run {i}: prompt {r["prompt_eval_count"]} tokens at {pe:.0f} tok/s, wrote {r["eval_count"]} tokens at {ev:.1f} tok/s')`;
+---
+<Base title={`Bench Log #${log.number}: ${log.title}`} page="hub" where="Nimesha's GPU Corner" description="I ran Llama 3.1 8B (4-bit) on a 16 GB NVIDIA T4 with context lengths from 4K to 128K, with a 16-bit and an 8-bit KV cache, and measured memory and speed.">
+  <div slot="top" class="band hero-band">
+    <div class="wrap">
+      <section class="hero er-hero bl-hero">
+        <div class="er-hero-text">
+          <p class="eyebrow"><a href={url('engine-room/#logs')}>GPU Corner</a> / Bench Log #{log.number}</p>
+          <h1 class="hero-title">{log.title}</h1>
+          <p class="hero-sub">I gave the same model more and more context on one 16 GB GPU, and measured the memory and the speed each time.</p>
+          <ul class="bl-kit">
+            <li>{log.date}</li>
+            <li>NVIDIA Tesla T4</li>
+            <li>Llama 3.1 8B (4-bit)</li>
+            <li>Ollama 0.40.6</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="bl">
+    <article class="bl-main">
+
+      <h2>Why I did this</h2>
+      <p>In <a href={url('engine-room/logs/will-it-fit/')}>Bench Log #1</a> the 4-bit model fit easily: 5.3 GB on a 15 GiB card. But I only gave it 4,096 tokens of context. Llama 3.1 can take up to 131,072. If you turn that number up, the model can get much slower, and it is not obvious why. I wanted to see where it stops fitting, and what it costs before that.</p>
+
+      <h2>The KV cache, in one paragraph</h2>
+      <p>When a model reads your chat, it keeps a key and a value for every token, in every layer, so it does not have to work them out again for each new word. That store is the KV cache. Ollama sets aside room for the whole context when it loads the model, before you type anything. For Llama 3.1 8B the sum is 32 layers × 8 key/value heads × 128 numbers × 2 (key and value) × 2 bytes = <b>128 KiB per token</b>. So 4K of context needs 512 MiB, and 128K needs 16 GiB. That is more than the whole card.</p>
+
+      <h2>The machine</h2>
+      <p>The same KodeBox as Bench Log #1: an NVIDIA Tesla T4 (15,360 MiB), 4 vCPU, 15 GiB RAM, Ollama 0.40.6, and the models I downloaded last time. I tried to make a new one, but my plan allows two GPU servers and I already had two (stopped), so I started this one again. It took about 3 minutes to come back.</p>
+      <figure class="bl-shot">
+        <img src={f('01-start-the-gpu-kodebox.webp')} width="1200" height="593" loading="lazy" alt="Starting the stopped will-it-fit KodeBox from the KodeKloud dashboard, from Stopped to Running" />
+        <figcaption>Starting the KodeBox again.</figcaption>
+      </figure>
+
+      <h2>How I measured</h2>
+      <p>One model for everything: <code>llama3.1:8b-instruct-q4_K_M</code>. A small Python script loads it with a given context size (<code>num_ctx</code>), then prints the KV cache lines from Ollama's own log, <code>ollama ps</code>, and the GPU memory from <code>nvidia-smi</code>. Then it runs one of two tests:</p>
+      <ul>
+        <li><b>Short prompt</b>: the same question as Log #1, 23 tokens, 3 runs, 128 tokens written each time.</li>
+        <li><b>Filled prompt</b>: a long list of numbered lines that fills about 80% of the context, then "Copy out the first 20 lines above". One run, 128 tokens written.</li>
+      </ul>
+      <p>Temperature 0 and seed 42 every time. Tokens per second is Ollama's <code>eval_count / eval_duration</code> for writing, and <code>prompt_eval_count / prompt_eval_duration</code> for reading the prompt.</p>
+      <p>Two things went wrong on the way, and I kept them in. My first filled prompt asked "How many lines are above?". The model answered in 8 or 9 tokens, which is too few to time, so I changed the question and ran those again. And the very first run after restarting Ollama wrote at 11.8 tokens a second, against about 41.6 on the next two. That looks like a one-time warm-up. It is in the table as it happened.</p>
+      <div class="er-term py"><pre><code>{script.split('\n').map((l) => <span class="ln-plain">{l}</span>)}</code></pre></div>
+      <p class="small"><a href={f('bench2.py')} download>Download bench2.py</a> (the full script, including the log lines)</p>
+
+      <h2>Part 1: the cache grows, the speed doesn't, until it stops fitting</h2>
+      <p>Default settings. Ollama's log shows "Flash Attention enabled" and a 16-bit cache (<code>K (f16)</code>, <code>V (f16)</code>).</p>
+      <figure class="bl-shot">
+        <img src={f('02-five-context-sizes.webp')} width="1200" height="593" loading="lazy" alt="bench2.py run at 4096, 16384, 32768, 65536 and 131072 tokens of context with the 16-bit KV cache" />
+      </figure>
+      <div class="bl-scroll">
+        <table class="bl-table bl-results">
+          <thead><tr><th>Context</th><th>KV cache</th><th>GPU memory used</th><th><code>ollama ps</code></th><th>Tokens/s (3 runs)</th></tr></thead>
+          <tbody>
+            <tr><td>4K</td><td>512 MiB</td><td>5,161 MiB</td><td>5.3 GB, 100% GPU</td><td>42.1, 42.2, 42.1</td></tr>
+            <tr><td>16K</td><td>2,048 MiB</td><td>6,841 MiB</td><td>7.0 GB, 100% GPU</td><td>42.2, 42.2, 42.0</td></tr>
+            <tr><td>32K</td><td>4,096 MiB</td><td>8,921 MiB</td><td>9.2 GB, 100% GPU</td><td>41.9, 42.0, 41.9</td></tr>
+            <tr><td>64K</td><td>8,192 MiB</td><td>12,901 MiB</td><td>13 GB, 100% GPU</td><td>42.0, 41.9, 41.9</td></tr>
+            <tr class="bad"><td>128K</td><td>16,384 MiB</td><td>13,577 MiB</td><td>21 GB, 34%/66% CPU/GPU</td><td>6.8, 6.9, 6.9</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The cache was exactly 128 KiB per token every time, so the sum above holds. With a short prompt, speed did not change at all from 4K to 64K: about 42 tokens a second.</p>
+      <p>At 128K the 16 GiB cache cannot fit. Ollama put 20 of the 33 layers on the GPU and the rest on the CPU, and split the cache too:</p>
+      <figure class="bl-shot">
+        <img src={f('128k-16bit-split.jpg')} width="1254" height="268" loading="lazy" alt="Ollama log at 128K: CUDA0 model buffer 2789 MiB, CPU model buffers 1779 and 117 MiB, CPU KV buffer 6656 MiB, CUDA0 KV buffer 9728 MiB, 20 of 33 layers offloaded to GPU" />
+        <figcaption>From Ollama's log: 9,728 MiB of cache on the GPU, 6,656 MiB on the CPU, 20 of 33 layers on the GPU.</figcaption>
+      </figure>
+      <p>Speed fell from 42 to 6.9 tokens a second. Same model, same question. The only change was one number in the settings.</p>
+
+      <h2>Part 2: an 8-bit cache</h2>
+      <p>Ollama can keep the cache in 8-bit instead of 16-bit. I set <code>OLLAMA_KV_CACHE_TYPE=q8_0</code> on the Ollama service and restarted it. The log shows llama.cpp starting with <code>--cache-type-k q8_0 --cache-type-v q8_0</code>.</p>
+      <figure class="bl-shot">
+        <img src={f('kv-8bit-flags.jpg')} width="1254" height="137" loading="lazy" alt="Ollama log: --cache-type-k q8_0, --cache-type-v q8_0, --flash-attn auto, and enabling flash_attn since it is required for quantized V cache" />
+      </figure>
+      <figure class="bl-shot">
+        <img src={f('03-kv-cache-8bit.webp')} width="1200" height="593" loading="lazy" alt="Setting OLLAMA_KV_CACHE_TYPE=q8_0, restarting Ollama, and running bench2.py at five context sizes" />
+      </figure>
+      <div class="bl-scroll">
+        <table class="bl-table bl-results">
+          <thead><tr><th>Context</th><th>KV cache</th><th>GPU memory used</th><th><code>ollama ps</code></th><th>Tokens/s (3 runs)</th></tr></thead>
+          <tbody>
+            <tr><td>4K</td><td>272 MiB</td><td>4,923 MiB</td><td>5.0 GB, 100% GPU</td><td>11.8 (first run after restart), 41.6, 41.6</td></tr>
+            <tr><td>16K</td><td>1,088 MiB</td><td>5,883 MiB</td><td>6.0 GB, 100% GPU</td><td>41.2, 41.3, 41.5</td></tr>
+            <tr><td>32K</td><td>2,176 MiB</td><td>7,003 MiB</td><td>7.2 GB, 100% GPU</td><td>40.9, 41.3, 41.2</td></tr>
+            <tr><td>64K</td><td>4,352 MiB</td><td>9,243 MiB</td><td>9.6 GB, 100% GPU</td><td>41.0, 41.3, 41.2</td></tr>
+            <tr><td>128K</td><td>8,704 MiB</td><td>13,785 MiB</td><td>15 GB, 6%/94% CPU/GPU</td><td>31.1, 31.3, 31.3</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The cache is a little over half the size: 68 KiB per token instead of 128, because q8_0 stores about 8.5 bits per number. At 128K that is 8.5 GiB instead of 16, and 32 of the 33 layers stayed on the GPU. Speed went from 6.9 to 31 tokens a second.</p>
+      <p>I did not check whether the answers got worse with the 8-bit cache. That needs a proper quality test, not a speed test.</p>
+
+      <h2>Part 3: a long prompt slows every new token</h2>
+      <p>Part 1 and 2 used a 23-token question. So the cache had room for 128K tokens but only held a few. Here I filled about 80% of it.</p>
+      <figure class="bl-shot">
+        <img src={f('04-filled-context-8bit.webp')} width="1200" height="593" loading="lazy" alt="bench2.py with a filled prompt at 32K, 64K and 128K context, 8-bit KV cache" />
+        <figcaption>Filled prompt, 8-bit cache.</figcaption>
+      </figure>
+      <figure class="bl-shot">
+        <img src={f('05-filled-context-16bit.webp')} width="1200" height="593" loading="lazy" alt="bench2.py with a filled prompt at 32K and 64K context, back on the 16-bit KV cache" />
+        <figcaption>Filled prompt, back on the 16-bit cache.</figcaption>
+      </figure>
+      <div class="bl-scroll">
+        <table class="bl-table bl-results">
+          <thead><tr><th>Context</th><th>Prompt</th><th>16-bit cache: reading / writing</th><th>8-bit cache: reading / writing</th></tr></thead>
+          <tbody>
+            <tr><td>32K</td><td>25,232 tokens</td><td>847 / 28.0 tok/s</td><td>814 / 19.5 tok/s</td></tr>
+            <tr><td>64K</td><td>51,440 tokens</td><td>590 / 20.5 tok/s</td><td>556 / 12.0 tok/s</td></tr>
+            <tr class="bad"><td>128K</td><td>103,872 tokens</td><td>not run</td><td>323 / 1.6 tok/s</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Two things happen when the prompt is long.</p>
+      <p>Reading it takes time before the first word comes out. 25,232 tokens took about 30 seconds. 103,872 tokens took about 5 minutes 20 seconds.</p>
+      <p>Then every new token is slower, because it has to look back at every token before it. Each new token reads the weights (4,403 MiB on the GPU, from the log) and the cache for all the tokens so far. At 51,440 tokens that is 51,440 × 128 KiB = 6.3 GiB of cache, so about 11.4 GB in total. NVIDIA lists the T4 at 320 GB/s, so the most it could do is about 28 tokens a second. It did 20.5. At 25,232 tokens the same sum gives about 40, and it did 28.</p>
+      <p>The 8-bit cache surprised me. It has half as much to read, so I expected it to be faster here. It was slower: 19.5 against 28.0 at 32K, and 12.0 against 20.5 at 64K. My guess is the extra work to unpack the 8-bit numbers on this older card, but I did not test that.</p>
+      <p>At 128K with the 8-bit cache it wrote at 1.6 tokens a second. One layer and 272 MiB of the cache were on the CPU. The likely reason it was so slow is that the CPU has to look back over all 103,872 tokens for that layer for every new token, but I did not measure that part on its own. I did not run 128K filled with the 16-bit cache, which already had 13 layers on the CPU with a short prompt.</p>
+
+      <h2>What I take from this</h2>
+      <ul>
+        <li>Set the context to what you need. Every 1K tokens of context costs this model 128 MiB of GPU memory (68 MiB with an 8-bit cache), even if the chat is short.</li>
+        <li>Once the cache does not fit, the model still runs, but much slower. Check the PROCESSOR column in <code>ollama ps</code>.</li>
+        <li>An 8-bit cache got 128K almost onto the GPU (32 of 33 layers) and took a short prompt from 6.9 to 31 tokens a second. On this T4 it was slower once the context was really full.</li>
+        <li>Speed with a short prompt tells you little about speed in a long chat.</li>
+      </ul>
+
+      <h2>What this test does not tell you</h2>
+      <ul>
+        <li>Whether the 8-bit cache changes the answers. I only measured memory and speed.</li>
+        <li>Other models. The 128 KiB per token is for Llama 3.1 8B. Models with more layers or more key/value heads need more.</li>
+        <li>Newer GPUs. The T4 is from 2018. Faster memory and newer chips will change the numbers, and maybe the 8-bit result.</li>
+        <li>Many users at once. Each user needs their own cache.</li>
+        <li>One filled run per setting, not three. The 128K filled runs take over 5 minutes each.</li>
+      </ul>
+
+      <h2>Try it yourself</h2>
+      <p>On a Linux machine with an NVIDIA GPU, Ollama (running as a systemd service) and Python 3:</p>
+      <div class="er-term"><pre><code><span class="ln">ollama pull llama3.1:8b-instruct-q4_K_M</span><span class="ln">python3 bench2.py 4096</span><span class="ln">python3 bench2.py 131072</span><span class="ln">python3 -u bench2.py 32768 fill</span></code></pre></div>
+      <p>To try the 8-bit cache:</p>
+      <div class="er-term"><pre><code><span class="ln">sudo mkdir -p /etc/systemd/system/ollama.service.d</span><span class="ln">printf '[Service]\nEnvironment=OLLAMA_KV_CACHE_TYPE=q8_0\n' | sudo tee /etc/systemd/system/ollama.service.d/kv-cache.conf</span><span class="ln">sudo systemctl daemon-reload && sudo systemctl restart ollama</span></code></pre></div>
+      <p>Ran it on a different GPU? <a href={`${REPO}/issues/new?title=${encodeURIComponent('[Bench Log #2] My numbers')}`}>Send me your numbers</a>. I'd like to see them.</p>
+
+      <p class="bl-note">I ran this on a <a href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="bench-log-2">KodeBox</a>. By the KodeBox log the server ran from 22:01 to 22:45, about 44 minutes including 7 minutes to shut down, and used 18 credits. I work at KodeKloud.</p>
+    </article>
+
+    <aside class="bl-side" aria-label="Bench Log #2 at a glance">
+      <div class="bl-card">
+        <p class="bl-card-tag">At a glance</p>
+        <ul class="bl-meter">
+          <li><span>4K to 64K</span><b>42 tok/s</b><i style="--w:100%"></i></li>
+          <li><span>128K, 8-bit cache</span><b>31 tok/s</b><i style="--w:74%"></i></li>
+          <li class="bad"><span>128K, 16-bit cache</span><b>6.9 tok/s</b><i style="--w:16%"></i></li>
+          <li class="cpu"><span>64K, prompt filled</span><b>20.5 tok/s</b><i style="--w:49%"></i></li>
+        </ul>
+        <p class="bl-card-foot">Llama 3.1 8B (4-bit) on an NVIDIA T4. 128 KiB of KV cache per token of context.</p>
+      </div>
+      <a class="bl-back" href={url('engine-room/#logs')}>&larr; All Bench Logs</a>
+    </aside>
+  </div>
+</Base>

@@ -26,7 +26,7 @@ ollama ps
 nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
 ---
 <Base title={`Bench Log #${log.number}: ${log.title}`} page="hub" where="Nimesha's GPU Corner" description="I ran Llama 3.1 8B in 4-bit, 8-bit and 16-bit on a 16 GB NVIDIA T4 and measured memory and speed. The 16-bit version did not fit.">
-  <div slot="top" class="band hero-band er-band">
+  <div slot="top" class="band hero-band">
     <div class="wrap">
       <section class="hero er-hero bl-hero">
         <div class="er-hero-text">
@@ -48,7 +48,7 @@ nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
     <article class="bl-main">
 
       <h2>Why I did this</h2>
-      <p>The GPU Corner page has a "Will it fit?" check. It did a simple sum: number of parameters, times the bytes each one takes, plus 20%. I wanted to know how close that sum gets on a real GPU. So I took one model, ran it in three sizes on a 16 GB card, and wrote down the numbers.</p>
+      <p>The GPU Corner page has a <a href={url('engine-room/#fit')}>"Will it fit?" check</a>. It did a simple sum: number of parameters, times the bytes each one takes, plus 20%. I wanted to know how close that sum gets on a real GPU. So I took one model, ran it in three sizes on a 16 GB card, and wrote down the numbers.</p>
 
       <h2>The machine</h2>
       <p>I used a GPU KodeBox from KodeKloud with the "AI on GPU" image. It comes with the NVIDIA driver, Docker and Ollama already installed. It was ready in about a minute.</p>
@@ -168,7 +168,7 @@ nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
         <li>It counted 4-bit as half a byte per weight. q4_K_M is closer to 0.61 bytes (4.9 bits), and q8_0 is about 1.06 bytes (8.5 bits).</li>
         <li>It added a flat 20%. The extra memory is mostly the KV cache, and that depends on the context length, not on the model file. Llama 3.1 8B has 32 layers and 8 key/value heads of size 128. For each token it keeps a key and a value in 16-bit: 2 × 32 × 8 × 128 × 2 bytes = 128 KiB. At 4,096 tokens that is 512 MiB.</li>
       </ul>
-      <p>So I changed the check. It now uses the real sizes and adds about 0.5 GB for a 4K context:</p>
+      <p>So I <a href={url('engine-room/#fit')}>changed the check</a>. It now uses the real sizes and adds about 0.5 GB for a 4K context:</p>
       <table class="bl-table">
         <thead><tr><th>Version</th><th>New check</th><th>Measured</th></tr></thead>
         <tbody>
@@ -190,7 +190,7 @@ nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
       <h2>Try it yourself</h2>
       <p>On any Linux machine with an NVIDIA GPU, Ollama, <code>curl</code> and <code>jq</code>:</p>
       <div class="er-term"><pre><code><span class="ln">ollama pull llama3.1:8b-instruct-q4_K_M</span><span class="ln">chmod +x bench.sh</span><span class="ln">./bench.sh q4_K_M</span><span class="ln">./bench.sh q4_K_M 0</span></code></pre></div>
-      <p>Ran it on a different GPU? <a href={`${REPO}/issues/new?template=gpu-project.yml`}>Send me your numbers</a> and I'll add them to the Guest Rack.</p>
+      <p>Ran it on a different GPU? <a href={`${REPO}/issues/new?title=${encodeURIComponent('[Bench Log #1] My numbers')}`}>Send me your numbers</a>. I'd like to see them.</p>
 
       <p class="bl-note">I ran this on a <a href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="bench-log-1">KodeBox</a>. The whole run took about 20 minutes and used about 7 credits. I work at KodeKloud.</p>
     </article>

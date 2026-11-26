@@ -1,14 +1,15 @@
 ---
 // The Engine Room: the site's GPU corner. Linked from the front page and the KodeBox pop-up.
-// It has its own hardware look (GPU green, always dark), set in src/styles/hub.css under
-// "GPU Corner". The KodeBox link is set in src/lib/site.ts.
+// It has its own calm, always-dark look in src/styles/engine-room.css.
+// The KodeBox link is set in src/lib/site.ts.
 import Base from '../layouts/Base.astro';
+import '../styles/engine-room.css';
 import GpuBoard from '../components/GpuBoard.astro';
 import { url } from '../lib/url';
 import { KODEBOX, REPO } from '../lib/site';
 import { benchLogs } from '../lib/benchlogs';
 
-// 01 Boot check: run these in order on a new GPU server.
+// 04 Boot check: run these in order on a new GPU server.
 const checks = [
   { t: 'Driver', code: 'nvidia-smi',
     ok: 'The GPU’s name and its memory, for example <code>0MiB / 23034MiB</code>.',
@@ -30,21 +31,29 @@ const checks = [
     no: '<code>&lt;none&gt;</code> means the NVIDIA device plugin (part of the GPU Operator) is not running on that node.' },
 ];
 
-// 03 The Guest Rack: projects readers built or ran on a GPU. Add new ones at the top.
+// 05 The Guest Rack: projects readers built or ran on a GPU. Add new ones at the top.
 // Each one comes from a "Guest Rack" issue on GitHub.
 const guests: { title: string; by: string; gpu: string; what: string; link: string }[] = [];
-const RACK_UNITS = 4;
+const RACK_UNITS = 3;
 const empty = Math.max(0, RACK_UNITS - guests.length);
 
-// 04 Manuals: chapters to read first.
-const manuals = [
-  { nb: 'running-your-own-models', ch: '04-meet-the-gpu', from: 'Running Your Own Models · 4', title: 'Meet the GPU' },
-  { nb: 'inside-the-machine', ch: '06-the-gpu', from: 'Inside the Machine · 6', title: 'The GPU' },
-  { nb: 'inside-the-machine', ch: '07-the-real-bottleneck', from: 'Inside the Machine · 7', title: 'The real bottleneck' },
-  { nb: 'inside-the-machine', ch: '11-reading-a-gpu-spec-sheet', from: 'Inside the Machine · 11', title: 'How to read a GPU spec sheet' },
-  { nb: 'running-your-own-models', ch: '07-models-on-kubernetes', from: 'Running Your Own Models · 7', title: 'Models on Kubernetes' },
-  { nb: 'inside-the-machine', ch: '08-when-one-gpu-isnt-enough', from: 'Inside the Machine · 8', title: 'When one GPU isn’t enough' },
+// 03 Start here: chapters from the notebooks, in the order a newcomer should read them.
+const start = [
+  { title: 'What a GPU is', why: 'Why a GPU suits model work, and what is inside one.', reads: [
+    { nb: 'running-your-own-models', ch: '04-meet-the-gpu', from: 'Running Your Own Models · 4', title: 'Meet the GPU' },
+    { nb: 'inside-the-machine', ch: '06-the-gpu', from: 'Inside the Machine · 6', title: 'The GPU: thousands of line cooks' },
+  ] },
+  { title: 'Memory decides what fits', why: 'Why GPU memory matters more than speed, and how to read the numbers.', reads: [
+    { nb: 'inside-the-machine', ch: '07-the-real-bottleneck', from: 'Inside the Machine · 7', title: 'The real bottleneck' },
+    { nb: 'inside-the-machine', ch: '11-reading-a-gpu-spec-sheet', from: 'Inside the Machine · 11', title: 'How to read a GPU spec sheet' },
+  ] },
+  { title: 'When you need more', why: 'More than one GPU, and GPUs shared by pods.', reads: [
+    { nb: 'inside-the-machine', ch: '08-when-one-gpu-isnt-enough', from: 'Inside the Machine · 8', title: 'When one GPU isn’t enough' },
+    { nb: 'running-your-own-models', ch: '07-models-on-kubernetes', from: 'Running Your Own Models · 7', title: 'Models on Kubernetes' },
+  ] },
 ];
+const latest = benchLogs[0];
+const older = benchLogs.slice(1);
 ---
 <Base title="The Engine Room: Nimesha's GPU Corner" page="hub" where="Nimesha's GPU Corner" description="The GPU corner of Ship It with Nimesha: a boot check for a new GPU server, a check for whether a model fits in GPU memory, readers' GPU projects and the chapters to read first.">
   <div slot="top" class="band hero-band er-band">
@@ -55,11 +64,11 @@ const manuals = [
           <h1 class="hero-title">The Engine Room</h1>
           <p class="hero-sub">For people who train, fine-tune or serve models on a GPU after office hours.</p>
           <nav class="er-jump" aria-label="On this page">
-            <a href="#boot"><span>01</span>Boot check</a>
-            <a href="#fit"><span>02</span>Will it fit?</a>
-            <a href="#logs"><span>03</span>Bench Logs</a>
-            <a href="#rack"><span>04</span>Guest Rack</a>
-            <a href="#manuals"><span>05</span>Manuals</a>
+            <a href="#logs">Bench Logs</a>
+            <a href="#fit">Will it fit?</a>
+            <a href="#start">Start here</a>
+            <a href="#boot">Boot check</a>
+            <a href="#rack">Guest Rack</a>
           </nav>
         </div>
         <GpuBoard />
@@ -67,37 +76,45 @@ const manuals = [
     </div>
   </div>
 
-  <section class="er-kb" aria-labelledby="kb-title">
-    <img src={url('kodebox-mark.png')} width="72" height="76" alt="KodeBox logo" />
-    <div class="er-kb-text">
-      <p class="er-kb-tag">Where I run my GPU work</p>
-      <h2 id="kb-title">KodeBox</h2>
-      <p>My Macs have no NVIDIA GPU. A KodeBox is a server from KodeKloud that keeps running after I close my laptop, with a GPU when I need one. I trained and fine-tuned a small model on one, and ran a Kubernetes cluster where several pods share one GPU.</p>
-    </div>
-    <a class="btn primary" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="engine-room">Start a KodeBox</a>
-  </section>
-
-  <section class="er-section" aria-labelledby="boot">
+  <section class="er-section" aria-labelledby="logs">
     <header class="er-head">
       <span class="er-idx">01</span>
-      <h2 id="boot">Boot check</h2>
-      <p class="er-status" id="boot-status" aria-live="polite"><b id="boot-n">0</b> / {checks.length} passed</p>
+      <h2 id="logs">Bench Logs</h2>
+      <p class="er-status">A series <span aria-hidden="true">·</span> {benchLogs.length} {benchLogs.length === 1 ? 'log' : 'logs'} so far</p>
     </header>
-    <p class="er-lead">Six checks for a new GPU server, in order. Tick each one when it passes.</p>
-    <ol class="boot" id="boot-list">
-      {checks.map((c, i) => (
-        <li class="boot-row">
-          <label class="boot-led">
-            <input type="checkbox" data-i={i} aria-label={`${c.t} passed`} />
-            <span aria-hidden="true"></span>
-          </label>
-          <div class="boot-name"><span class="boot-no">{String(i + 1).padStart(2, '0')}</span>{c.t}</div>
-          <div class="er-term"><pre><code>{c.code.split('\n').map((l) => <span class="ln">{l}</span>)}</code></pre></div>
-          <p class="boot-ok"><span>Expect</span><span set:html={c.ok} /></p>
-          <details class="boot-no-pass"><summary>If not</summary><p set:html={c.no} /></details>
-        </li>
-      ))}
-    </ol>
+    <p class="er-lead">Real runs on a real GPU, written up with every number, setting and screen.</p>
+    <div class="series">
+      <a class="series-main" href={url(`engine-room/logs/${latest.slug}/`)}>
+        <div class="series-text">
+          <span class="log-no">Latest <span aria-hidden="true">·</span> Log #{String(latest.number).padStart(2, '0')} <span aria-hidden="true">·</span> {latest.date}</span>
+          <b class="series-title">{latest.title}</b>
+          <span class="log-finding">{latest.finding}</span>
+          <span class="log-kit">{latest.kit.map((k) => <span>{k}</span>)}</span>
+          <span class="log-go">Read the log <span aria-hidden="true">&rarr;</span></span>
+        </div>
+        <div class="series-stats" aria-label={latest.statsNote}>
+          <ul>
+            {latest.stats.map((st) => (
+              <li class={st.tone}><span>{st.label}</span><b>{st.value}</b><i style={`--w:${st.pct}%`}></i></li>
+            ))}
+          </ul>
+          <p>{latest.statsNote}</p>
+        </div>
+      </a>
+      <div class="series-next">
+        <span class="log-no">Log #{String(latest.number + 1).padStart(2, '0')} <span aria-hidden="true">·</span> not run yet</span>
+        <b>What should I run next?</b>
+        <span class="log-finding">A model, a GPU question, something you want measured instead of guessed.</span>
+        <a class="log-go" href={`${REPO}/issues/new?title=${encodeURIComponent('[Bench Log idea] ')}`}>Suggest a run <span aria-hidden="true">&rarr;</span></a>
+      </div>
+    </div>
+    {older.length > 0 && (
+      <ol class="series-older">
+        {older.map((l) => (
+          <li><a href={url(`engine-room/logs/${l.slug}/`)}><span class="log-no">Log #{String(l.number).padStart(2, '0')}</span><b>{l.title}</b><span class="log-no">{l.date}</span></a></li>
+        ))}
+      </ol>
+    )}
   </section>
 
   <section class="er-section" aria-labelledby="fit">
@@ -129,22 +146,46 @@ const manuals = [
     <p class="small">A rough check for running a model, with one user and a 4K context. Longer contexts need more KV cache, and models with more layers need more per token. Full fine-tuning needs about 16 bytes per parameter, which is why most people fine-tune with LoRA or QLoRA.</p>
   </section>
 
-  <section class="er-section" aria-labelledby="logs">
+  <section class="er-section" aria-labelledby="start">
     <header class="er-head">
       <span class="er-idx">03</span>
-      <h2 id="logs">Bench Logs</h2>
+      <h2 id="start">Start here</h2>
     </header>
-    <p class="er-lead">Real runs on a real GPU, written up with every number, setting and screen.</p>
-    <ol class="logs">
-      {benchLogs.map((l) => (
-        <li>
-          <a class="log-card" href={url(`engine-room/logs/${l.slug}/`)}>
-            <span class="log-no">LOG #{String(l.number).padStart(2, '0')} <span aria-hidden="true">·</span> {l.date}</span>
-            <b class="log-title">{l.title}</b>
-            <span class="log-finding">{l.finding}</span>
-            <span class="log-kit">{l.kit.map((k) => <span>{k}</span>)}</span>
-            <span class="log-go">Read the log <span aria-hidden="true">&rarr;</span></span>
-          </a>
+    <p class="er-lead">New to GPUs? Six chapters from the notebooks, in this order.</p>
+    <ol class="path">
+      {start.map((g, i) => (
+        <li class="path-step">
+          <span class="path-no">Step {i + 1}</span>
+          <h3>{g.title}</h3>
+          <p>{g.why}</p>
+          <ul>
+            {g.reads.map((r) => (
+              <li><a href={url(`notebooks/${r.nb}/${r.ch}/`)}><span class="mn-from">{r.from}</span><b>{r.title}</b></a></li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="er-section" aria-labelledby="boot">
+    <header class="er-head">
+      <span class="er-idx">04</span>
+      <h2 id="boot">Boot check</h2>
+      <p class="er-status" id="boot-status" aria-live="polite"><b id="boot-n">0</b> / {checks.length} passed</p>
+    </header>
+    <p class="er-lead">Six checks for a new GPU server, in order. Tick each one when it passes.</p>
+    <ol class="boot" id="boot-list">
+      {checks.map((c, i) => (
+        <li class="boot-row">
+          <label class="boot-led">
+            <input type="checkbox" data-i={i} aria-label={`${c.t} passed`} />
+            <span aria-hidden="true"></span>
+          </label>
+          <div class="boot-name"><span class="boot-no">{String(i + 1).padStart(2, '0')}</span>{c.t}</div>
+          <div class="er-term"><pre><code>{c.code.split('\n').map((l) => <span class="ln">{l}</span>)}</code></pre></div>
+          <p class="boot-ok"><span>Expect</span><span set:html={c.ok} /></p>
+          <details class="boot-no-pass"><summary>If not</summary><p set:html={c.no} /></details>
         </li>
       ))}
     </ol>
@@ -152,10 +193,10 @@ const manuals = [
 
   <section class="er-section" aria-labelledby="rack">
     <header class="er-head">
-      <span class="er-idx">04</span>
+      <span class="er-idx">05</span>
       <h2 id="rack">The Guest Rack</h2>
     </header>
-    <p class="er-lead">Projects readers built or ran on a GPU. Each one gets a slot in the rack.</p>
+    <p class="er-lead">Projects readers built or ran on a GPU. Each one gets a slot.</p>
     <div class="rack">
       <div class="rack-top" aria-hidden="true"><span>RACK 01</span><span>GUEST PROJECTS</span><span>{guests.length} / {RACK_UNITS} U</span></div>
       <ul class="rack-units">
@@ -189,18 +230,11 @@ const manuals = [
     </div>
   </section>
 
-  <section class="er-section" aria-labelledby="manuals">
-    <header class="er-head">
-      <span class="er-idx">05</span>
-      <h2 id="manuals">Manuals</h2>
-    </header>
-    <p class="er-lead">Chapters from the notebooks to read before you rent a GPU.</p>
-    <ol class="manuals">
-      {manuals.map((m) => (
-        <li><a href={url(`notebooks/${m.nb}/${m.ch}/`)}><span class="mn-from">{m.from}</span><b>{m.title}</b><span class="mn-go" aria-hidden="true">&rarr;</span></a></li>
-      ))}
-    </ol>
-  </section>
+  <aside class="er-kb-strip" aria-label="Where I run my GPU work">
+    <img src={url('kodebox-mark.png')} width="40" height="42" alt="KodeBox logo" />
+    <p><b>Where I run these:</b> a KodeBox from KodeKloud, a server with an NVIDIA GPU that keeps running after I close my laptop. I work at KodeKloud.</p>
+    <a class="btn" href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="engine-room">Start a KodeBox</a>
+  </aside>
 
   <script is:inline>
   // Boot check: ticked steps are kept in this browser.

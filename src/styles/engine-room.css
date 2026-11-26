@@ -197,3 +197,43 @@
   :root body.hub-page:has(.er-hero) .er-head::after{display:none}
 }
 @media (prefers-reduced-motion:reduce){:root body.hub-page .series-main,:root body.hub-page .vram-bar span{transition:none}}
+
+/* ---- GPU Corner hero (v4): text and buttons on the left, real run output on the right ---- */
+:root body.hub-page:has(.er-hero-v4){
+  & .er-top{padding:88px 0 80px;background:
+      radial-gradient(60% 80% at 85% 20%,color-mix(in srgb,var(--x-accent) 14%,transparent),transparent 70%),
+      radial-gradient(50% 70% at 0% 100%,color-mix(in srgb,var(--x-link) 10%,transparent),transparent 70%),
+      var(--x-bg)}
+  & .er-top::before{display:none}
+  & .er-hero-v4{display:grid;grid-template-columns:minmax(0,1fr);gap:44px;align-items:center}
+  & .er-kicker{display:inline-flex;align-items:center;gap:8px;margin:0 0 18px;padding:5px 12px 5px 10px;border:1px solid var(--x-line2);border-radius:999px;background:var(--x-card);font-size:.8rem;font-weight:600;color:var(--x-muted)}
+  & .er-dot{width:7px;height:7px;border-radius:50%;background:var(--x-accent)}
+  & .er-hero-v4 .hero-title{font-size:clamp(2.8rem,6.5vw,4.6rem);letter-spacing:-.045em;line-height:1;margin:0 0 18px}
+  & .er-hero-v4 .hero-sub{max-width:34ch;font-size:clamp(1.1rem,1.6vw,1.3rem);line-height:1.5;color:var(--x-muted)}
+  & .er-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+  & .er-cta .btn{padding:12px 20px;font-size:.95rem;border-radius:10px}
+  & .er-facts{display:flex;flex-wrap:wrap;gap:12px 36px;margin:36px 0 0;padding-top:22px;border-top:1px solid var(--x-line)}
+  & .er-facts div{margin:0}
+  & .er-facts dt{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--x-muted)}
+  & .er-facts dd{margin:4px 0 0;font-size:1.15rem;font-weight:700;color:var(--x-text)}
+
+  & .er-console{margin:0;min-width:0;border:1px solid #262d36;border-radius:14px;background:#0b0e12;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+  & .er-console-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid #1d232a;background:#11161b}
+  & .er-console-bar i{width:11px;height:11px;border-radius:50%;background:#3a424b}
+  & .er-console-bar span{margin-left:8px;font-family:var(--er-mono);font-size:.72rem;color:#7d8790}
+  & .er-console pre{margin:0;padding:18px 20px;border:0;background:transparent;color:#cfd6dd;font-family:var(--er-mono);font-size:.78rem;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+  & .er-console code{color:inherit;background:none;border:0;padding:0;font-size:inherit}
+  & .er-console .c-cmd{color:#e9ecef;font-weight:600}
+  & .er-console .c-dim{color:#7d8790}
+  & .er-console .c-hi{color:#f7c325}
+  & .er-console figcaption{padding:10px 20px 14px;border-top:1px solid #1d232a;font-size:.78rem;color:#7d8790}
+  & .er-console figcaption a{color:#9ab8d6}
+  & .er-console figcaption code{font-family:var(--er-mono);font-size:.95em;color:#9aa4ae;background:none;border:0;padding:0}
+}
+@media (min-width:1000px){
+  :root body.hub-page:has(.er-hero-v4) .hero-band .hero.er-hero-v4{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:64px}
+}
+@media (max-width:760px){
+  :root body.hub-page:has(.er-hero-v4) .er-top{padding:48px 0 44px}
+  :root body.hub-page:has(.er-hero-v4) .er-console pre{font-size:.7rem;padding:14px}
+}

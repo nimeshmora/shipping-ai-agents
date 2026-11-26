@@ -14,7 +14,10 @@ import logo from '../../public/favicon.svg?raw';
 
 // page="hub" is the site front page: no notebook sidebar and no Previous / Next.
 // Every other page belongs to a notebook (its slug, for example "shipping-ai-agents").
-const { title, page, description, notebook: nbSlug } = Astro.props as { title: string; page: string; description?: string; notebook?: string };
+const { title, page, description, notebook: nbSlug, image } = Astro.props as { title: string; page: string; description?: string; notebook?: string; image?: string };
+// Link previews (LinkedIn, Facebook, X). `image` is a file in public/, for example 'bench-logs/01/share.png' (1200x630).
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = image ? new URL(url(image), Astro.site).href : undefined;
 const hub = page === 'hub';
 // The front page can add a side column (slot "aside"). It only shows on wide screens; see site.css.
 const rail = hub && Astro.slots.has('aside');
@@ -46,6 +49,16 @@ const fullTitle = hub ? (title && title !== 'Ship It with Nimesha' ? `${title} |
   <title>{fullTitle}</title>
   <meta name="description" content={description ?? 'Ship It with Nimesha: Head First style notebooks about running AI agents and their models in production, from the cloud to Kubernetes and the GPU.'} />
   <meta name="author" content="Nimesha Jinarajadasa" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Ship It with Nimesha" />
+  <meta property="og:title" content={fullTitle} />
+  {description && <meta property="og:description" content={description} />}
+  <meta property="og:url" content={pageUrl} />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  {ogImage && <meta property="og:image:width" content="1200" />}
+  {ogImage && <meta property="og:image:height" content="630" />}
+  <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
   <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

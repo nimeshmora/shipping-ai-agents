@@ -281,3 +281,9 @@
 .viz-src{margin:0;font-size:.78rem;color:var(--x-muted)}
 .viz-btn{justify-self:start;font:600 .86rem var(--x-font);color:var(--x-text);background:transparent;border:1.5px solid var(--x-line2);border-radius:8px;padding:5px 12px;cursor:pointer}
 @media (prefers-reduced-motion: reduce){.viz-bar i{transition:none}}
+
+/* GPU Corner opening: the six-step explainer (src/components/viz/GpuStory.astro) takes the whole width. */
+:root body.hub-page:has(.er-hero-story) .hero-band .hero.er-hero-v4.er-hero-story{grid-template-columns:minmax(0,1fr);gap:26px}
+:root body.hub-page:has(.er-hero-story) .er-hero-story .hero-title{font-size:clamp(2.1rem,4.6vw,3.3rem);margin:0 0 10px}
+:root body.hub-page:has(.er-hero-story) .er-hero-story .hero-sub{max-width:60ch;margin:0}
+:root body.hub-page:has(.er-hero-story) .er-hero-story .er-cta{margin:0}

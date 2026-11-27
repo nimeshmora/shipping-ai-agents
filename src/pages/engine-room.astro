@@ -7,6 +7,7 @@ import '../styles/engine-room.css';
 import { url } from '../lib/url';
 import { KODEBOX, REPO } from '../lib/site';
 import { benchLogs } from '../lib/benchlogs';
+import GpuStory from '../components/viz/GpuStory.astro';
 
 // 03 Start here: chapters from the notebooks, in the order a newcomer should read them.
 const start = [
@@ -29,37 +30,17 @@ const older = benchLogs.slice(1);
 <Base title="The Engine Room: Nimesha's GPU Corner" page="hub" where="Nimesha's GPU Corner" description="The GPU corner of Ship It with Nimesha: Bench Logs from real GPU runs, a check for whether a model fits in GPU memory, and the chapters to read first.">
   <div slot="top" class="band hero-band er-top">
     <div class="wrap">
-      <section class="hero er-hero er-hero-v4">
-        <div class="er-hero-text">
+      <section class="hero er-hero er-hero-v4 er-hero-story">
+        <div class="gs-head">
           <p class="er-kicker"><span class="er-dot" aria-hidden="true"></span>Nimesha's GPU Corner</p>
-          <h1 class="hero-title">The Engine Room</h1>
-          <p class="hero-sub">Real runs on a real GPU, written up with every number. Plus a quick check for whether your model will fit.</p>
-          <div class="er-cta">
-            <a class="btn primary" href={url(`engine-room/logs/${latest.slug}/`)}>Read Bench Log #{latest.number}</a>
-            <a class="btn" href="#fit">Will it fit?</a>
-          </div>
-          <dl class="er-facts">
-            <div><dt>Bench Logs</dt><dd>{benchLogs.length}</dd></div>
-            <div><dt>Latest run</dt><dd>{latest.date}</dd></div>
-            <div><dt>GPU so far</dt><dd>NVIDIA T4</dd></div>
-          </dl>
+          <h1 class="hero-title">How an AI model runs on a GPU</h1>
+          <p class="hero-sub">Six steps, every number measured on a real 16 GB NVIDIA T4. Click a step, or let it play.</p>
         </div>
-        <figure class="er-console">
-          <div class="er-console-bar" aria-hidden="true"><i></i><i></i><i></i><span>kk_user@k8s-gpu-share</span></div>
-          <pre><code><span class="c-cmd">$ python3 bench3.py 16 share</span>
-pods=4 users=16 requests=64 tokens=16384 wall=58.2s
-  whole GPU : <span class="c-hi">281.7 tokens/s</span>
-  each user : 18.4 tokens/s (median)
-  first word: 176 ms median, 331 ms worst
-  GPU memory used: 10843 MiB
-<span class="c-cmd">$ python3 bench3.py 16 solo</span>
-pods=1 users=16 requests=64 tokens=16384 wall=36.6s
-  whole GPU : <span class="c-hi">447.4 tokens/s</span>
-  each user : 29.9 tokens/s (median)
-  first word: 115 ms median, 1919 ms worst
-  GPU memory used: 10767 MiB</code></pre>
-          <figcaption>Output from the <a href={url('engine-room/logs/k8s-gpu-sharing/')}>Bench Log #3</a> run, 27 Nov 2026: four pods sharing the GPU, then one pod with the same memory (first of three runs).</figcaption>
-        </figure>
+        <GpuStory />
+        <div class="er-cta">
+          <a class="btn primary" href={url(`engine-room/logs/${latest.slug}/`)}>Read Bench Log #{latest.number}</a>
+          <a class="btn" href="#fit">Will it fit?</a>
+        </div>
       </section>
     </div>
   </div>

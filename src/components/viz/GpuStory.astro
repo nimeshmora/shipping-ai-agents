@@ -1,0 +1,169 @@
+---
+// The GPU Corner's opening picture: how an AI model runs on a GPU, in six steps.
+// Every number is from a Bench Log run on a 16 GB NVIDIA T4 (see each step's source line).
+import { url } from '../../lib/url';
+const steps = [
+  { n: 1, label: 'The model fits' },
+  { n: 2, label: 'Too big for the GPU' },
+  { n: 3, label: 'A longer chat' },
+  { n: 4, label: 'The chat gets too long' },
+  { n: 5, label: 'Smaller chat notes' },
+  { n: 6, label: 'Many people at once' },
+];
+---
+<div class="gs" id="gpustory" data-base={url('')}>
+  <ol class="gs-steps" role="tablist" aria-label="Steps">
+    {steps.map((s, i) => (
+      <li><button type="button" role="tab" data-i={i} aria-selected={i === 0 ? 'true' : 'false'}><span class="gs-n">{s.n}</span><span>{s.label}</span></button></li>
+    ))}
+  </ol>
+
+  <div class="gs-stage" role="tabpanel" aria-live="polite">
+    <div class="gs-top">
+      <p class="gs-what" data-o="what"></p>
+      <div class="gs-speed"><b data-o="spd"></b><span data-o="unit"></span></div>
+    </div>
+
+    <div>
+      <div class="viz-row-h"><b>GPU memory (fast)</b><span data-o="gpu"></span></div>
+      <div class="viz-bar gs-bar" data-b="gpu"></div>
+    </div>
+    <div>
+      <div class="viz-row-h"><b>Normal RAM, used by the CPU (slow)</b><span data-o="ram"></span></div>
+      <div class="viz-bar gs-bar" data-b="ram"></div>
+    </div>
+    <div class="viz-legend">
+      <span><i style="background:var(--vz-model)"></i>the model (its numbers, or weights)</span>
+      <span><i style="background:var(--vz-kv)"></i>KV cache (notes on the chat)</span>
+      <span><i style="background:var(--vz-other)"></i>other</span>
+    </div>
+
+    <div class="gs-layers-wrap" data-o="layerswrap">
+      <div class="viz-row-h"><b>Every new token goes through all the layers, in order</b><span data-o="layers"></span></div>
+      <div class="gs-layers" aria-hidden="true"></div>
+    </div>
+
+    <p class="gs-why" data-o="why"></p>
+    <div class="gs-foot">
+      <p class="viz-src" data-o="src"></p>
+      <div class="gs-nav">
+        <button type="button" class="viz-btn" data-act="prev" aria-label="Previous step">←</button>
+        <button type="button" class="viz-btn" data-act="play">Pause</button>
+        <button type="button" class="viz-btn" data-act="next" aria-label="Next step">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  .gs{--vz-gpu:#2f5be0;--vz-model:#8b7cf6;--vz-kv:#f2be2c;--vz-other:#b9bec8;--vz-cpu:#e08a3c;--vz-empty:var(--x-soft);
+    display:grid;grid-template-columns:minmax(0,1fr);gap:18px;min-width:0}
+  :root[data-theme="dark"] .gs{--vz-gpu:#7f9cff}
+  .gs-steps{list-style:none;margin:0;padding:0;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+  .gs-steps li{margin:0;flex:0 0 auto}
+  .gs-steps button{display:flex;align-items:center;gap:10px;font:600 .9rem var(--x-font);color:var(--x-muted);background:var(--x-card);border:1.5px solid var(--x-line);border-radius:12px;padding:9px 14px;cursor:pointer;text-align:left;width:100%}
+  .gs-steps button[aria-selected="true"]{color:var(--x-text);border-color:var(--x-text)}
+  .gs-steps button:focus-visible,.gs .viz-btn:focus-visible{outline:3px solid var(--vz-gpu);outline-offset:2px}
+  .gs-n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--x-soft);color:var(--x-text);font-size:.8rem;flex:0 0 auto}
+  .gs-steps button[aria-selected="true"] .gs-n{background:var(--x-text);color:var(--x-card)}
+  .gs-stage{background:var(--x-card);border:1px solid var(--x-line);border-radius:16px;padding:20px;display:grid;gap:16px;min-width:0;box-shadow:0 10px 30px rgba(20,25,35,.06)}
+  .gs-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .gs-what{margin:0;font-weight:700;font-size:1.15rem;max-width:30ch;line-height:1.35}
+  .gs-speed{text-align:right}
+  .gs-speed b{display:block;font-size:2.6rem;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .gs-speed span{font-size:.82rem;color:var(--x-muted)}
+  .gs-bar{height:40px}
+  .gs-bar i.g{background:var(--vz-gpu);color:#fff}
+  .gs-layers{display:grid;grid-template-columns:repeat(33,1fr);gap:3px}
+  .gs-layers i{height:24px;border-radius:3px;background:var(--vz-gpu)}
+  .gs-layers i.c{background:var(--vz-cpu)}
+  .gs-layers i.hit{outline:2px solid var(--x-text);outline-offset:1px}
+  .gs-why{margin:0;font-size:1rem;line-height:1.55;max-width:70ch}
+  .gs-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+  .gs-foot .viz-src{max-width:60ch}
+  .gs-nav{display:flex;gap:6px}
+  @media (min-width:960px){
+    .gs{grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start}
+    .gs-steps{flex-direction:column;overflow:visible}
+  }
+  @media (max-width:520px){.gs-layers{gap:2px}.gs-layers i{height:18px}.gs-speed b{font-size:2rem}}
+  @media (prefers-reduced-motion: reduce){.gs-layers i{transition:none}}
+</style>
+
+<script>
+  const root = document.getElementById('gpustory');
+  if (root) {
+    const base = root.dataset.base || '/';
+    const GPU = 15360, RAM = 16384;
+    type Part = [string, number, string];
+    type Step = { what: string; spd: string; unit: string; gpu: Part[]; ram: Part[]; gpuTxt: string; ramTxt: string; gl: number | null; layersTxt?: string; why: string; src: string; log: string };
+    const S: Step[] = [
+      { what: 'A model is billions of numbers. It has to fit in GPU memory.', spd: '41', unit: 'tokens a second',
+        gpu: [['m', 4403, 'Llama 3.1 8B, 4-bit'], ['k', 512, ''], ['o', 246, '']], ram: [], gpuTxt: '5,161 of 15,360 MiB', ramTxt: 'nothing', gl: 33,
+        why: 'Llama 3.1 8B has 8 billion numbers. Stored at about 4 bits each, they take about 4,400 MiB, so the model fits on the GPU with room to spare. It writes one token (a word or part of one) at a time, and every layer runs on the GPU, where thousands of small cores do the maths at once.',
+        src: 'Bench Log #1: nvidia-smi 5,161 MiB, 41.0 tok/s. Model and cache sizes from the Ollama log (Bench Log #2, same 4K setting).', log: 'will-it-fit' },
+      { what: 'The same model in 16-bit is too big. Part of it spills to the CPU.', spd: '8.6', unit: 'tokens a second',
+        gpu: [['m', 13881, '16-bit model, most of it']], ram: [['m', 2458, '']], gpuTxt: '13,881 of 15,360 MiB', ramTxt: 'about 15% of the model', gl: 28, layersTxt: 'about 15% on the CPU',
+        why: 'At 16 bits the model is 16 GB, more than the GPU has. Ollama runs about 15% of it on the CPU. Every token has to wait for that slow part, so it writes about 5 times slower.',
+        src: 'Bench Log #1: nvidia-smi 13,881 MiB, ollama ps 15% CPU / 85% GPU, 8.6 tok/s. The RAM bar and the 5 orange layers show that 15%; the exact layer split was not logged.', log: 'will-it-fit' },
+      { what: 'Back to 4-bit. A longer chat needs room for its notes, the KV cache.', spd: '42', unit: 'tokens a second, short question',
+        gpu: [['m', 4403, 'model'], ['k', 8192, 'KV cache 8,192 MiB'], ['o', 306, '']], ram: [], gpuTxt: '12,901 of 15,360 MiB', ramTxt: 'nothing', gl: 33,
+        why: 'The model keeps notes on every token of the chat, so it does not redo work: 128 KiB per token for this model. Set it up for 64K tokens and that is 8 GiB, reserved up front. It still fits, so the speed stays the same.',
+        src: 'Bench Log #2: KV cache 8,192 MiB (Ollama log), nvidia-smi 12,901 MiB, 33/33 layers on the GPU, 42.0 tok/s.', log: 'long-context' },
+      { what: 'At 128K tokens, the notes alone are bigger than the GPU.', spd: '6.9', unit: 'tokens a second, short question',
+        gpu: [['m', 2789, 'model'], ['k', 9728, 'KV cache'], ['o', 1060, '']], ram: [['m', 1896, ''], ['k', 6656, 'KV cache']], gpuTxt: '13,577 of 15,360 MiB', ramTxt: '8,552 MiB', gl: 20,
+        why: 'The KV cache would need 16 GiB. Ollama moved 13 of the 33 layers, and part of the cache, to the CPU. Every token goes through all the layers in order, so the GPU waits for the slow CPU part each time.',
+        src: 'Bench Log #2: Ollama log (20 of 33 layers on the GPU, KV 9,728 MiB on GPU and 6,656 MiB on CPU), 6.9 tok/s.', log: 'long-context' },
+      { what: 'Store the notes in 8-bit and they take about half the room.', spd: '31', unit: 'tokens a second, short question',
+        gpu: [['m', 5353, 'model + other'], ['k', 8432, 'KV cache, 8-bit']], ram: [['k', 272, '']], gpuTxt: '13,785 of 15,360 MiB', ramTxt: '1 layer and 272 MiB of cache', gl: 32,
+        why: 'With an 8-bit KV cache, 128K tokens need about 8.5 GiB instead of 16. Now 32 of 33 layers fit back on the GPU, and the speed comes most of the way back.',
+        src: 'Bench Log #2: nvidia-smi 13,785 MiB, ollama ps 6% CPU / 94% GPU, 32 of 33 layers on the GPU, 31.1 to 31.3 tok/s.', log: 'long-context' },
+      { what: 'Serving many people: one server batches everyone together.', spd: '481.5', unit: 'tokens a second for 16 people (31.8 for one)',
+        gpu: [['m', 1147, ''], ['k', 9206, 'KV cache, room for 84,176 tokens'], ['o', 405, '']], ram: [], gpuTxt: '10,758 of 15,360 MiB', ramTxt: 'nothing', gl: null,
+        why: 'vLLM puts everyone\'s next token into one batch and works them out together, so 16 people cost far less than 16 times one person. Here a small model (Qwen3-0.6B) served 16 people at once, 15 times the total speed of one person.',
+        src: 'Bench Log #3: one vLLM pod, nvidia-smi 10,758 MiB, KV cache 84,176 tokens (vLLM log), 481.5 tok/s for 16 people, 31.8 for one (medians of 3 runs).', log: 'k8s-gpu-sharing' },
+    ];
+    const $ = (k: string) => root.querySelector(`[data-o="${k}"]`) as HTMLElement;
+    const bar = (k: string, parts: Part[], total: number) => {
+      const el = root.querySelector(`[data-b="${k}"]`) as HTMLElement; el.innerHTML = '';
+      for (const [c, v, label] of parts) { const i = document.createElement('i'); i.className = c; i.style.width = (v / total * 100) + '%'; i.textContent = v / total > .16 ? label : ''; i.title = label; el.appendChild(i); }
+    };
+    const lay = root.querySelector('.gs-layers') as HTMLElement;
+    for (let i = 0; i < 33; i++) lay.appendChild(document.createElement('i'));
+    const cells = [...lay.children] as HTMLElement[];
+    const tabs = [...root.querySelectorAll('.gs-steps button')] as HTMLElement[];
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let cur = 0, walkT = 0, playT = 0, playing = !reduce;
+
+    // A token walking through the layers: quick steps on the GPU, slow ones on the CPU. A picture of the idea, not a timing.
+    const walk = (gl: number) => {
+      clearTimeout(walkT); if (reduce) return;
+      let i = 0;
+      const step = () => { cells.forEach((c) => c.classList.remove('hit')); cells[i].classList.add('hit');
+        const d = i < gl ? 40 : 300; i = (i + 1) % 33; walkT = window.setTimeout(step, i === 0 ? 600 : d); };
+      step();
+    };
+    const show = (n: number) => {
+      cur = (n + S.length) % S.length; const s = S[cur];
+      tabs.forEach((t, i) => t.setAttribute('aria-selected', i === cur ? 'true' : 'false'));
+      $('what').textContent = s.what; $('spd').textContent = s.spd; $('unit').textContent = s.unit;
+      bar('gpu', s.gpu, GPU); bar('ram', s.ram, RAM);
+      $('gpu').textContent = s.gpuTxt; $('ram').textContent = s.ramTxt;
+      const lw = $('layerswrap');
+      if (s.gl === null) { lw.hidden = true; clearTimeout(walkT); }
+      else { lw.hidden = false; cells.forEach((c, i) => c.classList.toggle('c', i >= (s.gl as number)));
+        $('layers').textContent = s.layersTxt || `${s.gl} of 33 on the GPU${s.gl < 33 ? `, ${33 - s.gl} on the CPU` : ''}`; walk(s.gl); }
+      $('why').textContent = s.why;
+      const src = $('src'); src.textContent = s.src + ' ';
+      const a = document.createElement('a'); a.href = `${base}engine-room/logs/${s.log}/`; a.textContent = 'Read the log'; src.appendChild(a);
+    };
+    const playBtn = root.querySelector('[data-act="play"]') as HTMLElement;
+    const schedule = () => { clearTimeout(playT); if (playing) playT = window.setTimeout(() => { show(cur + 1); schedule(); }, 9000); };
+    const setPlaying = (p: boolean) => { playing = p; playBtn.textContent = p ? 'Pause' : 'Play'; schedule(); };
+    tabs.forEach((t, i) => t.addEventListener('click', () => { show(i); setPlaying(false); }));
+    (root.querySelector('[data-act="prev"]') as HTMLElement).addEventListener('click', () => { show(cur - 1); setPlaying(false); });
+    (root.querySelector('[data-act="next"]') as HTMLElement).addEventListener('click', () => { show(cur + 1); setPlaying(false); });
+    playBtn.addEventListener('click', () => setPlaying(!playing));
+    show(0); setPlaying(playing);
+  }
+</script>

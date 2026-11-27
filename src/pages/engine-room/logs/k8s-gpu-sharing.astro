@@ -1,0 +1,192 @@
+---
+// Bench Log #3. Every number on this page comes from the run on 27 Nov 2026.
+// The raw GIFs, screenshots and run notes are in social/bench-log-03/ (not published).
+import Base from '../../../layouts/Base.astro';
+import '../../../styles/engine-room.css';
+import { url } from '../../../lib/url';
+import { KODEBOX, REPO } from '../../../lib/site';
+import { benchLogs } from '../../../lib/benchlogs';
+import BenchLogSeries from '../../../components/BenchLogSeries.astro';
+
+const log = benchLogs.find((l) => l.slug === 'k8s-gpu-sharing')!;
+const f = (name: string) => url(`bench-logs/03/${name}`);
+const sharing = `version: v1
+sharing:
+  timeSlicing:
+    resources:
+    - name: nvidia.com/gpu
+      replicas: 4`;
+const podSpec = `args:
+- Qwen/Qwen3-0.6B
+- --dtype=half
+- --max-model-len=4096
+- --enforce-eager
+- --gpu-memory-utilization=0.18
+resources:
+  requests: {cpu: 500m, memory: 3Gi, nvidia.com/gpu: 1}
+  limits: {cpu: "2", memory: 6Gi, nvidia.com/gpu: 1}`;
+---
+<Base title={`Bench Log #${log.number}: ${log.title}`} image="bench-logs/03/share.png" page="hub" where="Nimesha's GPU Corner" description="I ran vLLM pods on one 16 GB NVIDIA T4 shared four ways on Kubernetes, saw where they crash, and compared four small pods with one big pod using the same memory.">
+  <div slot="top" class="band hero-band">
+    <div class="wrap">
+      <section class="hero er-hero bl-hero">
+        <div class="er-hero-text">
+          <p class="eyebrow"><a href={url('engine-room/#logs')}>GPU Corner</a> / Bench Log #{log.number}</p>
+          <h1 class="hero-title">{log.title}</h1>
+          <p class="hero-sub">Kubernetes said I had 4 GPUs. I had one, shared four ways. I put model servers on it until they broke, then measured what the sharing really gives you.</p>
+          <ul class="bl-kit">
+            <li>{log.date}</li>
+            <li>NVIDIA Tesla T4</li>
+            <li>k3s 1.36</li>
+            <li>vLLM 0.31.0</li>
+            <li>Qwen3-0.6B</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="bl">
+    <article class="bl-main">
+
+      <h2>Why I did this</h2>
+      <p>In <a href={url('engine-room/logs/will-it-fit/')}>Bench Log #1</a> and <a href={url('engine-room/logs/long-context/')}>#2</a> one person talked to one model. Real apps have many people, and they often run on Kubernetes. GPUs are expensive, so a common idea is to share one GPU between several pods. I wanted to see what that sharing really does: what breaks, and whether it is a good way to serve more people.</p>
+
+      <h2>The machine</h2>
+      <p>A KodeBox from the "Kubernetes on GPU" template: an NVIDIA Tesla T4 (15,360 MiB), 4 vCPU, 16 GB RAM and a 75 GB disk, in US East. It comes with a one-node k3s v1.36.5 cluster, the NVIDIA device plugin v0.20.1, the vLLM v0.31.0 image and the Qwen3-0.6B model already on disk, so nothing had to download.</p>
+      <p>First I had to make room. My plan allows two GPU servers and I had two, both stopped. Stopped servers still count, so I deleted one. Then it took about 2 minutes from clicking Create to Running.</p>
+      <figure class="bl-shot">
+        <img src={f('01-start-the-server.webp')} width="1200" height="593" loading="lazy" alt="Creating the k8s-gpu-share server from the Kubernetes on GPU template on the KodeKloud dashboard, from Provisioning to Running" />
+        <figcaption>Creating the server.</figcaption>
+      </figure>
+
+      <h2>What "4 GPUs" means here</h2>
+      <p>Ask Kubernetes and it says the node has <code>"nvidia.com/gpu":"4"</code>. That comes from this setting in the device plugin's ConfigMap:</p>
+      <div class="er-term yaml"><pre><code>{sharing.split('\n').map((l) => <span class="ln-plain">{l}</span>)}</code></pre></div>
+      <p>This is called time-slicing. Kubernetes hands out 4 tickets for the same GPU, and the pods that hold them take turns on it. What it does not do is split the memory. Every pod sees the whole card (vLLM reported 14.56 GiB) and can take as much as it likes. That is the catch the rest of this log is about.</p>
+      <figure class="bl-shot">
+        <img src={f('02-what-the-server-has.webp')} width="1200" height="593" loading="lazy" alt="Terminal: nvidia-smi showing a Tesla T4 with 15360 MiB, kubectl showing nvidia.com/gpu 4, the time-slicing ConfigMap with replicas 4, and the container images on the server" />
+        <figcaption>Checking what the template set up.</figcaption>
+      </figure>
+
+      <h2>How I measured</h2>
+      <p>Two small scripts. <code>gpu-pods.sh</code> starts some number of vLLM pods serving Qwen3-0.6B. Each pod asks for one <code>nvidia.com/gpu</code>. I used the same vLLM flags as the template's own setup: 16-bit weights (the T4 has no bf16), a 4,096-token limit, and <code>--enforce-eager</code>.</p>
+      <div class="er-term yaml"><pre><code>{podSpec.split('\n').map((l) => <span class="ln-plain">{l}</span>)}</code></pre></div>
+      <p><code>bench3.py</code> plays some number of people chatting at the same time. Each person asks 4 questions, one after the other. Every answer is exactly 256 tokens (<code>ignore_eos</code>, temperature 0), so every run does the same work. People are spread evenly over the pods.</p>
+      <ul>
+        <li><b>Whole GPU</b>: all the tokens written, divided by the time from the first question to the last answer.</li>
+        <li><b>Each user</b>: how fast one answer came out once it started. The median of all the answers.</li>
+      </ul>
+      <p class="small"><a href={f('gpu-pods.sh')} download>Download gpu-pods.sh</a> · <a href={f('bench3.py')} download>Download bench3.py</a></p>
+
+      <h2>Test 1: two pods with vLLM's default settings</h2>
+      <p>By default vLLM takes most of the GPU's memory for itself. I started two pods anyway. Kubernetes was happy, because there were 4 tickets. One pod came up and took 12,295 MiB. The other one crashed. Its log the first time:</p>
+      <div class="er-term log"><pre><code><span class="ln-plain">torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 10.50 GiB.</span><span class="ln-plain">GPU 0 has a total capacity of 14.56 GiB of which 1.04 GiB is free.</span></code></pre></div>
+      <p>And after Kubernetes restarted it:</p>
+      <div class="er-term log"><pre><code><span class="ln-plain">ValueError: Free memory on device cuda:0 (2.46/14.56 GiB) on startup is less</span><span class="ln-plain">than desired GPU memory utilization (0.92, 13.4 GiB).</span></code></pre></div>
+      <p>So the default in this version is 0.92: "take 92% of the GPU". The first time, both pods started together and both got past that check, then one ran out of memory. After that it just kept restarting.</p>
+      <figure class="bl-shot">
+        <img src={f('03-two-pods-crash.webp')} width="1200" height="593" loading="lazy" alt="Two vLLM pods with default settings: one Ready with 12295 MiB of GPU memory, the other restarting with CUDA out of memory and then a free memory error" />
+      </figure>
+
+      <h2>Test 2: five pods on four tickets</h2>
+      <p>Next I gave each pod 18% of the memory (<code>--gpu-memory-utilization=0.18</code>) and asked for five. Four started. The fifth stayed in Pending:</p>
+      <div class="er-term log"><pre><code><span class="ln-plain">Warning  FailedScheduling  default-scheduler  0/1 nodes are available:</span><span class="ln-plain">1 Insufficient nvidia.com/gpu.</span></code></pre></div>
+      <p>That is what you would expect. 4 tickets, 4 pods.</p>
+      <p>What I did not expect: all four of the running pods crashed and restarted too. The two I looked at wrote <code>Available KV cache memory: -3.3 GiB</code> and <code>-3.64 GiB</code>, then stopped. Minus 3 GiB. The model itself only took 1.12 GiB.</p>
+      <p>So I deleted them and started the same four pods one at a time, waiting for each to be ready before the next. All four came up with no restarts, each using 2,706 MiB. Each one took 77 to 101 seconds to start.</p>
+      <p>My reading: when vLLM starts, it measures how much GPU memory it uses while it warms up. If other pods are loading at the same moment, it counts their memory as its own. I did not prove this. But starting them one at a time fixed it every time, and the template's own <code>kk-llmd</code> command does the same thing: it waits for the first copy to be ready before it starts the second.</p>
+      <figure class="bl-shot">
+        <img src={f('04-five-pods-four-slots.webp')} width="1200" height="593" loading="lazy" alt="Five pods requested: four Running and one Pending with Insufficient nvidia.com/gpu; the four crash with negative KV cache memory; started one at a time all four are ready using 2706 MiB each" />
+      </figure>
+
+      <h2>Test 3: four small pods or one big pod?</h2>
+      <p>Now the real question. Same GPU, same amount of memory, two ways to use it:</p>
+      <ul>
+        <li><b>4 pods</b> sharing the GPU, 18% of the memory each: 10,827 MiB in total.</li>
+        <li><b>1 pod</b> with 72% of the memory: 10,758 MiB.</li>
+      </ul>
+      <p>Before any test, vLLM's own log already shows a difference. Each small pod had room for 10,560 tokens of chat history (its KV cache). Four of them is 42,240. The one big pod had room for 84,176, about twice as much. That is mainly because the model and vLLM's own working memory are loaded once instead of four times.</p>
+      <p>Then the load test. 1, 4, 8 and 16 people, three runs each. Then 32 and 64 people once.</p>
+      <figure class="bl-shot">
+        <img src={f('05-load-four-pods.webp')} width="1200" height="593" loading="lazy" alt="bench3.py with 1, 4, 8 and 16 users on four shared pods" />
+        <figcaption>Run 1 on the four pods.</figcaption>
+      </figure>
+      <figure class="bl-shot">
+        <img src={f('06-one-pod.webp')} width="1200" height="593" loading="lazy" alt="One vLLM pod at 0.72 GPU memory: ready after 78 seconds, KV cache 84176 tokens, then bench3.py with 1, 4, 8 and 16 users" />
+        <figcaption>Run 1 on the one pod.</figcaption>
+      </figure>
+      <div class="bl-scroll">
+        <table class="bl-table bl-results">
+          <thead><tr><th>People</th><th>4 pods: whole GPU, tokens/s</th><th>1 pod: whole GPU, tokens/s</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>31.2, 30.9, 30.0</td><td>31.8, 30.7, 32.9</td></tr>
+            <tr><td>4</td><td>73.4, 73.6, 73.7</td><td>116.1, 122.6, 120.2</td></tr>
+            <tr><td>8</td><td>134.6, 136.4, 143.9</td><td>242.8, 241.7, 254.2</td></tr>
+            <tr><td>16</td><td>281.7, 281.3, 282.6</td><td>447.4, 486.0, 481.5</td></tr>
+            <tr><td>32 (one run)</td><td>556.0</td><td>946.6</td></tr>
+            <tr><td>64 (one run)</td><td>901.9</td><td>1,648.2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>With one person it makes no difference, about 31 tokens a second either way. With more people, the one big pod pulls ahead: 481.5 against 281.7 tokens a second at 16 people (the median of three runs), and 1,648.2 against 901.9 at 64.</p>
+      <p>Each person felt it too. With the one pod, each answer came out at about 30 tokens a second (30.4 at 16 people). With four pods it was about 19 (18.3 at 16 people). At 64 people (one run) it was 26.5 against 15.1.</p>
+      <figure class="bl-shot">
+        <img src={f('07-one-pod-repeats.webp')} width="1200" height="593" loading="lazy" alt="Runs 2 and 3 on the one pod, then 32 and 64 users" />
+        <figcaption>Runs 2 and 3, and 32 and 64 people, on the one pod.</figcaption>
+      </figure>
+      <figure class="bl-shot">
+        <img src={f('08-four-pods-repeats.webp')} width="1200" height="593" loading="lazy" alt="Runs 2 and 3 on the four pods, then 32 and 64 users" />
+        <figcaption>The same on the four pods.</figcaption>
+      </figure>
+      <p>Why? vLLM is built to serve many people from one copy of the model. It puts everyone's next token into one batch and does them together. With four pods, there are four copies taking turns on the GPU instead. I measured the result, not the reason, so take that as my explanation, not a finding.</p>
+
+      <h2>The template's own setup</h2>
+      <p>The template also has a command, <code>kk-llmd</code>, that starts <a href="https://github.com/llm-d/llm-d" target="_blank" rel="noopener">llm-d</a>: two vLLM copies behind a router. It avoids both of the problems above: it sets <code>--gpu-memory-utilization=0.35</code> and starts the copies one at a time. The first copy was ready after 94 seconds, and both after 188.</p>
+      <p>Its demo sends 10 turns of one conversation through the router. All 10 went to the same copy, and 15,264 of 17,111 tokens (89%) were already in that copy's cache. That is the point of the router: it sends a conversation back to the copy that already has its history, so the history does not have to be read again.</p>
+      <figure class="bl-shot">
+        <img src={f('09-kk-llmd-demo.webp')} width="1200" height="593" loading="lazy" alt="kk-llmd up starting two vLLM replicas and the router, then kk-llmd demo: 10 turns all served by one replica with 89% prefix cache hits" />
+      </figure>
+
+      <h2>What I take from this</h2>
+      <ul>
+        <li>Time-slicing shares the GPU's time, not its memory. Kubernetes will happily put four pods on one GPU that only has room for one.</li>
+        <li>If you share a GPU with vLLM, always set <code>--gpu-memory-utilization</code>, and make the shares add up to less than 1.</li>
+        <li>Start the pods one at a time. Started together, they crashed even with room to spare.</li>
+        <li>To serve more people, one bigger model server did better than several small ones on the same GPU: about 1.7 times the tokens at 16 people, and twice the room for chat history.</li>
+        <li>Sharing is still useful for other things: different models, or dev and test pods on one card.</li>
+      </ul>
+
+      <h2>What this test does not tell you</h2>
+      <ul>
+        <li>Big models. Qwen3-0.6B is tiny, 1.12 GiB on the GPU. With a bigger model there is much less room to share. An 8B model in 16-bit would not fit on this card even once (<a href={url('engine-room/logs/will-it-fit/')}>Bench Log #1</a>).</li>
+        <li>Top speed. I used <code>--enforce-eager</code>, like the template. vLLM is usually faster without it, but it then needs more memory and more time to start.</li>
+        <li>The test script ran on the same 4 vCPU machine as the pods, so it took some CPU from them.</li>
+        <li>Other ways to split a GPU. The T4 cannot split itself into hard slices with their own memory (NVIDIA calls that MIG; it needs cards like the A100 or H100). I did not try NVIDIA MPS.</li>
+        <li>Different prompts or answer lengths. Every answer here was 256 tokens from a short question.</li>
+        <li>The 32 and 64 people rows are one run each, not three.</li>
+      </ul>
+
+      <h2>Try it yourself</h2>
+      <p>On a Kubernetes node with an NVIDIA GPU, the device plugin with time-slicing on, the <code>vllm/vllm-openai:v0.31.0</code> image and Qwen3-0.6B in <code>/var/lib/kk-hf</code> (that is how the KodeBox template comes; change the paths in the script for your own setup):</p>
+      <div class="er-term"><pre><code><span class="ln">./gpu-pods.sh default 2</span><span class="ln">./gpu-pods.sh share 1 0.18   # then 2, 3, 4, waiting for each</span><span class="ln">python3 bench3.py 16 share</span><span class="ln">kubectl delete deployment share</span><span class="ln">./gpu-pods.sh solo 1 0.72</span><span class="ln">python3 bench3.py 16 solo</span></code></pre></div>
+      <p>Ran it on a different GPU? <a href={`${REPO}/issues/new?title=${encodeURIComponent('[Bench Log #3] My numbers')}`}>Send me your numbers</a>. I'd like to see them.</p>
+
+      <p class="bl-note">I ran this on a <a href={KODEBOX} target="_blank" rel="sponsored noopener" data-kb="bench-log-3">KodeBox</a>. By the KodeBox log the server ran from 19:12 to 20:17, about 65 minutes including 6 minutes to shut down, and used 27 credits. I work at KodeKloud.</p>
+      <BenchLogSeries slug="k8s-gpu-sharing" part="nav" />
+    </article>
+
+    <aside class="bl-side" aria-label="Bench Log #3 at a glance">
+      <div class="bl-card">
+        <p class="bl-card-tag">At a glance</p>
+        <ul class="bl-meter">
+          <li><span>1 pod, 16 people</span><b>481.5 tok/s</b><i style="--w:100%"></i></li>
+          <li><span>4 pods sharing, 16 people</span><b>281.7 tok/s</b><i style="--w:59%"></i></li>
+          <li class="bad"><span>2 pods, vLLM defaults</span><b>crashed</b><i style="--w:3%"></i></li>
+        </ul>
+        <p class="bl-card-foot">Whole GPU, Qwen3-0.6B on vLLM, NVIDIA T4. Median of 3 runs. Both setups used about 10.8 GiB of GPU memory.</p>
+      </div>
+      <BenchLogSeries slug="k8s-gpu-sharing" part="list" />
+    </aside>
+  </div>
+</Base>

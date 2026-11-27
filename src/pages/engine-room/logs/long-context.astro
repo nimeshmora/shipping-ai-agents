@@ -7,6 +7,7 @@ import { url } from '../../../lib/url';
 import { KODEBOX, REPO } from '../../../lib/site';
 import { benchLogs } from '../../../lib/benchlogs';
 import BenchLogSeries from '../../../components/BenchLogSeries.astro';
+import SplitViz from '../../../components/viz/SplitViz.astro';
 
 const log = benchLogs.find((l) => l.slug === 'long-context')!;
 const f = (name: string) => url(`bench-logs/02/${name}`);
@@ -132,6 +133,8 @@ for i, p in enumerate(prompts, 1):
       </div>
       <p>The cache is a little over half the size: 68 KiB per token instead of 128, because q8_0 stores about 8.5 bits per number. At 128K that is 8.5 GiB instead of 16, and 32 of the 33 layers stayed on the GPU. Speed went from 6.9 to 31 tokens a second.</p>
       <p>I did not check whether the answers got worse with the 8-bit cache. That needs a proper quality test, not a speed test.</p>
+
+      <SplitViz />
 
       <h2>Part 3: a long prompt slows every new token</h2>
       <p>Part 1 and 2 used a 23-token question. So the cache had room for 128K tokens but only held a few. Here I filled about 80% of it.</p>

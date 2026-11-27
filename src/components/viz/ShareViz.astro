@@ -1,0 +1,105 @@
+---
+// Bench Log #3 picture: 4 small pods vs 1 big pod on one T4. Memory to scale, measured speed by number of people,
+// and 16 answers being written at the measured speed per person. Numbers from social/bench-log-03/RUN-NOTES.md (27 Nov 2026).
+---
+<div class="viz" id="shareviz">
+  <p class="viz-title">Same GPU, same memory: 4 small pods or 1 big pod</p>
+  <p class="viz-sub">The memory bars are to scale: the full bar is the T4's 15,360 MiB.</p>
+  <div>
+    <div class="viz-row-h"><b>4 pods sharing the GPU</b><span>10,827 MiB · room for 4 × 10,560 = 42,240 tokens of chat</span></div>
+    <div class="viz-bar" data-bar="four"></div>
+  </div>
+  <div>
+    <div class="viz-row-h"><b>1 pod</b><span>10,758 MiB · room for 84,176 tokens of chat</span></div>
+    <div class="viz-bar" data-bar="one"></div>
+  </div>
+  <div class="viz-legend">
+    <span><i style="background:var(--vz-model)"></i>the model (one copy per pod)</span>
+    <span><i style="background:var(--vz-kv)"></i>KV cache (room for chats)</span>
+    <span><i style="background:var(--vz-other)"></i>other</span>
+  </div>
+
+  <p class="viz-title" style="margin-top:6px">How many people at once?</p>
+  <div class="viz-pick" role="group" aria-label="Number of people">
+    <button type="button" data-k="1" aria-pressed="false">1</button>
+    <button type="button" data-k="4" aria-pressed="false">4</button>
+    <button type="button" data-k="8" aria-pressed="false">8</button>
+    <button type="button" data-k="16" aria-pressed="true">16</button>
+    <button type="button" data-k="32" aria-pressed="false">32</button>
+    <button type="button" data-k="64" aria-pressed="false">64</button>
+  </div>
+  <div class="share-speeds">
+    <div><div class="viz-row-h"><b>4 pods</b><span data-out="four"></span></div><div class="viz-bar" data-sp="four"></div></div>
+    <div><div class="viz-row-h"><b>1 pod</b><span data-out="one"></span></div><div class="viz-bar" data-sp="one"></div></div>
+  </div>
+  <p class="viz-why" data-out="note"></p>
+
+  <p class="viz-title" style="margin-top:6px">16 people, each getting a 256-token answer</p>
+  <p class="viz-sub" style="margin:0">Each bar fills at the measured speed for one person: 30.4 tokens a second on 1 pod, 18.3 on 4 pods.</p>
+  <div class="share-race">
+    <div><div class="viz-row-h"><b>1 pod</b><span data-out="r1">0 s</span></div><div class="share-dots" data-race="one"></div></div>
+    <div><div class="viz-row-h"><b>4 pods</b><span data-out="r4">0 s</span></div><div class="share-dots" data-race="four"></div></div>
+  </div>
+  <button type="button" class="viz-btn" data-act="race">Start again</button>
+  <p class="viz-src">From the run: tokens per second for the whole GPU, the median of 3 runs for 1 to 16 people and one run for 32 and 64. Per-person speeds are the medians at 16 people. Memory and KV cache sizes are from nvidia-smi and vLLM's own log.</p>
+</div>
+
+<style is:global>
+  .share-speeds{display:grid;gap:10px}
+  .share-race{display:grid;gap:12px}
+  .share-dots{display:grid;grid-template-columns:repeat(16,1fr);gap:4px}
+  .share-dots i{height:34px;border-radius:4px;background:var(--x-soft);position:relative;overflow:hidden}
+  .share-dots i b{position:absolute;left:0;right:0;bottom:0;height:100%;background:var(--vz-gpu)}
+  .share-dots[data-race="four"] i b{background:var(--vz-cpu)}
+</style>
+
+<script>
+  const root = document.getElementById('shareviz');
+  if (root) {
+    const GPU = 15360;
+    const mk = (k: string, parts: [string, number, string][]) => {
+      const el = root.querySelector(`[data-bar="${k}"]`) as HTMLElement;
+      for (const [c, v, label] of parts) { const i = document.createElement('i'); i.className = c; i.style.width = (v / GPU * 100) + '%'; i.textContent = v / GPU > .2 ? label : ''; i.title = label; el.appendChild(i); }
+    };
+    const pod: [string, number, string][] = [['m', 1147, 'model'], ['k', 1157, 'KV'], ['o', 402, '']];
+    mk('four', [...pod, ...pod, ...pod, ...pod]);
+    mk('one', [['m', 1147, 'model'], ['k', 9206, 'KV cache 8.99 GiB'], ['o', 405, '']]);
+
+    // Whole-GPU tokens per second (medians of 3 runs; 32 and 64 are one run each).
+    const data: Record<string, [number, number]> = { '1': [30.9, 31.8], '4': [73.6, 120.2], '8': [136.4, 242.8], '16': [281.7, 481.5], '32': [556.0, 946.6], '64': [901.9, 1648.2] };
+    const MAX = 1648.2;
+    const out = (k: string) => root.querySelector(`[data-out="${k}"]`) as HTMLElement;
+    const sp = (k: string, v: number, cls: string) => { const el = root.querySelector(`[data-sp="${k}"]`) as HTMLElement; el.innerHTML = ''; const i = document.createElement('i'); i.className = cls; i.style.width = Math.max(1, v / MAX * 100) + '%'; el.appendChild(i); };
+    const show = (k: string) => {
+      const [f, o] = data[k];
+      root.querySelectorAll('.viz-pick button').forEach((b) => b.setAttribute('aria-pressed', (b as HTMLElement).dataset.k === k ? 'true' : 'false'));
+      sp('four', f, 'c'); sp('one', o, 'g');
+      out('four').textContent = `${f.toLocaleString('en')} tokens/s`; out('one').textContent = `${o.toLocaleString('en')} tokens/s`;
+      out('note').textContent = k === '1' ? 'With one person there is almost no difference.' : `With ${k} people, 1 pod wrote ${(o / f).toFixed(1)} times as many tokens a second${+k >= 32 ? ' (one run)' : ''}.`;
+    };
+    root.querySelectorAll('.viz-pick button').forEach((b) => b.addEventListener('click', () => show((b as HTMLElement).dataset.k!)));
+    show('16');
+
+    // 16 answers of 256 tokens, filling at the measured per-person speed.
+    const mkDots = (k: string) => { const el = root.querySelector(`[data-race="${k}"]`) as HTMLElement; for (let i = 0; i < 16; i++) { const d = document.createElement('i'); d.appendChild(document.createElement('b')); el.appendChild(d); } return [...el.querySelectorAll('b')] as HTMLElement[]; };
+    const one = mkDots('one'), four = mkDots('four');
+    const T1 = 256 / 30.4, T4 = 256 / 18.3;
+    let raf = 0, t0 = 0;
+    out('r1').textContent = `done in ${T1.toFixed(1)} s`; out('r4').textContent = `done in ${T4.toFixed(1)} s`;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const frame = (t: number) => {
+      if (!t0) t0 = t; const s = (t - t0) / 1000;
+      one.forEach((b) => (b.style.height = Math.min(100, s / T1 * 100) + '%'));
+      four.forEach((b) => (b.style.height = Math.min(100, s / T4 * 100) + '%'));
+      out('r1').textContent = s >= T1 ? `done in ${T1.toFixed(1)} s` : `${s.toFixed(1)} s`;
+      out('r4').textContent = s >= T4 ? `done in ${T4.toFixed(1)} s` : `${s.toFixed(1)} s`;
+      if (s < T4) raf = requestAnimationFrame(frame);
+    };
+    const start = () => { cancelAnimationFrame(raf); t0 = 0;
+      if (reduce) { [...one, ...four].forEach((b) => (b.style.height = '100%')); out('r1').textContent = `done in ${T1.toFixed(1)} s`; out('r4').textContent = `done in ${T4.toFixed(1)} s`; return; }
+      raf = requestAnimationFrame(frame); };
+    (root.querySelector('[data-act="race"]') as HTMLElement).addEventListener('click', start);
+    const io = new IntersectionObserver((e) => { if (e[0].isIntersecting) { start(); io.disconnect(); } }, { threshold: .4 });
+    io.observe(root.querySelector('.share-race') as HTMLElement);
+  }
+</script>

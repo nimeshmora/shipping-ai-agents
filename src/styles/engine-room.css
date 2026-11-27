@@ -252,3 +252,32 @@
   & .er-lead{max-width:62ch;font-size:1.02rem;margin:0 0 28px}
   & .er-kb-strip{margin-top:56px}
 }
+
+/* Interactive pictures inside the Bench Logs (src/components/viz/). Numbers come from each run. */
+.viz{--vz-gpu:#2f5be0;--vz-model:#8b7cf6;--vz-kv:#f2be2c;--vz-other:#b9bec8;--vz-cpu:#e08a3c;--vz-empty:var(--x-soft);
+  margin:22px 0 26px;padding:18px 18px 14px;border:1px solid var(--x-line);border-radius:14px;background:var(--x-card);display:grid;gap:16px;min-width:0}
+.viz-title{margin:0;font-weight:700;font-size:1rem}
+.viz-sub{margin:-8px 0 0;font-size:.9rem;color:var(--x-muted)}
+.viz-pick{display:flex;flex-wrap:wrap;gap:8px}
+.viz-pick button{font:600 .88rem var(--x-font);color:var(--x-text);background:transparent;border:1.5px solid var(--x-line2);border-radius:999px;padding:6px 14px;cursor:pointer}
+.viz-pick button[aria-pressed="true"]{background:var(--x-text);color:var(--x-card);border-color:var(--x-text)}
+.viz-pick button:focus-visible,.viz button:focus-visible{outline:3px solid var(--x-accent);outline-offset:2px}
+.viz-row-h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.86rem;margin-bottom:5px}
+.viz-row-h b{font-weight:600}
+.viz-row-h span{color:var(--x-muted);font-variant-numeric:tabular-nums}
+.viz-bar{display:flex;height:36px;border-radius:8px;overflow:hidden;background:var(--vz-empty)}
+.viz-bar i{display:flex;align-items:center;justify-content:center;font:600 .74rem var(--x-font);color:#15181c;white-space:nowrap;overflow:hidden;transition:width .5s ease}
+.viz-bar i.m{background:var(--vz-model)}.viz-bar i.k{background:var(--vz-kv)}.viz-bar i.o{background:var(--vz-other)}.viz-bar i.c{background:var(--vz-cpu)}.viz-bar i.g{background:var(--vz-gpu);color:#fff}
+:root[data-theme="dark"] .viz{--vz-gpu:#7f9cff}
+:root[data-theme="dark"] .viz-bar i.g{color:#0f1115}
+.viz-bar i+i{box-shadow:inset 2px 0 0 var(--x-card)}
+.viz-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--x-muted)}
+.viz-legend span{display:flex;align-items:center;gap:6px}
+.viz-legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.viz-big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.viz-big b{font-size:2.2rem;line-height:1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.viz-big span{color:var(--x-muted);font-size:.9rem}
+.viz-why{margin:0;font-size:.95rem}
+.viz-src{margin:0;font-size:.78rem;color:var(--x-muted)}
+.viz-btn{justify-self:start;font:600 .86rem var(--x-font);color:var(--x-text);background:transparent;border:1.5px solid var(--x-line2);border-radius:8px;padding:5px 12px;cursor:pointer}
+@media (prefers-reduced-motion: reduce){.viz-bar i{transition:none}}

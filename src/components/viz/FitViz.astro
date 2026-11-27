@@ -1,0 +1,114 @@
+---
+// Bench Log #1 picture: where each version of Llama 3.1 8B sat, and a "watch it write" race at the measured speeds.
+// Every number is from social/gpu-will-it-fit/RESULTS.md (26 Nov 2026).
+---
+<div class="viz" id="fitviz">
+  <p class="viz-title">Where the model sat, and how fast it wrote</p>
+  <p class="viz-sub">Pick a version. The bars are to scale: the GPU has 15,360 MiB, the server has 15 GiB of normal RAM.</p>
+  <div class="viz-pick" role="group" aria-label="Pick a version">
+    <button type="button" data-k="q4" aria-pressed="true">4-bit</button>
+    <button type="button" data-k="q8" aria-pressed="false">8-bit</button>
+    <button type="button" data-k="f16" aria-pressed="false">16-bit</button>
+    <button type="button" data-k="cpu" aria-pressed="false">CPU only</button>
+  </div>
+  <div>
+    <div class="viz-row-h"><b>GPU memory (fast)</b><span data-out="gpu"></span></div>
+    <div class="viz-bar" data-bar="gpu"></div>
+  </div>
+  <div>
+    <div class="viz-row-h"><b>Normal RAM, used by the CPU (slow)</b><span data-out="ram"></span></div>
+    <div class="viz-bar" data-bar="ram"></div>
+  </div>
+  <div class="viz-big"><b data-out="spd"></b><span>tokens a second (median of 3 runs)</span></div>
+  <p class="viz-why" data-out="why"></p>
+
+  <div class="fit-race" aria-label="The four versions writing at their measured speeds">
+    <p class="viz-title" style="font-size:.92rem">Watch them write</p>
+    <p class="viz-sub" style="margin:0 0 8px">All four start together and write at the speed we measured. Each word stands for one token.</p>
+    <div class="fit-lanes"></div>
+    <button type="button" class="viz-btn" data-act="race">Start again</button>
+  </div>
+  <p class="viz-src" data-out="src"></p>
+</div>
+
+<style is:global>
+  .fit-lanes{display:grid;gap:8px}
+  .fit-lane{display:grid;grid-template-columns:84px 1fr 64px;gap:10px;align-items:center;font-size:.85rem}
+  .fit-lane b{font-weight:600}
+  .fit-lane .t{min-width:0;height:2.6em;overflow:hidden;font-family:var(--er-mono);font-size:.74rem;line-height:1.3;color:var(--x-muted);padding:4px 8px;border-radius:6px;background:var(--x-soft);display:flex;align-items:flex-end}
+  .fit-lane .t span{display:block}
+  .fit-lane .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--x-muted)}
+  @media (max-width:520px){.fit-lane{grid-template-columns:64px 1fr 48px}}
+</style>
+
+<script>
+  const root = document.getElementById('fitviz');
+  if (root) {
+    const RAM_MIB = 15 * 1024;
+    const GPU = 15360;
+    const runs: Record<string, any> = {
+      q4: { gpu: 5161, ram: 0, gpuTxt: '5,161 of 15,360 MiB used', ramTxt: 'nothing from the model', spd: '41.0',
+        why: 'The 4-bit version is about 5.3 GB with its working memory, so it fits on the GPU with lots of room left.',
+        src: 'nvidia-smi 5,161 MiB, ollama ps 5.3 GB, 100% GPU, 41.3 / 41.0 / 40.7 tok/s.' },
+      q8: { gpu: 8363, ram: 0, gpuTxt: '8,363 of 15,360 MiB used', ramTxt: 'nothing from the model', spd: '29.6',
+        why: 'The 8-bit version is about 8.6 GB. It still fits, but there is more to read for every token, so it is slower than 4-bit.',
+        src: 'nvidia-smi 8,363 MiB, ollama ps 8.6 GB, 100% GPU, 29.7 / 29.6 / 29.6 tok/s.' },
+      f16: { gpu: 13881, ram: 16 * 1024 * 0.15, gpuTxt: '13,881 of 15,360 MiB used', ramTxt: 'about 15% of the model', spd: '8.6',
+        why: 'The 16-bit version is 16 GB, more than the GPU has. Ollama kept 85% on the GPU and ran 15% on the CPU. Every token has to wait for the CPU part.',
+        src: 'nvidia-smi 13,881 MiB, ollama ps 16 GB, 15% CPU / 85% GPU, 8.6 / 8.6 / 8.5 tok/s. The RAM bar is 15% of 16 GB, worked out from ollama ps, not measured on its own.' },
+      cpu: { gpu: 0, ram: 5.6 * 1024, gpuTxt: '0 MiB used', ramTxt: 'the whole model, about 5.6 GB', spd: '3.0',
+        why: 'The same 4-bit model, told not to use the GPU at all. It all runs on the 4 CPU cores and writes about 14 times slower.',
+        src: 'nvidia-smi 0 MiB, ollama ps 5.6 GB, 100% CPU, 3.0 / 2.9 / 3.0 tok/s.' },
+    };
+    const out = (k: string) => root.querySelector(`[data-out="${k}"]`) as HTMLElement;
+    const bar = (k: string, cls: string, v: number, total: number, label: string) => {
+      const el = root.querySelector(`[data-bar="${k}"]`) as HTMLElement;
+      el.innerHTML = '';
+      if (v > 0) { const i = document.createElement('i'); i.className = cls; i.style.width = (v / total * 100) + '%'; i.textContent = v / total > .14 ? label : ''; el.appendChild(i); }
+    };
+    const show = (k: string) => {
+      const r = runs[k];
+      root.querySelectorAll('.viz-pick button').forEach((b) => b.setAttribute('aria-pressed', (b as HTMLElement).dataset.k === k ? 'true' : 'false'));
+      bar('gpu', 'g', r.gpu, GPU, 'model on the GPU');
+      bar('ram', 'c', r.ram, RAM_MIB, 'model on the CPU');
+      out('gpu').textContent = r.gpuTxt; out('ram').textContent = r.ramTxt;
+      out('spd').textContent = r.spd; out('why').textContent = r.why; out('src').textContent = 'From the run: ' + r.src;
+    };
+    root.querySelectorAll('.viz-pick button').forEach((b) => b.addEventListener('click', () => show((b as HTMLElement).dataset.k!)));
+    show('q4');
+
+    // The race: each lane adds one word per token at the measured tokens per second.
+    const words = 'A GPU runs a language model by doing the same simple maths on thousands of numbers at the same time. For every new word it reads all the weights from its memory, so a smaller model has less to read and writes faster.'.split(' ');
+    const lanes = [['4-bit', 41.0], ['8-bit', 29.6], ['16-bit', 8.6], ['CPU only', 3.0]] as const;
+    const box = root.querySelector('.fit-lanes') as HTMLElement;
+    const state = lanes.map(([name, tps]) => {
+      const row = document.createElement('div'); row.className = 'fit-lane';
+      row.innerHTML = `<b>${name}</b><div class="t"><span></span></div><span class="n">0</span>`;
+      box.appendChild(row);
+      return { tps, text: row.querySelector('.t span') as HTMLElement, n: row.querySelector('.n') as HTMLElement };
+    });
+    // Resting state before it plays: every lane shows its measured speed.
+    state.forEach((l) => { l.text.textContent = words.slice(0, 14).join(' '); l.n.textContent = `${l.tps} tok/s`; });
+    let t0 = 0, raf = 0;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const frame = (t: number) => {
+      if (!t0) t0 = t;
+      const s = (t - t0) / 1000;
+      let done = true;
+      for (const l of state) {
+        const n = Math.min(words.length, Math.floor(s * l.tps));
+        if (n < words.length) done = false;
+        l.text.textContent = words.slice(Math.max(0, n - 14), n).join(' ');
+        l.n.textContent = n + (n === words.length ? ' ✓' : '');
+      }
+      if (!done) raf = requestAnimationFrame(frame);
+    };
+    const start = () => { cancelAnimationFrame(raf); t0 = 0;
+      if (reduce) { state.forEach((l) => { l.text.textContent = words.slice(-14).join(' '); l.n.textContent = `${l.tps} tok/s`; }); return; }
+      raf = requestAnimationFrame(frame); };
+    (root.querySelector('[data-act="race"]') as HTMLElement).addEventListener('click', start);
+    // Start the race when it scrolls into view, once.
+    const io = new IntersectionObserver((e) => { if (e[0].isIntersecting) { start(); io.disconnect(); } }, { threshold: .4 });
+    io.observe(box);
+  }
+</script>

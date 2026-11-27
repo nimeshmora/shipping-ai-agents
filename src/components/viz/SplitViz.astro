@@ -1,0 +1,94 @@
+---
+// Bench Log #2 picture: where the model and the KV cache went at 64K and 128K, and the 33 layers a token walks through.
+// Every number is from the Bench Log #2 run (26 Nov 2026): nvidia-smi, ollama ps and the Ollama log.
+---
+<div class="viz" id="splitviz">
+  <p class="viz-title">Where the model and the KV cache went</p>
+  <p class="viz-sub">Pick a run. The bars are to scale: the GPU has 15,360 MiB, the server has 16 GiB of normal RAM.</p>
+  <div class="viz-pick" role="group" aria-label="Pick a run">
+    <button type="button" data-k="c64" aria-pressed="true">64K context</button>
+    <button type="button" data-k="c128" aria-pressed="false">128K context</button>
+    <button type="button" data-k="c128q" aria-pressed="false">128K, 8-bit cache</button>
+  </div>
+  <div>
+    <div class="viz-row-h"><b>GPU memory (fast)</b><span data-out="gpu"></span></div>
+    <div class="viz-bar" data-bar="gpu"></div>
+  </div>
+  <div>
+    <div class="viz-row-h"><b>Normal RAM, used by the CPU (slow)</b><span data-out="ram"></span></div>
+    <div class="viz-bar" data-bar="ram"></div>
+  </div>
+  <div class="viz-legend">
+    <span><i style="background:var(--vz-model)"></i>the model</span>
+    <span><i style="background:var(--vz-kv)"></i>KV cache (notes on the chat)</span>
+    <span><i style="background:var(--vz-other)"></i>other</span>
+  </div>
+  <div>
+    <div class="viz-row-h"><b>The 33 layers, in the order every token goes through them</b><span data-out="layers"></span></div>
+    <div class="split-layers" aria-hidden="true"></div>
+    <div class="viz-legend" style="margin-top:8px">
+      <span><i style="background:var(--vz-gpu)"></i>layer on the GPU</span>
+      <span><i style="background:var(--vz-cpu)"></i>layer on the CPU</span>
+    </div>
+  </div>
+  <div class="viz-big"><b data-out="spd"></b><span>tokens a second, short question</span></div>
+  <p class="viz-why" data-out="why"></p>
+  <p class="viz-src" data-out="src"></p>
+</div>
+
+<style is:global>
+  .split-layers{display:grid;grid-template-columns:repeat(33,1fr);gap:3px}
+  .split-layers i{height:26px;border-radius:3px;background:var(--vz-gpu);transition:background .4s ease}
+  .split-layers i.c{background:var(--vz-cpu)}
+  .split-layers i.hit{outline:2px solid var(--x-text);outline-offset:1px}
+  @media (max-width:520px){.split-layers{gap:2px}.split-layers i{height:20px}}
+</style>
+
+<script>
+  const root = document.getElementById('splitviz');
+  if (root) {
+    const GPU = 15360, RAM = 16384;
+    type Part = [string, number, string];
+    const runs: Record<string, { gpu: Part[]; ram: Part[]; gpuTxt: string; ramTxt: string; gl: number; spd: string; why: string; src: string }> = {
+      c64: { gpu: [['m', 4403, 'model'], ['k', 8192, 'KV cache 8,192 MiB'], ['o', 306, '']], ram: [], gpuTxt: '12,901 of 15,360 MiB used', ramTxt: 'nothing from the model', gl: 33, spd: '42',
+        why: 'At 64K the KV cache is 8,192 MiB. The model and the cache both fit on the GPU, so every layer runs fast.',
+        src: 'nvidia-smi 12,901 MiB, "offloaded 33/33 layers to GPU", 42.0 / 41.9 / 41.9 tok/s. The model size on the GPU (4,403 MiB) is from the Ollama log. "Other" is what is left of the measured total.' },
+      c128: { gpu: [['m', 2789, 'model'], ['k', 9728, 'KV cache 9,728 MiB'], ['o', 1060, '']], ram: [['m', 1896, 'model'], ['k', 6656, 'KV cache 6,656 MiB']], gpuTxt: '13,577 of 15,360 MiB used', ramTxt: '8,552 MiB of the model and cache', gl: 20, spd: '6.9',
+        why: 'At 128K the KV cache alone is 16 GiB, more than the whole GPU. Ollama kept 20 layers on the GPU and moved 13 layers, and part of the cache, to normal RAM. Those 13 run on the CPU, and every token waits for them.',
+        src: 'Ollama log: CUDA0 model buffer 2,789 MiB, CPU model buffers 1,779 + 117 MiB, CUDA0 KV 9,728 MiB, CPU KV 6,656 MiB, 20 of 33 layers on the GPU. ollama ps 34%/66% CPU/GPU. 6.8 / 6.9 / 6.9 tok/s.' },
+      c128q: { gpu: [['m', 5353, 'model + other'], ['k', 8432, 'KV cache 8,432 MiB']], ram: [['k', 272, '']], gpuTxt: '13,785 of 15,360 MiB used', ramTxt: '1 layer and 272 MiB of cache', gl: 32, spd: '31',
+        why: 'The 8-bit cache is about half the size: 8,704 MiB at 128K. Now 32 of 33 layers fit back on the GPU. Only one layer and a small part of the cache stay on the CPU, so the speed comes most of the way back.',
+        src: 'nvidia-smi 13,785 MiB, ollama ps 6%/94% CPU/GPU, 32 of 33 layers on the GPU, 272 MiB of cache on the CPU, 31.1 / 31.3 / 31.3 tok/s. I don\'t have the exact model split for this run, so the first block is the rest of the measured total.' },
+    };
+    const out = (k: string) => root.querySelector(`[data-out="${k}"]`) as HTMLElement;
+    const bar = (k: string, parts: Part[], total: number) => {
+      const el = root.querySelector(`[data-bar="${k}"]`) as HTMLElement; el.innerHTML = '';
+      for (const [c, v, label] of parts) { const i = document.createElement('i'); i.className = c; i.style.width = (v / total * 100) + '%'; i.textContent = v / total > .13 ? label : ''; i.title = label; el.appendChild(i); }
+    };
+    const lay = root.querySelector('.split-layers') as HTMLElement;
+    for (let i = 0; i < 33; i++) lay.appendChild(document.createElement('i'));
+    const cells = [...lay.children] as HTMLElement[];
+    let timer = 0;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // A token walks through the layers: short steps on the GPU, long steps on the CPU (the picture, not a measurement).
+    const walk = (gl: number) => {
+      clearTimeout(timer); if (reduce) return;
+      let i = 0;
+      const step = () => { cells.forEach((c) => c.classList.remove('hit')); cells[i].classList.add('hit');
+        const d = i < gl ? 45 : 330; i = (i + 1) % 33; timer = window.setTimeout(step, i === 0 ? 700 : d); };
+      step();
+    };
+    const show = (k: string) => {
+      const r = runs[k];
+      root.querySelectorAll('.viz-pick button').forEach((b) => b.setAttribute('aria-pressed', (b as HTMLElement).dataset.k === k ? 'true' : 'false'));
+      bar('gpu', r.gpu, GPU); bar('ram', r.ram, RAM);
+      out('gpu').textContent = r.gpuTxt; out('ram').textContent = r.ramTxt;
+      cells.forEach((c, i) => c.classList.toggle('c', i >= r.gl));
+      out('layers').textContent = `${r.gl} on the GPU, ${33 - r.gl} on the CPU`;
+      out('spd').textContent = r.spd; out('why').textContent = r.why; out('src').textContent = 'From the run: ' + r.src;
+      walk(r.gl);
+    };
+    root.querySelectorAll('.viz-pick button').forEach((b) => b.addEventListener('click', () => show((b as HTMLElement).dataset.k!)));
+    show('c64');
+  }
+</script>

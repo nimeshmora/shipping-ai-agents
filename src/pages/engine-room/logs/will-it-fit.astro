@@ -7,6 +7,7 @@ import { url } from '../../../lib/url';
 import { KODEBOX, REPO } from '../../../lib/site';
 import { benchLogs } from '../../../lib/benchlogs';
 import BenchLogSeries from '../../../components/BenchLogSeries.astro';
+import FitViz from '../../../components/viz/FitViz.astro';
 
 const log = benchLogs.find((l) => l.slug === 'will-it-fit')!;
 const f = (name: string) => url(`bench-logs/01/${name}`);
@@ -141,6 +142,8 @@ nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv`;
           </tbody>
         </table>
       </div>
+
+      <FitViz />
 
       <h2>Why the speeds look like this</h2>
       <p>When a model writes, every new token needs every weight read from GPU memory once. So a quick upper limit is memory speed divided by model size. NVIDIA lists the T4 at 320 GB/s.</p>

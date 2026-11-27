@@ -7,6 +7,7 @@ import { url } from '../../../lib/url';
 import { KODEBOX, REPO } from '../../../lib/site';
 import { benchLogs } from '../../../lib/benchlogs';
 import BenchLogSeries from '../../../components/BenchLogSeries.astro';
+import ShareViz from '../../../components/viz/ShareViz.astro';
 
 const log = benchLogs.find((l) => l.slug === 'k8s-gpu-sharing')!;
 const f = (name: string) => url(`bench-logs/03/${name}`);
@@ -140,6 +141,8 @@ resources:
         <figcaption>The same on the four pods.</figcaption>
       </figure>
       <p>Why? vLLM is built to serve many people from one copy of the model. It puts everyone's next token into one batch and does them together. With four pods, there are four copies taking turns on the GPU instead. I measured the result, not the reason, so take that as my explanation, not a finding.</p>
+
+      <ShareViz />
 
       <h2>The template's own setup</h2>
       <p>The template also has a command, <code>kk-llmd</code>, that starts <a href="https://github.com/llm-d/llm-d" target="_blank" rel="noopener">llm-d</a>: two vLLM copies behind a router. It avoids both of the problems above: it sets <code>--gpu-memory-utilization=0.35</code> and starts the copies one at a time. The first copy was ready after 94 seconds, and both after 188.</p>

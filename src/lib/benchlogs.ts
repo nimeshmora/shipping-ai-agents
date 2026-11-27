@@ -16,6 +16,21 @@ export type BenchLog = {
 
 export const benchLogs: BenchLog[] = [
   {
+    number: 3,
+    slug: 'k8s-gpu-sharing',
+    title: 'Can four AI pods share one GPU on Kubernetes?',
+    date: '27 Nov 2026',
+    finding: 'Kubernetes split one T4 into 4 slots, but not its memory. Two vLLM pods on default settings crashed, and four small ones only came up when started one at a time. One bigger pod with the same memory served 16 people about 1.7 times faster.',
+    kit: ['NVIDIA Tesla T4', 'k3s + time-slicing', 'vLLM', 'Qwen3-0.6B'],
+    stats: [
+      { label: '1 pod, 16 people', value: '481.5 tok/s', pct: 100, tone: '' },
+      { label: '4 pods sharing, 16 people', value: '281.7 tok/s', pct: 59, tone: '' },
+      { label: '1 pod, 1 person', value: '31.8 tok/s', pct: 7, tone: 'cpu' },
+      { label: '2 pods, vLLM defaults', value: 'crashed', pct: 3, tone: 'warn' },
+    ],
+    statsNote: 'Tokens per second for the whole GPU, Qwen3-0.6B on vLLM, NVIDIA T4. Median of 3 runs. Both setups used about 10.8 GiB.',
+  },
+  {
     number: 2,
     slug: 'long-context',
     title: 'How long can a chat get on a 16 GB GPU?',

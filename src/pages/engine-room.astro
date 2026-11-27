@@ -7,7 +7,7 @@ import '../styles/engine-room.css';
 import { url } from '../lib/url';
 import { KODEBOX, REPO } from '../lib/site';
 import { benchLogs } from '../lib/benchlogs';
-import GpuStory from '../components/viz/GpuStory.astro';
+import HowItWorks from '../components/viz/HowItWorks.astro';
 
 // 03 Start here: chapters from the notebooks, in the order a newcomer should read them.
 const start = [
@@ -34,9 +34,9 @@ const older = benchLogs.slice(1);
         <div class="gs-head">
           <p class="er-kicker"><span class="er-dot" aria-hidden="true"></span>Nimesha's GPU Corner</p>
           <h1 class="hero-title">How an AI model runs on a GPU</h1>
-          <p class="hero-sub">Six steps, every number measured on a real 16 GB NVIDIA T4. Click a step, or let it play.</p>
+          <p class="hero-sub">From the machine to Kubernetes, one picture at a time. Click the tabs and try things. The last tabs show it measured on a real GPU.</p>
         </div>
-        <GpuStory />
+        <HowItWorks />
         <div class="er-cta">
           <a class="btn primary" href={url(`engine-room/logs/${latest.slug}/`)}>Read Bench Log #{latest.number}</a>
           <a class="btn" href="#fit">Will it fit?</a>

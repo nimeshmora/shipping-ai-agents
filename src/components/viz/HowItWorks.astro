@@ -1,0 +1,467 @@
+---
+// The GPU Corner's opening explainer: how AI models run on a GPU, in tabs, from the machine to Kubernetes.
+// Hardware numbers are published specs (NVIDIA data sheets). The memory and speed tools are estimates and say so;
+// measured numbers come from the Bench Logs and link to them. The "Real T4 runs" tab is GpuStory.
+import { url } from '../../lib/url';
+import GpuStory from './GpuStory.astro';
+const tabs = [
+  ['machine', 'The machine'], ['token', 'One token'], ['fit', 'What fits'], ['users', 'Many users'],
+  ['k8s', 'Kubernetes'], ['big', 'Bigger setups'], ['real', 'Real T4 runs'], ['words', 'Words'],
+];
+---
+<div class="hw" id="howitworks">
+  <ol class="hw-tabs" role="tablist" aria-label="How it works">
+    {tabs.map(([k, label], i) => (
+      <li><button type="button" role="tab" id={`hwt-${k}`} aria-controls={`hwp-${k}`} aria-selected={i === 0 ? 'true' : 'false'} data-t={k}><span class="hw-n">{i + 1}</span>{label}</button></li>
+    ))}
+  </ol>
+
+  <!-- 1. THE MACHINE -->
+  <div class="hw-panel" role="tabpanel" id="hwp-machine" aria-labelledby="hwt-machine">
+    <p class="hw-lead">A GPU server is a normal computer with a graphics card added. The AI work happens on the card. Click any part.</p>
+    <div class="viz hw-machine">
+      <svg viewBox="0 0 900 330" class="hw-svg" role="img" aria-label="A server: disk, CPU and RAM on the left, a PCIe link, and a GPU with cores and VRAM on the right">
+        <g class="part" data-part="disk"><rect x="20" y="230" width="150" height="70" rx="10"/><text x="95" y="262">Disk</text><text x="95" y="283" class="s">model files</text></g>
+        <g class="part" data-part="cpu"><rect x="20" y="30" width="150" height="80" rx="10"/><text x="95" y="66">CPU</text><text x="95" y="88" class="s">4 cores</text></g>
+        <g class="part" data-part="ram"><rect x="20" y="130" width="150" height="80" rx="10"/><text x="95" y="166">RAM</text><text x="95" y="188" class="s">16 GB</text></g>
+        <g class="part" data-part="pcie"><rect x="215" y="150" width="150" height="40" rx="20"/><text x="290" y="175" class="s">PCIe link</text></g>
+        <g class="part gpu" data-part="gpu"><rect x="400" y="20" width="480" height="290" rx="16"/><text x="430" y="52" class="l">GPU · NVIDIA T4</text></g>
+        <g class="part" data-part="cores"><rect x="425" y="70" width="200" height="220" rx="10"/><text x="525" y="98">Cores</text><g class="cores-grid"></g></g>
+        <g class="part" data-part="vram"><rect x="650" y="70" width="205" height="220" rx="10"/><text x="752" y="98">VRAM</text><text x="752" y="118" class="s">16 GB, GPU memory</text>
+          <rect class="vram-fill" x="665" y="280" width="175" height="0" rx="6"/></g>
+        <path class="flow" d="M95 230 V210 M95 170 H215 M365 170 H650"/>
+        <circle class="dot" r="7" cx="-20" cy="-20"><animateMotion id="am-load" dur="2.4s" begin="indefinite" fill="freeze" path="M115 265 L115 170 L752 170 L752 240"/></circle>
+        <circle class="dot d2" r="6" cx="-20" cy="-20"><animateMotion id="am-tok" dur="0.9s" begin="indefinite" repeatCount="6" path="M752 200 L620 180 L525 190 L620 200 L752 200"/></circle>
+      </svg>
+      <div class="hw-info" aria-live="polite">
+        <p class="viz-title" data-o="pt">Click a part</p>
+        <p class="viz-why" data-o="pd">Or press the buttons to see what happens when a model loads, and when it writes.</p>
+      </div>
+      <div class="hw-btns">
+        <button type="button" class="viz-btn" data-act="load">Load the model</button>
+        <button type="button" class="viz-btn" data-act="write">Write some tokens</button>
+      </div>
+      <p class="viz-src">T4 numbers from NVIDIA's data sheet. The 4 cores and 16 GB of RAM are the KodeBox server from the <a href={url('engine-room/logs/will-it-fit/')}>Bench Logs</a>.</p>
+    </div>
+  </div>
+
+  <!-- 2. ONE TOKEN -->
+  <div class="hw-panel" role="tabpanel" id="hwp-token" aria-labelledby="hwt-token" hidden>
+    <p class="hw-lead">A model doesn't write a whole answer at once. It writes one <b>token</b> (a word or a piece of one), adds it to the text, and goes again. Press play.</p>
+    <div class="viz hw-token">
+      <div class="tk-steps">
+        <div class="tk"><b>Text to tokens</b><span>Your question is cut into tokens, each a number.</span></div>
+        <div class="tk"><b>Through every layer</b><span>The tokens pass through all the layers in order. Each layer is maths with the model's weights, read from VRAM.</span></div>
+        <div class="tk"><b>Save the notes</b><span>Each layer keeps a key and a value for every token: the <b>KV cache</b>. Next time it doesn't redo that work.</span></div>
+        <div class="tk"><b>Pick the next token</b><span>The last layer scores every possible next token. One is picked and added to the text.</span></div>
+      </div>
+      <div class="tk-out"><span class="tk-q">Q: What does a GPU do?</span> <span data-o="ans"></span><span class="tk-cur">▍</span></div>
+      <div class="tk-kv"><span>KV cache</span><div class="tk-kvbar"><i data-o="kv"></i></div><span data-o="kvn">7 tokens</span></div>
+      <div class="hw-btns"><button type="button" class="viz-btn" data-act="tplay">Play</button><button type="button" class="viz-btn" data-act="treset">Reset</button></div>
+      <div class="tk-limit">
+        <p class="viz-title">Why speed depends on memory</p>
+        <p class="viz-why">For every token, the GPU reads all of the model's weights from VRAM. So the fastest it can possibly go is roughly <b>memory speed ÷ model size</b>. Pick a GPU and a model.</p>
+        <div class="viz-pick" role="group" aria-label="GPU" data-g="gpu">
+          <button type="button" data-v="t4" aria-pressed="true">T4 · 320 GB/s</button>
+          <button type="button" data-v="l4" aria-pressed="false">L4 · 300 GB/s</button>
+          <button type="button" data-v="a100" aria-pressed="false">A100 · 2,039 GB/s</button>
+          <button type="button" data-v="h100" aria-pressed="false">H100 · 3,350 GB/s</button>
+        </div>
+        <div class="viz-pick" role="group" aria-label="Model" data-g="msz">
+          <button type="button" data-v="4.9" aria-pressed="true">8B, 4-bit · 4.9 GB</button>
+          <button type="button" data-v="8.5" aria-pressed="false">8B, 8-bit · 8.5 GB</button>
+          <button type="button" data-v="16" aria-pressed="false">8B, 16-bit · 16 GB</button>
+        </div>
+        <div class="viz-big"><b data-o="ceil"></b><span>tokens a second, at most, for one person</span></div>
+        <p class="viz-src" data-o="ceilnote"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. WHAT FITS -->
+  <div class="hw-panel" role="tabpanel" id="hwp-fit" aria-labelledby="hwt-fit" hidden>
+    <p class="hw-lead">Two things fill GPU memory: the model's <b>weights</b>, and the <b>KV cache</b> for every chat. Weights depend on the model size and the bits. The KV cache grows with the chat length and the number of people. Try it.</p>
+    <div class="viz hw-fit">
+      <div class="fit-ctl">
+        <label>Model <select id="f-model"><option value="1">Llama 3.2 1B</option><option value="8" selected>Llama 3.1 8B</option><option value="70">Llama 3.1 70B</option></select></label>
+        <label>Bits per weight <select id="f-bits"><option value="0.61" selected>4-bit</option><option value="1.06">8-bit</option><option value="2">16-bit</option></select></label>
+        <label>KV cache <select id="f-kv"><option value="1" selected>16-bit</option><option value="0.53">8-bit</option></select></label>
+        <label>Chat length <select id="f-ctx"><option value="4096" selected>4K tokens</option><option value="16384">16K</option><option value="32768">32K</option><option value="65536">64K</option><option value="131072">128K</option></select></label>
+        <label>People at once <select id="f-users"><option>1</option><option>4</option><option>8</option><option>16</option></select></label>
+        <label>GPU <select id="f-gpu"><option value="16" selected>T4 · 16 GB</option><option value="24">L4 · 24 GB</option><option value="80">A100 · 80 GB</option><option value="80.1">H100 · 80 GB</option></select></label>
+      </div>
+      <div>
+        <div class="viz-row-h"><b>GPU memory</b><span data-o="fused"></span></div>
+        <div class="viz-bar fit-bar" data-b="vram"></div>
+      </div>
+      <div class="viz-legend">
+        <span><i style="background:var(--vz-model)"></i>weights</span>
+        <span><i style="background:var(--vz-kv)"></i>KV cache</span>
+        <span><i style="background:var(--vz-cpu)"></i>does not fit</span>
+      </div>
+      <p class="fit-verdict" data-o="verdict"></p>
+      <p class="viz-src">An estimate: weights = parameters × bytes per weight (about 0.61 for 4-bit and 1.06 for 8-bit in llama.cpp's formats), KV cache = 2 × layers × KV heads × head size × bytes × tokens × people. Real servers also need a little working memory. On the T4 it matched our runs closely: 8B 4-bit at 4K comes to 5.4 GB here, and we measured 5,161 MiB (<a href={url('engine-room/logs/will-it-fit/')}>Bench Log #1</a>).</p>
+    </div>
+  </div>
+
+  <!-- 4. MANY USERS -->
+  <div class="hw-panel" role="tabpanel" id="hwp-users" aria-labelledby="hwt-users" hidden>
+    <p class="hw-lead">Reading the weights is the slow part. A serving engine like vLLM reads them once and works out the next token for everyone in the batch together. Compare.</p>
+    <div class="viz hw-batch">
+      <div class="viz-pick" role="group" aria-label="Mode" data-g="bmode">
+        <button type="button" data-v="seq" aria-pressed="true">One person at a time</button>
+        <button type="button" data-v="bat" aria-pressed="false">Batched</button>
+      </div>
+      <div class="bt-users"></div>
+      <p class="viz-why" data-o="bnote"></p>
+      <p class="viz-src">Measured in <a href={url('engine-room/logs/k8s-gpu-sharing/')}>Bench Log #3</a>: one vLLM server on a T4 wrote 31.8 tokens a second for 1 person and 481.5 in total for 16 people.</p>
+    </div>
+  </div>
+
+  <!-- 5. KUBERNETES -->
+  <div class="hw-panel" role="tabpanel" id="hwp-k8s" aria-labelledby="hwt-k8s" hidden>
+    <p class="hw-lead">Kubernetes runs apps in <b>pods</b> on machines called <b>nodes</b>. It doesn't know about GPUs by itself. NVIDIA's <b>device plugin</b> tells it how many the node has, as <code>nvidia.com/gpu</code>. A pod asks for one, and Kubernetes only starts it where one is free. Pick how the GPU is shared, then add pods.</p>
+    <div class="viz hw-k8s">
+      <div class="viz-pick" role="group" aria-label="Sharing" data-g="kmode">
+        <button type="button" data-v="none" aria-pressed="true">No sharing</button>
+        <button type="button" data-v="ts" aria-pressed="false">Time-slicing</button>
+        <button type="button" data-v="mps" aria-pressed="false">MPS</button>
+        <button type="button" data-v="mig" aria-pressed="false">MIG</button>
+      </div>
+      <div class="k8-node">
+        <div class="k8-head"><b>Node</b><span data-o="kslots"></span></div>
+        <div class="k8-gpu"><span class="k8-gl" data-o="kgpu"></span><div class="k8-slots"></div></div>
+        <div class="k8-pend"><b>Waiting (Pending)</b><div class="k8-pq"></div></div>
+      </div>
+      <div class="hw-btns"><button type="button" class="viz-btn" data-act="kadd">Add a pod</button><button type="button" class="viz-btn" data-act="kclear">Clear</button></div>
+      <p class="viz-why" data-o="knote"></p>
+      <p class="viz-src">Time-slicing is what the KodeBox "Kubernetes on GPU" template uses, with 4 slots; <a href={url('engine-room/logs/k8s-gpu-sharing/')}>Bench Log #3</a> shows what happened. MPS and MIG are from NVIDIA's docs; MIG needs newer cards such as the A100 or H100.</p>
+    </div>
+  </div>
+
+  <!-- 6. BIGGER SETUPS -->
+  <div class="hw-panel" role="tabpanel" id="hwp-big" aria-labelledby="hwt-big" hidden>
+    <p class="hw-lead">Llama 3.1 70B in 16-bit is about 141 GB of weights. No single GPU has that much memory, so the model is split across GPUs. There are two common ways.</p>
+    <div class="viz hw-big">
+      <div class="viz-pick" role="group" aria-label="Split" data-g="split">
+        <button type="button" data-v="pp" aria-pressed="true">Split by layers (pipeline)</button>
+        <button type="button" data-v="tp" aria-pressed="false">Split every layer (tensor)</button>
+      </div>
+      <div class="bg-gpus">
+        <div class="bg-gpu"><b>GPU 1 · 80 GB</b><div class="bg-layers" data-g1></div></div>
+        <div class="bg-link"><span data-o="link"></span></div>
+        <div class="bg-gpu"><b>GPU 2 · 80 GB</b><div class="bg-layers" data-g2></div></div>
+      </div>
+      <p class="viz-why" data-o="bignote"></p>
+      <p class="viz-src">Llama 3.1 70B has 80 layers. NVLink on the H100 is 900 GB/s; a PCIe Gen5 x16 slot is about 64 GB/s each way (NVIDIA and PCI-SIG specs).</p>
+    </div>
+  </div>
+
+  <!-- 7. REAL T4 RUNS -->
+  <div class="hw-panel" role="tabpanel" id="hwp-real" aria-labelledby="hwt-real" hidden>
+    <p class="hw-lead">The same ideas, measured on a real 16 GB NVIDIA T4 in the Bench Logs. Click a step, or let it play.</p>
+    <GpuStory />
+  </div>
+
+  <!-- 8. WORDS -->
+  <div class="hw-panel" role="tabpanel" id="hwp-words" aria-labelledby="hwt-words" hidden>
+    <dl class="hw-gl">
+      <div><dt>Token</dt><dd>A word or a piece of a word. Models read and write tokens.</dd></div>
+      <div><dt>Weights (parameters)</dt><dd>The model's numbers. "8B" means 8 billion of them.</dd></div>
+      <div><dt>Layer</dt><dd>One step of maths. Every token goes through all of them, in order.</dd></div>
+      <div><dt>VRAM</dt><dd>The GPU's own memory. Fast, but limited.</dd></div>
+      <div><dt>RAM</dt><dd>The computer's main memory, used by the CPU. Bigger, but much slower for this work.</dd></div>
+      <div><dt>PCIe</dt><dd>The link between the CPU side and the GPU.</dd></div>
+      <div><dt>Memory bandwidth</dt><dd>How fast the GPU can read its VRAM, in GB per second. It sets the speed limit.</dd></div>
+      <div><dt>Quantization</dt><dd>Storing weights with fewer bits (8-bit, 4-bit) so they take less room.</dd></div>
+      <div><dt>KV cache</dt><dd>The notes a model keeps on every token of the chat, so it doesn't redo work.</dd></div>
+      <div><dt>Context length</dt><dd>The longest chat a model is set up for. Longer means a bigger KV cache.</dd></div>
+      <div><dt>Batching</dt><dd>Working out the next token for many people together.</dd></div>
+      <div><dt>Inference / serving</dt><dd>Running a trained model to answer people.</dd></div>
+      <div><dt>Pod, node</dt><dd>In Kubernetes, a running app, and the machine it runs on.</dd></div>
+      <div><dt>Device plugin</dt><dd>Tells Kubernetes how many GPUs a node has.</dd></div>
+      <div><dt>Time-slicing, MPS, MIG</dt><dd>Three ways to share one GPU between pods: by turns, by soft slices, by hard slices.</dd></div>
+      <div><dt>Tensor / pipeline parallel</dt><dd>Two ways to split one model across several GPUs.</dd></div>
+    </dl>
+  </div>
+</div>
+
+<style is:global>
+  .hw{--vz-gpu:#2f5be0;--vz-model:#8b7cf6;--vz-kv:#f2be2c;--vz-other:#b9bec8;--vz-cpu:#e08a3c;--vz-empty:var(--x-soft);display:grid;gap:14px;min-width:0}
+  :root[data-theme="dark"] .hw{--vz-gpu:#7f9cff}
+  .hw .viz{margin:0}
+  .hw-tabs{list-style:none;margin:0;padding:0 0 4px;display:flex;gap:6px;overflow-x:auto}
+  .hw-tabs li{margin:0;flex:0 0 auto}
+  .hw-tabs button{display:flex;align-items:center;gap:8px;font:600 .9rem var(--x-font);color:var(--x-muted);background:var(--x-card);border:1.5px solid var(--x-line);border-radius:999px;padding:7px 14px 7px 8px;cursor:pointer;white-space:nowrap}
+  .hw-tabs button[aria-selected="true"]{color:var(--x-card);background:var(--x-text);border-color:var(--x-text)}
+  .hw-tabs button:focus-visible,.hw .viz-btn:focus-visible{outline:3px solid var(--vz-gpu);outline-offset:2px}
+  .hw-n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--x-soft);color:var(--x-text);font-size:.75rem}
+  .hw-tabs button[aria-selected="true"] .hw-n{background:var(--x-card);color:var(--x-text)}
+  .hw-panel{display:grid;gap:12px;min-width:0}
+  .hw-panel[hidden]{display:none}
+  .hw-lead{margin:0;max-width:72ch;font-size:1.02rem}
+  .hw-btns{display:flex;flex-wrap:wrap;gap:8px}
+  .hw-svg{width:100%;height:auto;display:block}
+  .hw-svg .part{cursor:pointer}
+  .hw-svg .part rect{fill:var(--x-soft);stroke:var(--x-line2);stroke-width:2}
+  .hw-svg .part.gpu > rect{fill:none;stroke:var(--vz-gpu);stroke-dasharray:6 6}
+  .hw-svg .part:hover > rect,.hw-svg .part.on > rect{stroke:var(--vz-gpu);stroke-width:3}
+  .hw-svg text{fill:var(--x-text);font:700 17px var(--x-font);text-anchor:middle}
+  .hw-svg text.s{font:500 13px var(--x-font);fill:var(--x-muted)}
+  .hw-svg text.l{text-anchor:start;font-size:15px;fill:var(--vz-gpu)}
+  .hw-svg .flow{fill:none;stroke:var(--x-line2);stroke-width:3;stroke-dasharray:4 6}
+  .hw-svg .dot{fill:var(--vz-model)} .hw-svg .dot.d2{fill:var(--vz-kv)}
+  .hw-svg .core{fill:var(--vz-gpu);opacity:.3}
+  .hw-svg .core.on{opacity:1}
+  .hw-svg .vram-fill{fill:var(--vz-model)}
+  .hw-info{min-height:4.6em}
+  .tk-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .tk{border:1.5px solid var(--x-line);border-radius:10px;padding:10px;display:grid;gap:4px;align-content:start;font-size:.84rem;color:var(--x-muted)}
+  .tk b{color:var(--x-text);font-size:.9rem}
+  .tk.on{border-color:var(--vz-gpu);background:var(--x-soft)}
+  .tk-out{font-family:var(--er-mono);font-size:.9rem;background:var(--x-soft);border-radius:8px;padding:12px;min-height:3.2em}
+  .tk-q{color:var(--x-muted)} .tk-cur{animation:hwblink 1s steps(1) infinite}
+  @keyframes hwblink{50%{opacity:0}}
+  .tk-kv{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:.85rem;color:var(--x-muted)}
+  .tk-kvbar{height:14px;border-radius:7px;background:var(--x-soft);overflow:hidden}
+  .tk-kvbar i{display:block;height:100%;width:0;background:var(--vz-kv)}
+  .tk-limit{border-top:1px solid var(--x-line);padding-top:14px;display:grid;gap:10px}
+  @media (max-width:700px){.tk-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .fit-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .fit-ctl label{display:grid;gap:4px;font-size:.82rem;font-weight:600;color:var(--x-muted)}
+  .fit-ctl select{font:500 .92rem var(--x-font);color:var(--x-text);background:var(--x-card);border:1.5px solid var(--x-line2);border-radius:8px;padding:7px 8px;min-width:0}
+  .fit-bar{height:42px}
+  .fit-verdict{margin:0;font-weight:600}
+  @media (max-width:640px){.fit-ctl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .bt-users{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+  .bt-u{height:46px;border-radius:8px;background:var(--x-soft);position:relative;overflow:hidden;font-size:.7rem;color:var(--x-muted);display:grid;place-items:center}
+  .bt-u i{position:absolute;left:0;bottom:0;width:100%;height:0;background:var(--vz-gpu);opacity:.85}
+  .bt-u span{position:relative}
+  @media (max-width:520px){.bt-users{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .k8-node{border:1.5px solid var(--x-line2);border-radius:12px;padding:12px;display:grid;gap:10px}
+  .k8-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.88rem}.k8-head span{color:var(--x-muted);font-family:var(--er-mono);font-size:.8rem}
+  .k8-gpu{border:1.5px dashed var(--vz-gpu);border-radius:10px;padding:10px;display:grid;gap:8px}
+  .k8-gl{font-size:.8rem;color:var(--x-muted)}
+  .k8-slots{display:grid;gap:6px;grid-template-columns:repeat(var(--n,1),minmax(0,1fr))}
+  .k8-slot{min-height:54px;border-radius:8px;border:1.5px solid var(--x-line);display:grid;place-items:center;font-size:.74rem;color:var(--x-muted);text-align:center;padding:4px;min-width:0;overflow-wrap:anywhere}
+  .k8-slot.full{background:var(--vz-gpu);color:#fff;border-color:var(--vz-gpu)}
+  .k8-slot.crash{background:var(--vz-cpu);color:#15181c;border-color:var(--vz-cpu)}
+  .k8-pend{font-size:.82rem;color:var(--x-muted);display:grid;gap:6px}
+  .k8-pq{display:flex;flex-wrap:wrap;gap:6px;min-height:30px}
+  .k8-pq i{font-style:normal;font-size:.75rem;padding:5px 9px;border-radius:999px;border:1.5px dashed var(--x-line2)}
+  .bg-gpus{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr);gap:10px;align-items:center}
+  .bg-gpu{border:1.5px solid var(--vz-gpu);border-radius:10px;padding:10px;display:grid;gap:8px;font-size:.85rem;min-width:0}
+  .bg-layers{display:grid;grid-template-columns:repeat(10,1fr);gap:2px}
+  .bg-layers i{height:14px;border-radius:2px;background:var(--vz-model)}
+  .bg-layers i.half{background:linear-gradient(90deg,var(--vz-model) 50%,var(--x-soft) 50%)}
+  .bg-layers i.hit{outline:2px solid var(--x-text)}
+  .bg-link{text-align:center;font-size:.78rem;color:var(--x-muted);border-top:3px dashed var(--x-line2);padding-top:6px}
+  @media (max-width:640px){.bg-gpus{grid-template-columns:minmax(0,1fr)}.bg-link{border-top:0;border-left:3px dashed var(--x-line2);padding:6px 0 6px 10px;text-align:left}}
+  .hw-gl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;margin:0}
+  .hw-gl div{border-bottom:1px solid var(--x-line);padding:8px 0}
+  .hw-gl dt{font-weight:700}.hw-gl dd{margin:2px 0 0;color:var(--x-muted);font-size:.93rem}
+  @media (max-width:640px){.hw-gl{grid-template-columns:minmax(0,1fr)}}
+  @media (prefers-reduced-motion: reduce){.tk-cur{animation:none}}
+</style>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.getElementById('howitworks');
+  if (root) {
+    const q = (s: string, r: ParentNode = root) => r.querySelector(s) as HTMLElement;
+    const qa = (s: string, r: ParentNode = root) => [...r.querySelectorAll(s)] as HTMLElement[];
+    const pick = (g: string, fn: (v: string) => void) => {
+      const btns = qa('button', q(`[data-g="${g}"]`));
+      btns.forEach((b) => b.addEventListener('click', () => { btns.forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); fn(b.dataset.v!); }));
+      fn((btns.find((b) => b.getAttribute('aria-pressed') === 'true') || btns[0]).dataset.v!);
+    };
+
+    // Tabs
+    const tabs = qa('.hw-tabs button');
+    const showTab = (k: string) => {
+      tabs.forEach((t) => t.setAttribute('aria-selected', t.dataset.t === k ? 'true' : 'false'));
+      qa('.hw-panel').forEach((p) => (p.hidden = p.id !== 'hwp-' + k));
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.t!)));
+
+    // 1. The machine
+    {
+      const box = q('.hw-machine');
+      const info: Record<string, [string, string]> = {
+        disk: ['Disk', 'Where the model file lives when nothing is running. Loading a model means copying it from the disk into memory first.'],
+        cpu: ['CPU', 'The main processor: a few strong cores that do one thing after another. It runs the program, but it is slow at model maths. In Bench Log #1 the same model wrote 3 tokens a second on the CPU and 41 on the GPU.'],
+        ram: ['RAM', 'The computer\'s main memory, used by the CPU. If a model does not fit on the GPU, the part that spills over sits here and runs on the CPU, and everything slows down.'],
+        pcie: ['PCIe link', 'The road between the CPU side and the GPU. The T4 uses PCIe Gen3 x16, about 16 GB a second each way. Fine for loading a model once, far too slow to read it again for every token.'],
+        gpu: ['GPU', 'The graphics card that does the AI maths. It has its own cores and its own memory (VRAM). The T4 is a data-centre card from 2018 that uses 70 watts.'],
+        cores: ['GPU cores', 'Thousands of small cores that do the same simple maths at the same time. The T4 has 2,560 CUDA cores and 320 Tensor Cores, which are built for this kind of maths.'],
+        vram: ['VRAM (GPU memory)', 'The GPU\'s own fast memory: 16 GB on the T4, read at about 320 GB a second. The model\'s weights and the KV cache have to fit here to run at full speed.'],
+      };
+      const cg = q('.cores-grid', box);
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 9; c++) {
+        const e = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        e.setAttribute('x', String(440 + c * 20)); e.setAttribute('y', String(118 + r * 20)); e.setAttribute('width', '14'); e.setAttribute('height', '14'); e.setAttribute('rx', '3'); e.setAttribute('class', 'core'); cg.appendChild(e);
+      }
+      const cores = qa('.core', box);
+      const say = (t: string, d: string) => { q('[data-o="pt"]', box).textContent = t; q('[data-o="pd"]', box).textContent = d; };
+      qa('.part', box).forEach((p) => p.addEventListener('click', (ev) => {
+        ev.stopPropagation(); qa('.part', box).forEach((x) => x.classList.remove('on')); p.classList.add('on');
+        const [t, d] = info[p.dataset.part!]; say(t, d);
+      }));
+      const fill = q('.vram-fill', box);
+      const setFill = (h: number) => { fill.setAttribute('height', String(h)); fill.setAttribute('y', String(280 - h)); };
+      q('[data-act="load"]', box).addEventListener('click', () => {
+        say('Loading the model', 'The model file goes from the disk into RAM, across the PCIe link, and into VRAM. This happens once, when the model starts.');
+        setFill(0);
+        if (reduce) { setFill(150); return; }
+        (q('#am-load', box) as unknown as SVGAnimationElement).beginElement();
+        let h = 0; const iv = setInterval(() => { h += 10; setFill(h); if (h >= 150) clearInterval(iv); }, 160);
+      });
+      q('[data-act="write"]', box).addEventListener('click', () => {
+        setFill(150);
+        say('Writing tokens', 'Now the work happens inside the GPU. For each token, the cores read the weights from VRAM, do the maths all at once, and go again. The CPU and the PCIe link are hardly used.');
+        if (reduce) return;
+        (q('#am-tok', box) as unknown as SVGAnimationElement).beginElement();
+        let n = 0; const iv = setInterval(() => { cores.forEach((c) => c.classList.toggle('on', Math.random() < .7)); if (++n > 36) { clearInterval(iv); cores.forEach((c) => c.classList.remove('on')); } }, 150);
+      });
+    }
+
+    // 2. One token
+    {
+      const box = q('.hw-token');
+      const words = ['It', ' does', ' the', ' same', ' simple', ' maths', ' on', ' thousands', ' of', ' numbers', ' at', ' once', '.'];
+      const steps = qa('.tk', box); const ans = q('[data-o="ans"]', box); const kv = q('[data-o="kv"]', box); const kvn = q('[data-o="kvn"]', box);
+      const prompt = 7; let n = 0, timer = 0, phase = 0;
+      const draw = () => { ans.textContent = words.slice(0, n).join(''); const t = prompt + n; kv.style.width = (t / (prompt + words.length) * 100) + '%'; kvn.textContent = `${t} tokens`; };
+      const tick = () => {
+        steps.forEach((s, i) => s.classList.toggle('on', i === phase));
+        if (phase === 3) { n++; draw(); }
+        if (n >= words.length) { setTimeout(() => steps.forEach((s) => s.classList.remove('on')), 400); return; }
+        phase = phase === 3 ? 1 : phase + 1;
+        timer = window.setTimeout(tick, 420);
+      };
+      const reset = () => { clearTimeout(timer); n = 0; phase = 0; steps.forEach((s) => s.classList.remove('on')); draw(); };
+      q('[data-act="tplay"]', box).addEventListener('click', () => { reset(); if (reduce) { n = words.length; draw(); return; } tick(); });
+      q('[data-act="treset"]', box).addEventListener('click', reset);
+      draw();
+      let bw = 320, size = 4.9;
+      const gpus: Record<string, number> = { t4: 320, l4: 300, a100: 2039, h100: 3350 };
+      const calc = () => {
+        q('[data-o="ceil"]', box).textContent = '≈ ' + Math.round(bw / size);
+        q('[data-o="ceilnote"]', box).textContent = bw === 320
+          ? (size === 16 ? 'On the T4 this one does not even fit: it is 16 GB and the T4 has about 15 GiB usable. We measured 8.6 tokens a second with part of it on the CPU (Bench Log #1).'
+            : `An upper limit, not a promise. On our T4 we measured ${size === 4.9 ? '41' : '29.6'} tokens a second (Bench Log #1). Real runs lose time to other work.`)
+          : 'An upper limit worked out from the published memory speed, not measured here. Memory speeds from NVIDIA: L4 300 GB/s, A100 80GB SXM 2,039 GB/s, H100 SXM 3,350 GB/s.';
+      };
+      pick('gpu', (v) => { bw = gpus[v]; calc(); });
+      pick('msz', (v) => { size = +v; calc(); });
+    }
+
+    // 3. What fits
+    {
+      const box = q('.hw-fit');
+      const models: Record<string, { p: number; kv: number }> = {
+        '1': { p: 1.24, kv: 32 * 1024 },   // 16 layers x 8 KV heads x 64 x 2 (K and V) x 2 bytes
+        '8': { p: 8.03, kv: 128 * 1024 },  // 32 x 8 x 128 x 2 x 2
+        '70': { p: 70.6, kv: 320 * 1024 }, // 80 x 8 x 128 x 2 x 2
+      };
+      const sel = (id: string) => box.querySelector('#' + id) as HTMLSelectElement;
+      const run = () => {
+        const m = models[sel('f-model').value]; const bpw = +sel('f-bits').value; const kvf = +sel('f-kv').value;
+        const ctx = +sel('f-ctx').value; const users = +sel('f-users').value; const vram = Math.floor(+sel('f-gpu').value);
+        const w = m.p * bpw; const k = m.kv * kvf * ctx * users / 1e9; const tot = w + k; const scale = Math.max(vram, tot);
+        const el = q('[data-b="vram"]', box); el.innerHTML = '';
+        const seg = (cls: string, gb: number, label: string) => { if (gb <= 0) return; const i = document.createElement('i'); i.className = cls; i.style.width = (gb / scale * 100) + '%'; i.textContent = gb / scale > .14 ? label : ''; el.appendChild(i); };
+        const wIn = Math.min(w, vram), kIn = Math.max(0, Math.min(k, vram - wIn)), over = Math.max(0, tot - vram);
+        seg('m', wIn, `weights ${w.toFixed(1)} GB`); seg('k', kIn, `KV ${k.toFixed(1)} GB`); seg('c', over, `${over.toFixed(1)} GB over`);
+        q('[data-o="fused"]', box).textContent = `about ${tot.toFixed(1)} of ${vram} GB`;
+        q('[data-o="verdict"]', box).textContent = tot <= vram * .94 ? `Fits, with about ${(vram - tot).toFixed(1)} GB to spare.`
+          : tot <= vram ? 'Only just fits. Real servers need a little extra working memory, so this may spill over.'
+          : w > vram ? `Does not fit: the weights alone are ${w.toFixed(1)} GB. Use fewer bits, a smaller model, or more GPUs.`
+          : `Does not fit: the KV cache pushes it ${over.toFixed(1)} GB over. Part would spill to the CPU and run much slower. Try a shorter chat, fewer people, or an 8-bit KV cache.`;
+      };
+      qa('select', box).forEach((s) => s.addEventListener('change', run)); run();
+    }
+
+    // 4. Many users (batching)
+    {
+      const box = q('.hw-batch'); const wrap = q('.bt-users', box);
+      for (let i = 0; i < 16; i++) { const d = document.createElement('div'); d.className = 'bt-u'; d.innerHTML = `<i></i><span>person ${i + 1}</span>`; wrap.appendChild(d); }
+      const bars = qa('.bt-u i', box); let timer = 0;
+      const run = (mode: string) => {
+        clearTimeout(timer); bars.forEach((b) => (b.style.height = '0'));
+        q('[data-o="bnote"]', box).textContent = mode === 'seq'
+          ? 'One at a time: the GPU reads all the weights for person 1\'s next token, then all of them again for person 2, and so on. Everyone waits their turn.'
+          : 'Batched: the GPU reads the weights once and works out the next token for all 16 people together. Each trip to memory serves everyone.';
+        if (reduce) { bars.forEach((b) => (b.style.height = '100%')); return; }
+        // Each step is one read of all the weights. 4 tokens per person.
+        let step = 0; const per = 4;
+        const tick = () => {
+          step++;
+          if (mode === 'seq') { const who = (step - 1) % 16; bars[who].style.height = (Math.ceil(step / 16) / per * 100) + '%'; if (step < 16 * per) timer = window.setTimeout(tick, 90); }
+          else { bars.forEach((b) => (b.style.height = (step / per * 100) + '%')); if (step < per) timer = window.setTimeout(tick, 90); }
+        };
+        timer = window.setTimeout(tick, 250);
+      };
+      pick('bmode', run);
+    }
+
+    // 5. Kubernetes
+    {
+      const box = q('.hw-k8s'); const slotsEl = q('.k8-slots', box); const pq = q('.k8-pq', box);
+      let mode = 'none'; let pods = 2;
+      const modes: Record<string, { n: number; gpu: string; slots: string; label: string; note: string }> = {
+        none: { n: 1, gpu: 'One T4, not shared', slots: 'nvidia.com/gpu: 1', label: 'whole GPU',
+          note: 'One GPU, one pod. The next pod waits in Pending until the GPU is free. Simple and safe, but the GPU can sit half idle.' },
+        ts: { n: 4, gpu: 'One T4, shared by turns (time-slicing)', slots: 'nvidia.com/gpu: 4', label: 'takes turns',
+          note: 'The device plugin says there are 4 GPUs. Pods take turns on the one real GPU. Memory is not split: one pod can take most of it, and the next one crashes. In Bench Log #3, two vLLM pods on default settings did exactly that.' },
+        mps: { n: 4, gpu: 'One T4, soft slices (MPS)', slots: 'nvidia.com/gpu: 4', label: '¼ of the memory',
+          note: 'Also 4 slots, but each pod gets its own share of the memory, and pods run at the same time instead of taking turns. A crash in one pod can still affect the others.' },
+        mig: { n: 7, gpu: 'One A100 or H100, hard slices (MIG)', slots: 'up to 7 MIG slices', label: 'own memory and cores',
+          note: 'The GPU itself is cut into up to 7 separate parts, each with its own memory and cores, so pods are fully separate. Only newer cards can do this, not the T4.' },
+      };
+      const draw = () => {
+        const m = modes[mode]; slotsEl.style.setProperty('--n', String(Math.min(m.n, 7))); slotsEl.innerHTML = ''; pq.innerHTML = '';
+        q('[data-o="kgpu"]', box).textContent = m.gpu; q('[data-o="kslots"]', box).textContent = m.slots; q('[data-o="knote"]', box).textContent = m.note;
+        for (let i = 0; i < m.n; i++) { const s = document.createElement('div'); s.className = 'k8-slot'; s.textContent = 'free'; slotsEl.appendChild(s); }
+        const slots = qa('.k8-slot', slotsEl);
+        for (let p = 0; p < pods; p++) {
+          if (p < m.n) {
+            const crash = mode === 'ts' && p === 1;
+            slots[p].className = 'k8-slot ' + (crash ? 'crash' : 'full');
+            slots[p].textContent = crash ? `pod ${p + 1}: out of memory` : `pod ${p + 1} · ${m.label}`;
+          } else { const i = document.createElement('i'); i.textContent = `pod ${p + 1}`; pq.appendChild(i); }
+        }
+      };
+      pick('kmode', (v) => { mode = v; draw(); });
+      q('[data-act="kadd"]', box).addEventListener('click', () => { pods = Math.min(pods + 1, 9); draw(); });
+      q('[data-act="kclear"]', box).addEventListener('click', () => { pods = 0; draw(); });
+    }
+
+    // 6. Bigger setups
+    {
+      const box = q('.hw-big'); const g1 = q('[data-g1]', box); const g2 = q('[data-g2]', box);
+      let timer = 0;
+      pick('split', (v) => {
+        clearTimeout(timer); g1.innerHTML = ''; g2.innerHTML = '';
+        const n = v === 'pp' ? 40 : 80;
+        for (let i = 0; i < n; i++) { const a = document.createElement('i'); const b = document.createElement('i'); if (v === 'tp') { a.className = 'half'; b.className = 'half'; } g1.appendChild(a); g2.appendChild(b); }
+        if (v === 'pp') {
+          q('[data-o="link"]', box).textContent = 'once per token, after layer 40';
+          q('[data-o="bignote"]', box).textContent = 'Pipeline: GPU 1 holds layers 1 to 40 and GPU 2 holds layers 41 to 80, about 70 GB each. A token goes through GPU 1, hops across once, and finishes on GPU 2. Little talking between the GPUs, but each one waits while the other works.';
+        } else {
+          q('[data-o="link"]', box).textContent = 'at every layer: needs a fast link like NVLink';
+          q('[data-o="bignote"]', box).textContent = 'Tensor: both GPUs hold half of every layer and do half of each layer\'s maths at the same time. Both work all the time, but they swap results at every layer, so they need a very fast link between them, like NVLink.';
+        }
+        if (reduce) return;
+        const c1 = qa('i', g1), c2 = qa('i', g2); let i = 0;
+        const walk = () => {
+          [...c1, ...c2].forEach((c) => c.classList.remove('hit'));
+          if (v === 'pp') { (i < 40 ? c1[i] : c2[i - 40]).classList.add('hit'); i = (i + 1) % 80; }
+          else { c1[i].classList.add('hit'); c2[i].classList.add('hit'); i = (i + 1) % 80; }
+          timer = window.setTimeout(walk, 70);
+        };
+        walk();
+      });
+    }
+  }
+</script>
